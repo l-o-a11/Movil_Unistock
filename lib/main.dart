@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'produccion/app_dependencies.dart';
+import 'produccion/core/theme/app_theme.dart';
+import 'produccion/features/presentation/pages/produccion_page.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const ProduccionApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class ProduccionApp extends StatelessWidget {
+  const ProduccionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.createProduccionProvider(),
         ),
+      ],
+      child: MaterialApp(
+        title: 'Producción',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const ProduccionPage(),
       ),
     );
   }
