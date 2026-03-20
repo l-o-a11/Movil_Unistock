@@ -83,14 +83,14 @@ class _ProduccionPageState extends State<ProduccionPage> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.cardBorder),
+              color: AppColors.primarySoft,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary, width: 1.5),
             ),
             child: const Icon(
               Icons.person_outline_rounded,
               size: 20,
-              color: AppColors.textSecondary,
+              color: AppColors.primary,
             ),
           ),
         ),

@@ -22,29 +22,19 @@ class OrdenCard extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isExpanded ? AppColors.primarySoft : AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isExpanded
-              ? AppColors.primary.withAlpha((0.3 * 255).round())
-              : AppColors.cardBorder,
+          color: AppColors.primary.withAlpha((0.4 * 255).round()),
           width: 1.2,
         ),
-        boxShadow: isExpanded
-            ? [
-                BoxShadow(
-                  color: AppColors.primary.withAlpha((0.08 * 255).round()),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.04 * 255).round()),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withAlpha((0.08 * 255).round()),
+            blurRadius: isExpanded ? 12 : 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -68,20 +58,14 @@ class OrdenCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        'ORDEN #${orden.numero}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _EstadoBadge(estado: orden.estado),
-                    ],
+                  Text(
+                    'ORDEN #${orden.numero}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -95,22 +79,29 @@ class OrdenCard extends StatelessWidget {
                 ],
               ),
             ),
-            AnimatedRotation(
-              turns: isExpanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 250),
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.chipBackground,
-                  borderRadius: BorderRadius.circular(8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _EstadoBadge(estado: orden.estado),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              ],
             ),
           ],
         ),
