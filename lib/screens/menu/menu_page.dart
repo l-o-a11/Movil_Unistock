@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../categories/categories_page.dart';
 import '../produccion/produccion.dart';
+import '../compras/compras.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -113,7 +114,14 @@ class MenuPage extends StatelessWidget {
                       _MenuItemTile(
                         icon: Icons.shopping_cart_outlined,
                         label: 'Compras',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ComprasPage(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
