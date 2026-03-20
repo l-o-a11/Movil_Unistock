@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
-import 'compras.dart';
+import 'package:provider/provider.dart';
+
+import 'produccion/app_dependencies.dart';
+import 'produccion/core/theme/app_theme.dart';
+import 'produccion/features/presentation/pages/produccion_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProduccionApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ProduccionApp extends StatelessWidget {
+  const ProduccionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Compras',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE91E8C)),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.createProduccionProvider(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Producción',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const ProduccionPage(),
       ),
-      home: const ComprasPage(),
     );
   }
 }
