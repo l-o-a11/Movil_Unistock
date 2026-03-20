@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'products_page.dart';
+import '../products/products_page.dart';
 // import 'menu.dart'; 
 
 class CategoriesPage extends StatelessWidget {
