@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/Login_page.dart';
-import 'screens/produccion/produccion.dart';
+import 'domain/Login_page.dart';
+import 'domain/produccion/produccion.dart';
 
 void main() {
   runApp(const MainApp());
