@@ -10,8 +10,8 @@ class AppColors {
   static const Color primaryBorder = Color(0xFFE91E8C); // alias semántico
 
   // ── Estados ─────────────────────────────────────────────────────
-  static const Color pending = Color(0xFFFFC107);
-  static const Color pendingLight = Color(0xFFFFF8E1);
+  static const Color pending = Color(0xFF8E8E93);
+  static const Color pendingLight = Color(0xFFF2F2F2);
 
   // ── Superficies ─────────────────────────────────────────────────
   static const Color background = Color(0xFFF5F5F5);

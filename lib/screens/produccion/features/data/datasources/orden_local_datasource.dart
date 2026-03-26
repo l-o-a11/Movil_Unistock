@@ -1,5 +1,7 @@
 import '../../domain/entities/orden_entity.dart';
+import '../../domain/entities/orden_detail_entity.dart';
 import '../models/orden_model.dart';
+import '../models/orden_detail_model.dart';
 
 abstract class OrdenLocalDataSource {
   Future<List<OrdenModel>> getOrdenes({
@@ -7,6 +9,8 @@ abstract class OrdenLocalDataSource {
     OrdenTipo? tipo,
     String? query,
   });
+
+  Future<OrdenDetailEntity?> getOrdenDetail(String id);
 }
 
 class OrdenLocalDataSourceImpl implements OrdenLocalDataSource {
@@ -81,5 +85,11 @@ class OrdenLocalDataSourceImpl implements OrdenLocalDataSource {
       }
       return true;
     }).toList();
+  }
+
+  @override
+  Future<OrdenDetailEntity?> getOrdenDetail(String id) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    return OrdenDetailModel.findById(id);
   }
 }

@@ -15,7 +15,7 @@ class ProduccionState {
     this.ordenes = const [],
     this.isLoading = false,
     this.error,
-    this.activeTab = ProduccionTab.terceros,
+    this.activeTab = ProduccionTab.producciones,
     this.filtroEstado,
     this.searchQuery = '',
     this.expandedIds = const {},
