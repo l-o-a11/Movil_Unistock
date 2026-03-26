@@ -167,7 +167,7 @@ class _ProvDetail extends StatelessWidget {
         child:SlideTransition(
           position:Tween<Offset>(begin:const Offset(0,1), end:Offset.zero)
             .animate(CurvedAnimation(parent:animation, curve:Curves.easeOutCubic)),
-          child:Container(
+          child:Material(type:MaterialType.transparency, child:Container(
             constraints:BoxConstraints(maxHeight:sh*0.78),
             decoration:const BoxDecoration(color:Colors.white, borderRadius:BorderRadius.vertical(top:Radius.circular(24))),
             child:Column(mainAxisSize:MainAxisSize.min, children:[
@@ -218,7 +218,7 @@ class _ProvDetail extends StatelessWidget {
                     child:const Text('Cerrar', textAlign:TextAlign.center,
                       style:TextStyle(color:Colors.white, fontSize:16, fontWeight:FontWeight.w700))))),
             ])),
-        )),
+        ))),
     ]);
   }
 }
