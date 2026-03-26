@@ -1,4 +1,5 @@
 import '../../domain/entities/orden_entity.dart';
+import '../../domain/entities/orden_detail_entity.dart';
 import '../../domain/repositories/orden_repository.dart';
 import '../datasources/orden_local_datasource.dart';
 
@@ -28,5 +29,10 @@ class OrdenRepositoryImpl implements OrdenRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  Future<OrdenDetailEntity?> getOrdenDetail(String id) {
+    return localDataSource.getOrdenDetail(id);
   }
 }

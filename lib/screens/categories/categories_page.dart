@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/global_bottom_nav.dart';
 import '../products/products_page.dart';
 // import 'menu.dart'; 
 
@@ -18,6 +19,7 @@ class CategoriesPage extends StatelessWidget {
     ];
 
     return Scaffold(
+      bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: const Color(0xFFF6F6F6),
 
       body: SafeArea(
@@ -35,21 +37,24 @@ class CategoriesPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Botón atrás
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 20,
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                       

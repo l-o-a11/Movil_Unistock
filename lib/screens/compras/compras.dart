@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/global_bottom_nav.dart';
 import 'bottom_nav.dart';
 import 'detalle_compras.dart';
 
@@ -38,6 +39,7 @@ class _ComprasPageState extends State<ComprasPage> {
     const pink = Color(0xFFE91E8C);
 
     return Scaffold(
+      bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -180,10 +182,6 @@ class _ComprasPageState extends State<ComprasPage> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNav(
-        currentIndex: _currentNavIndex,
-        onTap: (index) => setState(() => _currentNavIndex = index),
       ),
     );
   }
