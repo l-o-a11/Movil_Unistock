@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../produccion/core/constants/app_colors.dart';
+import '../../../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/tercero_entity.dart';
 import '../../domain/entities/tercero_detail_entity.dart';
 import '../providers/tercero_detail_provider.dart';
@@ -55,12 +56,7 @@ class _TerceroDetailPageState extends State<TerceroDetailPage>
       backgroundColor: AppColors.background, elevation: 0, scrolledUnderElevation: 0, leadingWidth: 56,
       leading: Padding(
         padding: const EdgeInsets.only(left: 16),
-        child: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Container(width: 36, height: 36,
-            decoration: BoxDecoration(color: AppColors.chipBackground, borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.textPrimary)),
-        ),
+        child: AppBackButton(),
       ),
       title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('CÓDIGO: ${widget.tercero.codigo}',
@@ -109,21 +105,20 @@ class _DetailContentState extends State<_DetailContent>
         // Tab bar
         Container(
           color: AppColors.background,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(color: AppColors.chipBackground, borderRadius: BorderRadius.circular(10)),
-            child: TabBar(
-              controller: widget.tabController,
-              indicator: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: Colors.white,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-              tabs: const [Tab(text: 'Información general'), Tab(text: 'Producciones')],
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TabBar(
+            controller: widget.tabController,
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(color: AppColors.primary, width: 2.5),
+              insets: EdgeInsets.symmetric(horizontal: 0),
             ),
+            indicatorSize: TabBarIndicatorSize.label,
+            dividerColor: AppColors.divider,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            tabs: const [Tab(text: 'Información general'), Tab(text: 'Producciones')],
           ),
         ),
         Expanded(child: TabBarView(

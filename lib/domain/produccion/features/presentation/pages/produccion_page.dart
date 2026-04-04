@@ -1,213 +1,218 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../shared/widgets/global_bottom_nav.dart';
+import '../../../../../shared/widgets/app_back_button.dart';
+import '../../../app_dependencies.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
 import '../providers/produccion_provider.dart';
+import '../providers/orden_detail_provider.dart';
 import '../state/produccion_state.dart';
 import '../widgets/app_search_bar.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/orden_card.dart';
 import '../widgets/toggle_tab_bar.dart';
-import '../../../../terceros/features/presentation/providers/terceros_provider.dart';
-import '../../../../terceros/features/presentation/widgets/terceros_embedded_list.dart';
-import '../../../../../shared/widgets/global_bottom_nav.dart';
+import '../../../../../domain/terceros/features/presentation/widgets/terceros_embedded_list.dart';
+import 'orden_detail_page.dart';
 import 'calendario_page.dart';
 
-class ProduccionPage extends StatelessWidget {
+class ProduccionPage extends StatefulWidget {
   const ProduccionPage({super.key});
+  @override State<ProduccionPage> createState() => _ProduccionPageState();
+}
+
+class _ProduccionPageState extends State<ProduccionPage> {
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+
+  void _goToDetail(BuildContext context, OrdenEntity orden) {
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (_, animation, __) => ChangeNotifierProvider<OrdenDetailProvider>(
+        create: (_) => AppDependencies.createOrdenDetailProvider(),
+        child: OrdenDetailPage(orden: orden),
+      ),
+      transitionsBuilder: (_, animation, __, child) => SlideTransition(
+        position: animation.drive(
+          Tween(begin: const Offset(1, 0), end: Offset.zero)
+              .chain(CurveTween(curve: Curves.easeOutCubic)),
+        ),
+        child: child,
+      ),
+      transitionDuration: const Duration(milliseconds: 320),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      bottomNavigationBar: const GlobalBottomNav(),
-      appBar: _AppBar(),
-      body: Consumer<ProduccionProvider>(
-        builder: (context, provider, _) {
-          final state = provider.state;
-          return Column(
+    return Consumer<ProduccionProvider>(
+      builder: (context, provider, _) {
+        final state = provider.state;
+        final isProduccion = state.activeTab == ProduccionTab.produccion;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
+          body: SafeArea(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Header(provider: provider, state: state),
-              const SizedBox(height: 4),
-              Expanded(child: _Body(provider: provider, state: state)),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
+              // ── Header ────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Row(children: [
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                    Text('Orden de producción',
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4)),
+                  ])),
+                  if (isProduccion)
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => CalendarioPage(ordenes: state.ordenes),
+                        transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                          position: animation.drive(
+                            Tween(begin: const Offset(1, 0), end: Offset.zero)
+                                .chain(CurveTween(curve: Curves.easeOutCubic)),
+                          ),
+                          child: child,
+                        ),
+                        transitionDuration: const Duration(milliseconds: 320),
+                      )),
+                      child: Container(
+                        width: 36, height: 36,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.calendar_month_rounded,
+                            color: AppColors.primary, size: 18)),
+                    ),
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 1.5),
+                    ),
+                    child: const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.primary)),
+                ])),
+              const SizedBox(height: 14),
 
-// ── AppBar ────────────────────────────────────────────────────────────────────
-class _AppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _AppBar();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(56);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      toolbarHeight: 56,
-      backgroundColor: AppColors.background,
-      leading: Padding(
-        padding: const EdgeInsets.all(10),
-        child: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, Color(0xFFFF6EC7)],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
+              // ── Buscador ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: AppSearchBar(
+                  controller: _searchCtrl,
+                  onChanged: provider.setSearch,
+                  hintText: 'Buscar...',
+                ),
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-          ),
-        ),
-      ),
-      title: const Text('Producción',
-          style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft, shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 1.5)),
-            child: const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.primary)),
-        ),
-      ],
+              const SizedBox(height: 12),
+
+              // ── Toggle Producciones / Terceros ────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ToggleTabBar(
+                  labels: const ['Producciones', 'Terceros'],
+                  activeIndex: isProduccion ? 0 : 1,
+                  onChanged: (i) => provider.changeTab(
+                      i == 0 ? ProduccionTab.produccion : ProduccionTab.terceros),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ── Filtros (solo en Producciones) ────────────────────────
+              if (isProduccion) ...[
+                FilterChipsRow(
+                  filtroEstado: state.filtroEstado,
+                  onEstadoChanged: provider.setFiltroEstado,
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              // ── Lista ─────────────────────────────────────────────────
+              Expanded(
+                child: isProduccion
+                    ? _OrdenList(
+                        state: state,
+                        onTap: (o) => _goToDetail(context, o),
+                        onToggle: provider.toggleExpanded,
+                        onRetry: provider.loadOrdenes,
+                      )
+                    : const TercerosEmbeddedList(),
+              ),
+            ],
+          )),
+        );
+      },
     );
   }
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
-class _Header extends StatelessWidget {
-  final ProduccionProvider provider;
+// ── Lista de órdenes ──────────────────────────────────────────────────────────
+
+class _OrdenList extends StatelessWidget {
   final ProduccionState state;
-  const _Header({required this.provider, required this.state});
+  final ValueChanged<OrdenEntity> onTap;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onRetry;
+
+  const _OrdenList({
+    required this.state,
+    required this.onTap,
+    required this.onToggle,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Orden de producción',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-        const SizedBox(height: 14),
-        AppSearchBar(
-          onChanged: (q) {
-            if (state.activeTab == ProduccionTab.terceros) {
-              context.read<TercerosProvider>().updateSearch(q);
-            } else {
-              provider.updateSearch(q);
-            }
-          },
-        ),
-        const SizedBox(height: 12),
-        ToggleTabBar(activeTab: state.activeTab, onTabChanged: provider.changeTab),
-        const SizedBox(height: 12),
-        if (state.activeTab == ProduccionTab.producciones)
-          FilterChipsRow(
-            filtroEstado: state.filtroEstado,
-            onEstadoTap: () => _showEstadoSheet(context),
-            onTercerosTap: () {},
-            onCalendarioTap: () => Navigator.push(
-              context, MaterialPageRoute(builder: (_) => const CalendarioPage())),
-          ),
-        const SizedBox(height: 16),
-      ]),
-    );
-  }
-
-  void _showEstadoSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => SafeArea(
-        child: Padding(padding: const EdgeInsets.all(20),
-          child: Column(mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Filtrar por Estado',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 16),
-            _EstadoOpt('Todos', state.filtroEstado == null, () { provider.updateFiltroEstado(null); Navigator.pop(context); }),
-            _EstadoOpt('En producción', state.filtroEstado == OrdenEstado.enProduccion,
-                () { provider.updateFiltroEstado(OrdenEstado.enProduccion); Navigator.pop(context); }),
-            _EstadoOpt('Pendiente', state.filtroEstado == OrdenEstado.pendiente,
-                () { provider.updateFiltroEstado(OrdenEstado.pendiente); Navigator.pop(context); }),
-          ])),
-      ),
-    );
-  }
-}
-
-class _EstadoOpt extends StatelessWidget {
-  final String label; final bool isSelected; final VoidCallback onTap;
-  const _EstadoOpt(this.label, this.isSelected, this.onTap);
-  @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    title: Text(label, style: TextStyle(
-        color: isSelected ? AppColors.primary : AppColors.textPrimary,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
-    trailing: isSelected
-        ? const Icon(Icons.check_circle, color: AppColors.primary)
-        : const Icon(Icons.circle_outlined, color: AppColors.textHint),
-    onTap: onTap,
-  );
-}
-
-// ── Body ──────────────────────────────────────────────────────────────────────
-class _Body extends StatelessWidget {
-  final ProduccionProvider provider;
-  final ProduccionState state;
-  const _Body({required this.provider, required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.activeTab == ProduccionTab.terceros) return const TercerosEmbeddedList();
-
-    if (state.isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-
-    if (state.error != null) {
+    if (state.isLoading) {
+      return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5));
+    }
+    if (state.hasError) {
       return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.error_outline, color: AppColors.primary, size: 48),
+        const Icon(Icons.error_outline_rounded, color: AppColors.primary, size: 48),
         const SizedBox(height: 12),
-        Text(state.error!, style: const TextStyle(color: AppColors.textSecondary)),
+        Text(state.error!,
+            style: const TextStyle(color: AppColors.textSecondary),
+            textAlign: TextAlign.center),
         const SizedBox(height: 16),
-        ElevatedButton(onPressed: provider.loadOrdenes,
+        ElevatedButton(
+          onPressed: onRetry,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('Reintentar')),
       ]));
     }
-
     if (state.ordenes.isEmpty) {
       return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.inbox_outlined, size: 56, color: AppColors.textHint.withAlpha(150)),
+        Icon(Icons.inbox_rounded, size: 52, color: AppColors.textHint.withAlpha(120)),
         const SizedBox(height: 12),
-        const Text('No hay órdenes disponibles',
+        const Text('No hay órdenes',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
       ]));
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: state.ordenes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (_, i) {
         final orden = state.ordenes[i];
         return OrdenCard(
           orden: orden,
           isExpanded: state.isExpanded(orden.id),
-          onToggle: () => provider.toggleExpanded(orden.id),
+          onToggle: () => onToggle(orden.id),
+          onTap: () => onTap(orden),
+          animIndex: i,
         );
       },
     );

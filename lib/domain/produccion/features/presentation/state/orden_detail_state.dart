@@ -1,31 +1,28 @@
 import '../../domain/entities/orden_detail_entity.dart';
 
-enum OrdenDetailStatus { initial, loading, loaded, error }
-
 class OrdenDetailState {
-  final OrdenDetailStatus status;
-  final OrdenDetailEntity? detail;
+  final bool isLoading;
   final String? error;
+  final OrdenDetailEntity? detail;
 
   const OrdenDetailState({
-    this.status = OrdenDetailStatus.initial,
-    this.detail,
+    this.isLoading = false,
     this.error,
+    this.detail,
   });
 
-  bool get isLoading => status == OrdenDetailStatus.loading;
-  bool get hasError => status == OrdenDetailStatus.error;
-  bool get isLoaded => status == OrdenDetailStatus.loaded;
+  bool get hasError => error != null;
+  bool get isLoaded => !isLoading && error == null && detail != null;
 
   OrdenDetailState copyWith({
-    OrdenDetailStatus? status,
-    OrdenDetailEntity? detail,
+    bool? isLoading,
     String? error,
+    OrdenDetailEntity? detail,
   }) {
     return OrdenDetailState(
-      status: status ?? this.status,
-      detail: detail ?? this.detail,
+      isLoading: isLoading ?? this.isLoading,
       error: error,
+      detail: detail ?? this.detail,
     );
   }
 }

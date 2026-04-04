@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../shared/widgets/global_bottom_nav.dart';
+import '../../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/proveedor_entity.dart';
 import '../providers/proveedores_provider.dart';
 
@@ -37,17 +38,12 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      bottomNavigationBar: const GlobalBottomNav(),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
       body: SafeArea(child: Column(children: [
         // Header
         Padding(padding: const EdgeInsets.fromLTRB(16,14,16,10),
           child: Row(children: [
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(width:34, height:34,
-                decoration: BoxDecoration(color:const Color(0xFFF0F0F0), borderRadius:BorderRadius.circular(10)),
-                child: const Icon(Icons.arrow_back_ios_new_rounded, size:15, color:_text)),
-            ),
+            AppBackButton(),
             const SizedBox(width:14),
             const Text('Proveedores', style:TextStyle(color:_text, fontSize:20, fontWeight:FontWeight.w800, letterSpacing:-0.4)),
             const Spacer(),
@@ -57,17 +53,24 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
           ])),
         // Search
         Padding(padding:const EdgeInsets.symmetric(horizontal:16),
-          child:Container(decoration:BoxDecoration(color:Colors.white, borderRadius:BorderRadius.circular(12), border:Border.all(color:_border)),
+          child:Container(
+            decoration:BoxDecoration(
+              color:const Color(0xFFF5F5F7),
+              borderRadius:BorderRadius.circular(12),
+              border:Border.all(color:const Color(0xFFE8E8E8))),
             child:TextField(controller:_ctrl,
               onChanged: (v) { setState((){}); context.read<ProveedoresProvider>().search(v); },
-              style:const TextStyle(fontSize:14, color:_text),
-              decoration:InputDecoration(hintText:'Buscar proveedor...', hintStyle:const TextStyle(color:Color(0xFFAEAEB2), fontSize:14),
-                prefixIcon:const Icon(Icons.search_rounded, size:18, color:Color(0xFFAEAEB2)),
+              style:const TextStyle(fontSize:13, color:Color(0xFF1C1C1E)),
+              decoration:InputDecoration(
+                hintText:'Buscar...',
+                hintStyle:const TextStyle(color:Color(0xFFAEAEB2), fontSize:13),
+                prefixIcon:const Icon(Icons.search_rounded, size:17, color:Color(0xFFAEAEB2)),
                 suffixIcon:_ctrl.text.isNotEmpty
                   ? IconButton(icon:const Icon(Icons.clear_rounded, size:16, color:Color(0xFFAEAEB2)),
                       onPressed:(){ _ctrl.clear(); setState((){}); context.read<ProveedoresProvider>().search(''); })
                   : null,
-                border:InputBorder.none, isDense:true, contentPadding:const EdgeInsets.symmetric(vertical:12))))),
+                border:InputBorder.none, isDense:true,
+                contentPadding:const EdgeInsets.symmetric(vertical:12))))),
         const SizedBox(height:16),
         // List
         Expanded(child:Consumer<ProveedoresProvider>(

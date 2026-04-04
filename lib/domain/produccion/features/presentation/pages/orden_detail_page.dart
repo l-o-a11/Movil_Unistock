@@ -15,13 +15,8 @@ import '../widgets/detail/referencias_card.dart';
 import '../widgets/detail/historial_card.dart';
 import '../widgets/detail/ficha_costos_card.dart';
 
-/// Pantalla de detalle completo de una orden de producción.
-///
-/// Recibe una [OrdenEntity] de la lista y solicita el detalle completo
-/// al [OrdenDetailProvider] mediante su [id].
 class OrdenDetailPage extends StatefulWidget {
   final OrdenEntity orden;
-
   const OrdenDetailPage({super.key, required this.orden});
 
   @override
@@ -32,11 +27,8 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Dispara la carga diferida para no bloquear el frame de entrada.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<OrdenDetailProvider>()
-          .loadDetail(widget.orden.id);
+      context.read<OrdenDetailProvider>().loadDetail(widget.orden.id);
     });
   }
 
@@ -44,28 +36,20 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: const GlobalBottomNav(),
+      // Bolsita (producción) activa = index 3
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
       appBar: DetailAppBar(ordenNumero: widget.orden.numero),
       body: Consumer<OrdenDetailProvider>(
         builder: (context, provider, _) {
           final state = provider.state;
-
-          if (state.isLoading) {
-            return const DetailLoadingView();
-          }
-
+          if (state.isLoading) return const DetailLoadingView();
           if (state.hasError) {
             return DetailErrorView(
               message: state.error ?? 'Error desconocido',
-              onRetry: () =>
-                  provider.loadDetail(widget.orden.id),
+              onRetry: () => provider.loadDetail(widget.orden.id),
             );
           }
-
-          if (!state.isLoaded || state.detail == null) {
-            return const SizedBox.shrink();
-          }
-
+          if (!state.isLoaded || state.detail == null) return const SizedBox.shrink();
           return _DetailBody(detail: state.detail!);
         },
       ),
@@ -73,39 +57,21 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
   }
 }
 
-// ─── Body ────────────────────────────────────────────────────────────────────
-
 class _DetailBody extends StatefulWidget {
   final OrdenDetailEntity detail;
-
   const _DetailBody({required this.detail});
-
-  @override
-  State<_DetailBody> createState() => _DetailBodyState();
+  @override State<_DetailBody> createState() => _DetailBodyState();
 }
 
 class _DetailBodyState extends State<_DetailBody>
     with SingleTickerProviderStateMixin {
   late final AnimationController _fadeAc = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 480),
-  );
+    vsync: this, duration: const Duration(milliseconds: 480));
   late final Animation<double> _fadeAnim = CurvedAnimation(
-    parent: _fadeAc,
-    curve: Curves.easeOutCubic,
-  );
+    parent: _fadeAc, curve: Curves.easeOutCubic);
 
-  @override
-  void initState() {
-    super.initState();
-    _fadeAc.forward();
-  }
-
-  @override
-  void dispose() {
-    _fadeAc.dispose();
-    super.dispose();
-  }
+  @override void initState() { super.initState(); _fadeAc.forward(); }
+  @override void dispose() { _fadeAc.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -114,36 +80,33 @@ class _DetailBodyState extends State<_DetailBody>
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          // ── 1. Progreso general ───────────────────────────────
+          // 1. Progreso general
           ProgresoCard(detail: widget.detail),
           const SizedBox(height: 12),
 
-          // ── 2. Etapas de producción ───────────────────────────
+          // 2. Etapas (Diseño → FechaTécnica → Corte)
           EtapasCard(detail: widget.detail),
           const SizedBox(height: 12),
 
-          // ── 3. Proceso producción con terceros ────────────────
-          ProduccionTercerosCard(
-            onTap: () {/* navegar a flujo de terceros */},
-          ),
+          // 3. Producción con terceros
+          ProduccionTercerosCard(onTap: () {}),
           const SizedBox(height: 12),
 
-          // ── 4. Referencias ────────────────────────────────────
+          // 4. Referencias
           if (widget.detail.referencias.isNotEmpty) ...[
             ReferenciasCard(referencias: widget.detail.referencias),
             const SizedBox(height: 12),
           ],
 
-          // ── 5. Historial ──────────────────────────────────────
+          // 5. Historial
           HistorialCard(
             historial: widget.detail.historial,
-            onVerTodo: () {/* navegar a historial completo */},
+            onVerTodo: () {},
           ),
           const SizedBox(height: 12),
 
-          // ── 6. Ficha técnica y costos (opcional) ─────────────
-          if (widget.detail.fichaCosto != null)
-            FichaCostosCard(ficha: widget.detail.fichaCosto!),
+          // 6. Ficha técnica y costos — siempre visible
+          FichaCostosCard(ficha: widget.detail.fichaCosto),
         ],
       ),
     );

@@ -1,40 +1,31 @@
 import 'package:flutter/material.dart';
-
 import '../../domain/usecases/get_orden_detail_usecase.dart';
 import '../state/orden_detail_state.dart';
 
 class OrdenDetailProvider extends ChangeNotifier {
   final GetOrdenDetailUseCase getOrdenDetailUseCase;
 
+  OrdenDetailProvider({required this.getOrdenDetailUseCase});
+
   OrdenDetailState _state = const OrdenDetailState();
   OrdenDetailState get state => _state;
 
-  OrdenDetailProvider({required this.getOrdenDetailUseCase});
+  void _emit(OrdenDetailState s) {
+    _state = s;
+    notifyListeners();
+  }
 
   Future<void> loadDetail(String id) async {
-    _state = _state.copyWith(status: OrdenDetailStatus.loading);
-    notifyListeners();
-
+    _emit(const OrdenDetailState(isLoading: true));
     try {
       final detail = await getOrdenDetailUseCase(id);
       if (detail == null) {
-        _state = _state.copyWith(
-          status: OrdenDetailStatus.error,
-          error: 'Orden no encontrada',
-        );
+        _emit(const OrdenDetailState(error: 'Orden no encontrada'));
       } else {
-        _state = _state.copyWith(
-          status: OrdenDetailStatus.loaded,
-          detail: detail,
-        );
+        _emit(OrdenDetailState(detail: detail));
       }
     } catch (e) {
-      _state = _state.copyWith(
-        status: OrdenDetailStatus.error,
-        error: 'Error al cargar el detalle: $e',
-      );
+      _emit(OrdenDetailState(error: e.toString()));
     }
-
-    notifyListeners();
   }
 }

@@ -24,7 +24,6 @@ class _EtapasCardState extends State<EtapasCard>
     _Etapa(icon: Icons.brush_rounded, label: 'Diseño'),
     _Etapa(icon: Icons.calendar_today_rounded, label: 'Fecha\nTécnica'),
     _Etapa(icon: Icons.content_cut_rounded, label: 'Corte'),
-    _Etapa(icon: Icons.precision_manufacturing_rounded, label: 'Producción'),
   ];
 
   @override

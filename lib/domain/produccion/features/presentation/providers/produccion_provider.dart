@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../domain/entities/orden_entity.dart';
 import '../../domain/usecases/get_ordenes_usecase.dart';
 import '../state/produccion_state.dart';
@@ -7,69 +6,57 @@ import '../state/produccion_state.dart';
 class ProduccionProvider extends ChangeNotifier {
   final GetOrdenesUseCase getOrdenesUseCase;
 
-  ProduccionState _state = const ProduccionState();
-  ProduccionState get state => _state;
-
   ProduccionProvider({required this.getOrdenesUseCase}) {
     loadOrdenes();
   }
 
-  Future<void> loadOrdenes() async {
-    _state = _state.copyWith(isLoading: true);
+  ProduccionState _state = const ProduccionState();
+  ProduccionState get state => _state;
+
+  void _emit(ProduccionState s) {
+    _state = s;
     notifyListeners();
+  }
 
+  Future<void> loadOrdenes() async {
+    _emit(_state.copyWith(isLoading: true));
     try {
-      final tipo = _state.activeTab == ProduccionTab.terceros
-          ? OrdenTipo.terceros
-          : OrdenTipo.produccion;
-
       final ordenes = await getOrdenesUseCase(
         estado: _state.filtroEstado,
-        tipo: tipo,
-        query: _state.searchQuery.isNotEmpty ? _state.searchQuery : null,
+        tipo: _state.activeTab == ProduccionTab.terceros
+            ? OrdenTipo.terceros
+            : OrdenTipo.produccion,
+        query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
       );
-
-      _state = _state.copyWith(ordenes: ordenes, isLoading: false);
+      _emit(_state.copyWith(isLoading: false, ordenes: ordenes));
     } catch (e) {
-      _state = _state.copyWith(
-        isLoading: false,
-        error: 'Error al cargar órdenes: $e',
-      );
+      _emit(_state.copyWith(isLoading: false, error: e.toString()));
     }
+  }
 
-    notifyListeners();
+  void setFiltroEstado(OrdenEstado? estado) {
+    if (estado == null) {
+      _emit(_state.copyWith(clearFiltroEstado: true));
+    } else {
+      _emit(_state.copyWith(filtroEstado: estado));
+    }
+    loadOrdenes();
+  }
+
+  void setSearch(String q) {
+    _emit(_state.copyWith(searchQuery: q));
+    loadOrdenes();
   }
 
   void changeTab(ProduccionTab tab) {
-    _state = _state.copyWith(activeTab: tab);
-    notifyListeners();
-    loadOrdenes();
-  }
-
-  void updateSearch(String query) {
-    _state = _state.copyWith(searchQuery: query);
-    notifyListeners();
-    loadOrdenes();
-  }
-
-  void updateFiltroEstado(OrdenEstado? estado) {
-    if (estado == null) {
-      _state = _state.copyWith(clearFiltroEstado: true);
-    } else {
-      _state = _state.copyWith(filtroEstado: estado);
-    }
-    notifyListeners();
+    _emit(_state.copyWith(activeTab: tab, expandedIds: {}));
     loadOrdenes();
   }
 
   void toggleExpanded(String id) {
-    final newSet = Set<String>.from(_state.expandedIds);
-    if (newSet.contains(id)) {
-      newSet.remove(id);
-    } else {
-      newSet.add(id);
-    }
-    _state = _state.copyWith(expandedIds: newSet);
-    notifyListeners();
+    // Solo una tarjeta abierta a la vez
+    final isOpen = _state.expandedIds.contains(id);
+    final newSet = isOpen ? <String>{} : <String>{id};
+    _emit(_state.copyWith(expandedIds: newSet));
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../produccion/core/constants/app_colors.dart';
+import '../../../../produccion/features/presentation/widgets/app_search_bar.dart';
 import '../providers/terceros_provider.dart';
 import '../../../terceros_dependencies.dart';
 import '../widgets/tercero_card.dart';
@@ -96,26 +97,13 @@ class _TercerosBodyState extends State<_TercerosBody> {
           // Search bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: TextField(
+            child: AppSearchBar(
               controller: _ctrl,
               onChanged: (v) {
                 setState(() {});
                 context.read<TercerosProvider>().updateSearch(v);
               },
-              style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Buscar...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: _ctrl.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 18, color: AppColors.textHint),
-                        onPressed: () {
-                          _ctrl.clear();
-                          setState(() {});
-                          context.read<TercerosProvider>().updateSearch('');
-                        })
-                    : null,
-              ),
+              hintText: 'Buscar...',
             ),
           ),
           // Title

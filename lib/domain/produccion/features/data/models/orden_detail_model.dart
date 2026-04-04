@@ -86,7 +86,7 @@ class OrdenDetailModel extends OrdenDetailEntity {
         nombre: 'Ficha técnica top aurora',
         version: 'Versión 1.0',
         costoPorUnidad: 48900,
-        costoTotal: 2800900,
+        costoTotal: 4800900,
         completado: true,
       ),
     ),
@@ -188,6 +188,95 @@ class OrdenDetailModel extends OrdenDetailEntity {
       ],
       historial: [],
       fichaCosto: null,
+    ),
+    // ── Etapa avanzada: Corte completado → en Producción ────────────────────
+    '9': OrdenDetailModel(
+      id: '9',
+      numero: 33,
+      unidades: 250,
+      estado: OrdenEstado.enProduccion,
+      tipo: OrdenTipo.terceros,
+      cliente: 'Almacenes Éxito Moda',
+      fechaEntrega: DateTime(2025, 4, 30),
+      refCorte: '590_3300',
+      ref: '590',
+      fechaEstado: DateTime(2025, 4, 19),
+      progreso: 0.75,
+      etapaActual: 2, // Corte
+      referencias: const [
+        OrdenReferenciaEntity(
+            codigo: '3300', cantidad: 125,
+            color: Color(0xFF1565C0), colorName: 'Azul marino'),
+        OrdenReferenciaEntity(
+            codigo: '3301', cantidad: 125,
+            color: Color(0xFFFFFFFF), colorName: 'Blanco'),
+      ],
+      historial: [
+        HistorialEntryEntity(etapa: 'Diseño',
+            fecha: DateTime(2025, 4, 10), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Ficha técnica',
+            fecha: DateTime(2025, 4, 12), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Corte',
+            fecha: DateTime(2025, 4, 15), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Compras',
+            fecha: DateTime(2025, 4, 17), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Producción',
+            fecha: DateTime(2025, 4, 19), responsable: 'Samanta Rosales'),
+      ],
+      fichaCosto: const FichaCostoEntity(
+        nombre: 'Ficha técnica blusa éxito',
+        version: 'Versión 2.0',
+        costoPorUnidad: 38500,
+        costoTotal: 9625000,
+        completado: true,
+      ),
+    ),
+    // ── Etapa muy avanzada: Producción completa → Recepción ──────────────────
+    '10': OrdenDetailModel(
+      id: '10',
+      numero: 35,
+      unidades: 400,
+      estado: OrdenEstado.enProduccion,
+      tipo: OrdenTipo.produccion,
+      cliente: 'Falabella Colombia S.A.',
+      fechaEntrega: DateTime(2025, 5, 5),
+      refCorte: '610_4400',
+      ref: '610',
+      fechaEstado: DateTime(2025, 4, 20),
+      progreso: 0.90,
+      etapaActual: 3, // Producción (superó Corte)
+      referencias: const [
+        OrdenReferenciaEntity(
+            codigo: '4400', cantidad: 200,
+            color: Color(0xFF2E7D32), colorName: 'Verde bosque'),
+        OrdenReferenciaEntity(
+            codigo: '4401', cantidad: 120,
+            color: Color(0xFF4E342E), colorName: 'Café'),
+        OrdenReferenciaEntity(
+            codigo: '4402', cantidad: 80,
+            color: Color(0xFF37474F), colorName: 'Gris oscuro'),
+      ],
+      historial: [
+        HistorialEntryEntity(etapa: 'Diseño',
+            fecha: DateTime(2025, 3, 28), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Ficha técnica',
+            fecha: DateTime(2025, 4, 1),  responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Corte',
+            fecha: DateTime(2025, 4, 7),  responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Compras',
+            fecha: DateTime(2025, 4, 12), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Producción',
+            fecha: DateTime(2025, 4, 18), responsable: 'Samanta Rosales'),
+        HistorialEntryEntity(etapa: 'Recepción',
+            fecha: DateTime(2025, 4, 20), responsable: 'Samanta Rosales'),
+      ],
+      fichaCosto: const FichaCostoEntity(
+        nombre: 'Ficha técnica pantalón Falabella',
+        version: 'Versión 3.1',
+        costoPorUnidad: 52000,
+        costoTotal: 20800000,
+        completado: true,
+      ),
     ),
   };
 

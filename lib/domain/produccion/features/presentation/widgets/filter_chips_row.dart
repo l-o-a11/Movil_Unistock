@@ -1,105 +1,64 @@
 import 'package:flutter/material.dart';
-
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
 
 class FilterChipsRow extends StatelessWidget {
   final OrdenEstado? filtroEstado;
-  final VoidCallback onEstadoTap;
-  final VoidCallback onTercerosTap;
-  final VoidCallback onCalendarioTap;
-
+  final ValueChanged<OrdenEstado?> onEstadoChanged;
   const FilterChipsRow({
     super.key,
     required this.filtroEstado,
-    required this.onEstadoTap,
-    required this.onTercerosTap,
-    required this.onCalendarioTap,
+    required this.onEstadoChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _FilterChip(
-          label:
-              'Estado:${filtroEstado == null ? 'Todos' : _estadoLabel(filtroEstado!)}',
-          onTap: onEstadoTap,
-        ),
-        const SizedBox(width: 8),
-        _FilterChip(
-          label: 'Terceros:Todos',
-          onTap: onTercerosTap,
-        ),
-        const SizedBox(width: 8),
-        _IconChip(
-          icon: Icons.calendar_month_outlined,
-          onTap: onCalendarioTap,
-        ),
-      ],
-    );
-  }
-
-  String _estadoLabel(OrdenEstado estado) {
-    switch (estado) {
-      case OrdenEstado.enProduccion:
-        return 'En producción';
-      case OrdenEstado.pendiente:
-        return 'Pendiente';
-      case OrdenEstado.completado:
-        return 'Completado';
-      case OrdenEstado.cancelado:
-        return 'Cancelado';
-    }
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _FilterChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.chipText,
-          ),
-        ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          _Chip(label: 'Todos', active: filtroEstado == null,
+              onTap: () => onEstadoChanged(null)),
+          const SizedBox(width: 8),
+          _Chip(label: 'En producción', active: filtroEstado == OrdenEstado.enProduccion,
+              onTap: () => onEstadoChanged(OrdenEstado.enProduccion)),
+          const SizedBox(width: 8),
+          _Chip(label: 'Pendiente', active: filtroEstado == OrdenEstado.pendiente,
+              onTap: () => onEstadoChanged(OrdenEstado.pendiente)),
+          const SizedBox(width: 8),
+          _Chip(label: 'Completado', active: filtroEstado == OrdenEstado.completado,
+              onTap: () => onEstadoChanged(OrdenEstado.completado)),
+        ],
       ),
     );
   }
 }
 
-class _IconChip extends StatelessWidget {
-  final IconData icon;
+class _Chip extends StatelessWidget {
+  final String label;
+  final bool active;
   final VoidCallback onTap;
-
-  const _IconChip({required this.icon, required this.onTap});
+  const _Chip({required this.label, required this.active, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(7),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(8),
+          color: active ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: active ? AppColors.primary : AppColors.cardBorder),
         ),
-        child: Icon(icon, size: 16, color: AppColors.chipText),
+        child: Text(label,
+            style: TextStyle(
+                color: active ? Colors.white : AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w500)),
       ),
     );
   }

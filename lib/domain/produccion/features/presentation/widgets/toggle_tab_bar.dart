@@ -1,86 +1,51 @@
 import 'package:flutter/material.dart';
-
 import '../../../core/constants/app_colors.dart';
-import '../state/produccion_state.dart';
 
 class ToggleTabBar extends StatelessWidget {
-  final ProduccionTab activeTab;
-  final ValueChanged<ProduccionTab> onTabChanged;
-
+  final List<String> labels;
+  final int activeIndex;
+  final ValueChanged<int> onChanged;
   const ToggleTabBar({
     super.key,
-    required this.activeTab,
-    required this.onTabChanged,
+    required this.labels,
+    required this.activeIndex,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.chipBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
+          color: AppColors.chipBackground,
+          borderRadius: BorderRadius.circular(12)),
       child: Row(
-        children: [
-          _Tab(
-            label: 'Producciones',
-            isActive: activeTab == ProduccionTab.producciones,
-            onTap: () => onTabChanged(ProduccionTab.producciones),
-          ),
-          _Tab(
-            label: 'Terceros',
-            isActive: activeTab == ProduccionTab.terceros,
-            onTap: () => onTabChanged(ProduccionTab.terceros),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _Tab({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isActive ? Colors.white : AppColors.textSecondary,
+        children: labels.asMap().entries.map((e) {
+          final active = e.key == activeIndex;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(e.key),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                decoration: BoxDecoration(
+                  color: active ? AppColors.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: active
+                      ? [BoxShadow(color: Colors.black.withAlpha(12),
+                          blurRadius: 6, offset: const Offset(0, 2))]
+                      : null,
+                ),
+                child: Text(e.value,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: active ? AppColors.textPrimary : AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: active ? FontWeight.w600 : FontWeight.w500)),
+              ),
             ),
-          ),
-        ),
+          );
+        }).toList(),
       ),
     );
   }

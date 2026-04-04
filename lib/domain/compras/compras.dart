@@ -16,19 +16,19 @@ class _ComprasPageState extends State<ComprasPage> {
   final List<Map<String, dynamic>> _compras = [
     {
       'number': 'N°1',
-      'date': '12/02/2025',
+      'date': '12/02/2026',
       'provider': 'Proveedor',
       'isActive': true,
     },
     {
       'number': 'N°2',
-      'date': '20/03/2024',
+      'date': '20/03/2026',
       'provider': 'Proveedor',
       'isActive': true,
     },
     {
       'number': 'N°3',
-      'date': '30/07/2024',
+      'date': '30/07/2026',
       'provider': 'Proveedor',
       'isActive': false,
     },
