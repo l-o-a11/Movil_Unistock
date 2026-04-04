@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../domain/entities/orden_detail_entity.dart';
 
-/// Tarjeta de progreso por etapas con íconos animados y conectores.
+/// Tarjeta de flujo de etapas de producción con animación.
+/// 
+/// Muestra:
+/// - 3 etapas: Diseño → Ficha Técnica → Corte
+/// - Ícono animado para la etapa activa
+/// - Conectores entre etapas
+/// - Progreso visual del flujo
+/// - Indicador de etapa siguiente
 class EtapasCard extends StatefulWidget {
   final OrdenDetailEntity detail;
 

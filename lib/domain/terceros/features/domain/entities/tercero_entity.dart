@@ -1,6 +1,10 @@
+/// Estado de un tercero en el sistema.
 enum TerceroEstado { activo, inactivo }
 
-/// Entidad base de un tercero (proveedor / subcontratista).
+/// Entidad base de un tercero (subcontratista/proveedor de corte).
+///
+/// Contiene información básica de identificación y contacto.
+/// Para información extendida, ver [TerceroDetailEntity].
 class TerceroEntity {
   final String id;
   final String codigo;

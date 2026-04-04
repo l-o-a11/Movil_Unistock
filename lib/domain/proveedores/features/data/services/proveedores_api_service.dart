@@ -18,6 +18,12 @@ class ProveedoresApiService {
 
   // ── Obtener lista de proveedores ──────────────────────────────────────────
 
+  /// Obtiene lista de proveedores del API.
+  /// 
+  /// Parámetro:
+  /// - [query]: Término de búsqueda (opcional)
+  /// 
+  /// Si el API no está disponible, cae al datasource local (mock).
   Future<List<ProveedorEntity>> getAll({String? query}) async {
     try {
       final params = <String, String>{};
@@ -42,6 +48,10 @@ class ProveedoresApiService {
 
   // ── Obtener detalle de un proveedor ───────────────────────────────────────
 
+  /// Obtiene un proveedor por su ID.
+  /// 
+  /// Si el API no está disponible, busca en el datasource local.
+  /// Retorna null si no encuentra el proveedor.
   Future<ProveedorEntity?> getById(String id) async {
     try {
       final uri = Uri.parse('$baseUrl/proveedores/$id');

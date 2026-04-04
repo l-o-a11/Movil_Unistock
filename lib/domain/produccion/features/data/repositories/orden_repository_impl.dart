@@ -3,7 +3,12 @@ import '../../domain/entities/orden_detail_entity.dart';
 import '../../domain/repositories/orden_repository.dart';
 import '../datasources/orden_local_datasource.dart';
 
+/// Implementación de [OrdenRepository].
+///
+/// Delega todas las operaciones al datasource local [OrdenLocalDataSource].
+/// En producción se puede extender para consumir API remota.
 class OrdenRepositoryImpl implements OrdenRepository {
+  /// Construye el repositorio con un datasource local.
   final OrdenLocalDataSource localDataSource;
 
   const OrdenRepositoryImpl({required this.localDataSource});
@@ -14,11 +19,7 @@ class OrdenRepositoryImpl implements OrdenRepository {
     OrdenTipo? tipo,
     String? query,
   }) async {
-    return localDataSource.getOrdenes(
-      estado: estado,
-      tipo: tipo,
-      query: query,
-    );
+    return localDataSource.getOrdenes(estado: estado, tipo: tipo, query: query);
   }
 
   @override

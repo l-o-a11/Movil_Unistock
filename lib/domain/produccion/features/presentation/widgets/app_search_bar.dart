@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
+/// Barra de búsqueda reutilizable.
+/// 
+/// Características:
+/// - Ícono de búsqueda
+/// - Botón de limpiar (visible cuando hay texto)
+/// - Hint personalizable
+/// - Estilo consistente con border y surface
 class AppSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;

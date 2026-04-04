@@ -7,6 +7,13 @@ import '../../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/proveedor_entity.dart';
 import '../providers/proveedores_provider.dart';
 
+/// Página de proveedores de materiales/servicios.
+/// 
+/// Muestra:
+/// - Buscador de proveedores
+/// - Lista animada de tarjetas
+/// - Modal detalle con blur backdrop al presionar
+/// - Diseño minimalista con colores personalizados (pink, grey, green)
 class ProveedoresPage extends StatelessWidget {
   const ProveedoresPage({super.key});
 
@@ -19,6 +26,7 @@ class ProveedoresPage extends StatelessWidget {
   }
 }
 
+/// Vista interna de proveedores con controlador de búsqueda.
 class _ProveedoresView extends StatefulWidget {
   const _ProveedoresView();
   @override State<_ProveedoresView> createState() => _ProveedoresViewState();

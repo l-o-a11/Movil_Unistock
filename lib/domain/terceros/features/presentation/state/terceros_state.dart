@@ -1,5 +1,12 @@
 import '../../domain/entities/tercero_entity.dart';
 
+/// Estado de la lista de terceros.
+/// 
+/// Propiedades:
+/// - [terceros]: lista filtrada de terceros
+/// - [isLoading]: indica carga en progreso
+/// - [error]: mensaje de error (null si no hay error)
+/// - [searchQuery]: término de búsqueda actual
 class TercerosState {
   final List<TerceroEntity> terceros;
   final bool isLoading;

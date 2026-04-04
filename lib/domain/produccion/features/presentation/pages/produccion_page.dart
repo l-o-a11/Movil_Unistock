@@ -17,6 +17,14 @@ import '../../../../../domain/terceros/features/presentation/widgets/terceros_em
 import 'orden_detail_page.dart';
 import 'calendario_page.dart';
 
+/// Página principal del módulo Producción.
+/// 
+/// Muestra:
+/// - Buscador de órdenes
+/// - Selector de tabs (Producciones / Terceros)
+/// - Filtros por estado
+/// - Lista de órdenes expandibles
+/// - Botón flotante de calendario
 class ProduccionPage extends StatefulWidget {
   const ProduccionPage({super.key});
   @override State<ProduccionPage> createState() => _ProduccionPageState();
@@ -28,6 +36,11 @@ class _ProduccionPageState extends State<ProduccionPage> {
   @override
   void dispose() { _searchCtrl.dispose(); super.dispose(); }
 
+  /// Navega al detalle de una orden con animación slide.
+  /// 
+  /// Parámetros:
+  /// - [context]: Contexto de navegación
+  /// - [orden]: Orden a mostrar en detalle
   void _goToDetail(BuildContext context, OrdenEntity orden) {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (_, animation, __) => ChangeNotifierProvider<OrdenDetailProvider>(

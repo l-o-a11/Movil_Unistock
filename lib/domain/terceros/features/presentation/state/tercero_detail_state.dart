@@ -1,7 +1,14 @@
 import '../../domain/entities/tercero_detail_entity.dart';
 
+/// Estados posibles del detalle de un tercero.
 enum TerceroDetailStatus { initial, loading, loaded, error }
 
+/// Estado del detalle de un tercero.
+/// 
+/// Propiedades:
+/// - [status]: estado actual (inicial, cargando, cargado, error)
+/// - [detail]: detalle del tercero (null si no cargado)
+/// - [error]: mensaje de error (null si no hay error)
 class TerceroDetailState {
   final TerceroDetailStatus status;
   final TerceroDetailEntity? detail;

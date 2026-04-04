@@ -10,7 +10,13 @@ import '../../../app_dependencies.dart';
 import 'orden_detail_page.dart';
 import '../../data/datasources/orden_local_datasource.dart';
 
-// ── Evento de calendario vinculado a una orden ────────────────────────────────
+/// Evento de calendario vinculado a una orden de producción.
+/// 
+/// Propiedades:
+/// - [title]: Descripción del evento
+/// - [date]: Fecha del evento
+/// - [color]: Color de identificación
+/// - [orden]: Referencia a la orden (opcional)
 class _CalEvent {
   final String title;
   final DateTime date;
@@ -24,6 +30,13 @@ class _CalEvent {
   });
 }
 
+/// Página de calendario de producción.
+/// 
+/// Muestra:
+/// - Vista mensual/semanal de órdenes
+/// - Eventos vinculados a órdenes (por fecha de entrega)
+/// - Panel de próximos 3 vencimientos (navegables)
+/// - Navegación entre meses/semanas
 class CalendarioPage extends StatefulWidget {
   /// Lista de todas las órdenes para extraer las fechas.
   final List<OrdenEntity> ordenes;

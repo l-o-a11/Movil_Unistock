@@ -4,9 +4,14 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
 
-/// Tarjeta de orden con expansión/colapso.
-/// Al tocar el header se despliegan los detalles del cliente.
-/// Al tocar la tarjeta cuando expandida navega al detalle completo.
+/// Tarjeta de orden con expansión/colapso dinámico.
+/// 
+/// Características:
+/// - Al tocar el header se despliegan los detalles del cliente
+/// - Al tocar cuando expandida navega al detalle completo
+/// - Animación fluida de entrada (staggered con [animIndex])
+/// - Borde dinámico con color primario
+/// - Indicador visual de estado
 class OrdenCard extends StatelessWidget {
   final OrdenEntity orden;
   final bool isExpanded;

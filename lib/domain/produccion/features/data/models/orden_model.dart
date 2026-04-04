@@ -1,5 +1,9 @@
 import '../../domain/entities/orden_entity.dart';
 
+/// Modelo de datos para órdenes: mapeo entre JSON y [OrdenEntity].
+///
+/// Extiende [OrdenEntity] con métodos para serialización/deserialización JSON.
+/// Utilizado por [ProduccionApiService] y [OrdenLocalDataSourceImpl].
 class OrdenModel extends OrdenEntity {
   const OrdenModel({
     required super.id,
@@ -14,6 +18,13 @@ class OrdenModel extends OrdenEntity {
     super.fechaEstado,
   });
 
+  /// Crea un [OrdenModel] desde JSON.
+  ///
+  /// Parsea automáticamente:
+  /// - Enums de estado y tipo
+  /// - Fechas en formato ISO 8601
+  ///
+  /// Lanza excepción si faltan campos requeridos.
   factory OrdenModel.fromJson(Map<String, dynamic> json) {
     return OrdenModel(
       id: json['id'] as String,
@@ -33,18 +44,21 @@ class OrdenModel extends OrdenEntity {
     );
   }
 
+  /// Convierte el modelo a JSON.
+  ///
+  /// Serializa enums a sus nombres (strings) y fechas a ISO 8601.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'numero': numero,
-        'unidades': unidades,
-        'estado': estado.name,
-        'tipo': tipo.name,
-        'cliente': cliente,
-        'fechaEntrega': fechaEntrega?.toIso8601String(),
-        'refCorte': refCorte,
-        'ref': ref,
-        'fechaEstado': fechaEstado?.toIso8601String(),
-      };
+    'id': id,
+    'numero': numero,
+    'unidades': unidades,
+    'estado': estado.name,
+    'tipo': tipo.name,
+    'cliente': cliente,
+    'fechaEntrega': fechaEntrega?.toIso8601String(),
+    'refCorte': refCorte,
+    'ref': ref,
+    'fechaEstado': fechaEstado?.toIso8601String(),
+  };
 
   static OrdenEstado _parseEstado(String value) {
     switch (value) {

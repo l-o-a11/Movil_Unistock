@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
 
+/// Fila de chips de filtro por estado de orden.
+/// 
+/// Proporciona:
+/// - Botón "Todos" para limpiar filtro
+/// - Chips para cada estado: en producción, pendiente, completado
+/// - Animación al cambiar estado activo
+/// - Scroll horizontal para pequeñas pantallas
 class FilterChipsRow extends StatelessWidget {
   final OrdenEstado? filtroEstado;
   final ValueChanged<OrdenEstado?> onEstadoChanged;
@@ -35,6 +42,12 @@ class FilterChipsRow extends StatelessWidget {
   }
 }
 
+  /// Chip de filtro individual.
+  /// 
+  /// Propiedades:
+  /// - [label]: Texto del chip
+  /// - [active]: Indica si el chip está seleccionado
+  /// - [onTap]: Callback al presionar
 class _Chip extends StatelessWidget {
   final String label;
   final bool active;

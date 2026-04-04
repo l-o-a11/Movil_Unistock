@@ -1,7 +1,17 @@
 import '../../domain/entities/orden_entity.dart';
 
+/// Enum para los tabs principales del módulo Producción.
 enum ProduccionTab { produccion, terceros }
 
+/// Estado de la pantalla principal de producción.
+///
+/// Contiene:
+/// - Lista de órdenes filtradas
+/// - Estado de carga y errores
+/// - Filtros activos (estado, tipo)
+/// - Búsqueda de texto
+/// - Tab activo
+/// - IDs de tarjetas expandidas
 class ProduccionState {
   final bool isLoading;
   final String? error;
@@ -43,7 +53,9 @@ class ProduccionState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       ordenes: ordenes ?? this.ordenes,
-      filtroEstado: clearFiltroEstado ? null : (filtroEstado ?? this.filtroEstado),
+      filtroEstado: clearFiltroEstado
+          ? null
+          : (filtroEstado ?? this.filtroEstado),
       filtroTipo: clearFiltroTipo ? null : (filtroTipo ?? this.filtroTipo),
       searchQuery: searchQuery ?? this.searchQuery,
       activeTab: activeTab ?? this.activeTab,

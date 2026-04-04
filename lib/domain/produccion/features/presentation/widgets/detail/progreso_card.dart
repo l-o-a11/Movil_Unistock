@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../domain/entities/orden_detail_entity.dart';
 
+/// Tarjeta de información y progreso de una orden.
+/// 
+/// Muestra:
+/// - Número y cliente de la orden
+/// - Barra de progreso visual
+/// - Cantidad de unidades
+/// - Fechas clave (entrega, última actualización)
+/// - Órden de siguientes etapas
 class ProgresoCard extends StatelessWidget {
   final OrdenDetailEntity detail;
   const ProgresoCard({super.key, required this.detail});

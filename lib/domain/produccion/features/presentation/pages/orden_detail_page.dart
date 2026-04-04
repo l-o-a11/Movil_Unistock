@@ -15,6 +15,16 @@ import '../widgets/detail/referencias_card.dart';
 import '../widgets/detail/historial_card.dart';
 import '../widgets/detail/ficha_costos_card.dart';
 
+/// Página de detalle completo de una orden.
+/// 
+/// Muestra:
+/// - AppBar personalizado con número de orden
+/// - Tarjeta de progreso general
+/// - Flujo visual de 3 etapas
+/// - Información de asignación a terceros
+/// - Referencias (tallas/colores)
+/// - Historial de cambios de estado
+/// - Ficha técnica y costos
 class OrdenDetailPage extends StatefulWidget {
   final OrdenEntity orden;
   const OrdenDetailPage({super.key, required this.orden});

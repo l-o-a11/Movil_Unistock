@@ -1,5 +1,10 @@
+/// Estado de un proveedor en el sistema.
 enum ProveedorEstado { activo, inactivo }
 
+/// Entidad de proveedor de materiales/servicios.
+/// 
+/// Contiene datos de identificación, contacto e información web.
+/// Utilizada por el módulo Proveedores para mostrar lista de proveedores.
 class ProveedorEntity {
   final String id, nit, nombre, contacto, direccion, telefono, correo, sitioWeb;
   final ProveedorEstado estado;

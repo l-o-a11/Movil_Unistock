@@ -1,5 +1,9 @@
 import '../../domain/entities/proveedor_entity.dart';
 
+/// DataSource local (mock) con datos de 4 proveedores.
+/// 
+/// Proporciona operaciones de lectura para la lista de proveedores.
+/// Soporta filtrado por nombre, NIT y contacto.
 class ProveedorDataSource {
   static final List<ProveedorEntity> _data = [
     const ProveedorEntity(id:'1', nit:'1235', nombre:'Antonia Design',
@@ -20,6 +24,12 @@ class ProveedorDataSource {
       estado:ProveedorEstado.inactivo),
   ];
 
+  /// Obtiene lista de proveedores con búsqueda opcional.
+  /// 
+  /// Parámetro:
+  /// - [query]: Filtra por nombre, NIT o contacto (opcional)
+  /// 
+  /// Retorna lista de [ProveedorEntity] que coinciden.
   Future<List<ProveedorEntity>> getAll({String? query}) async {
     await Future.delayed(const Duration(milliseconds: 260));
     if (query == null || query.isEmpty) return _data;

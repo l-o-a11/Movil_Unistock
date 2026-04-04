@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
+/// Selector de tabs (toggle bar) entre Producciones y Terceros.
+/// 
+/// Características:
+/// - Dos opciones intercambiables
+/// - Indicador visual animado con sombra
+/// - Reutilizable para otros tabs
+/// - Estilo moderno con fondo de chip
 class ToggleTabBar extends StatelessWidget {
   final List<String> labels;
   final int activeIndex;

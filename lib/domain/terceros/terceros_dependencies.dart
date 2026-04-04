@@ -6,16 +6,23 @@ import 'features/presentation/providers/terceros_provider.dart';
 import 'features/presentation/providers/tercero_detail_provider.dart';
 
 /// Inyección de dependencias del módulo Terceros.
+///
+/// Construye la cadena de dependencias:
+/// Providers → Usecases → Repository → DataSource → Mock Data
+///
+/// Utilizado por [ProduccionApp] para inyectar proveedores.
 class TercerosDependencies {
   TercerosDependencies._();
 
   static TerceroRepositoryImpl _buildRepository() =>
       TerceroRepositoryImpl(localDataSource: TerceroLocalDataSourceImpl());
 
-  static TercerosProvider createTercerosProvider() =>
-      TercerosProvider(getTercerosUseCase: GetTercerosUseCase(_buildRepository()));
+  static TercerosProvider createTercerosProvider() => TercerosProvider(
+    getTercerosUseCase: GetTercerosUseCase(_buildRepository()),
+  );
 
   static TerceroDetailProvider createTerceroDetailProvider() =>
       TerceroDetailProvider(
-          getTerceroDetailUseCase: GetTerceroDetailUseCase(_buildRepository()));
+        getTerceroDetailUseCase: GetTerceroDetailUseCase(_buildRepository()),
+      );
 }

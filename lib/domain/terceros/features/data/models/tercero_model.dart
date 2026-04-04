@@ -1,5 +1,9 @@
 import '../../domain/entities/tercero_entity.dart';
 
+/// Modelo de datos para terceros: mapeo entre JSON y [TerceroEntity].
+/// 
+/// Extiende [TerceroEntity] con métodos para serialización JSON.
+/// Utilizado por [TercerosApiService] y [TerceroLocalDataSourceImpl].
 class TerceroModel extends TerceroEntity {
   const TerceroModel({
     required super.id,
@@ -12,6 +16,10 @@ class TerceroModel extends TerceroEntity {
     required super.estado,
   });
 
+  /// Crea un [TerceroModel] desde JSON.
+  /// 
+  /// Parsea automáticamente el enum [TerceroEstado].
+  /// Lanza excepción si faltan campos requeridos.
   factory TerceroModel.fromJson(Map<String, dynamic> json) {
     return TerceroModel(
       id: json['id'] as String,

@@ -7,8 +7,14 @@ import '../providers/terceros_provider.dart';
 import '../../../terceros_dependencies.dart';
 import '../widgets/tercero_card.dart';
 
-/// Pantalla standalone de terceros — se navega desde el menú principal.
+/// Página standalone de terceros.
+/// Se navega desde el menú principal.
 /// Crea su propio [TercerosProvider] via [TercerosDependencies].
+/// 
+/// Muestra:
+/// - Buscador de terceros
+/// - Lista de tarjetas de terceros
+/// - Modal resumen al presionar tarjeta
 class TercerosPage extends StatelessWidget {
   const TercerosPage({super.key});
 
@@ -21,6 +27,7 @@ class TercerosPage extends StatelessWidget {
   }
 }
 
+/// Body interno con controlador de búsqueda.
 class _TercerosBody extends StatefulWidget {
   const _TercerosBody();
 
