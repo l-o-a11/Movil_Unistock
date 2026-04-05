@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'bottom_nav.dart';
+import '../shared/bottom_nav.dart';
 import 'detalle_compras.dart';
 
 class ComprasPage extends StatefulWidget {
