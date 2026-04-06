@@ -40,15 +40,23 @@ class MenuPage extends StatelessWidget {
                     height: 42,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      color: Colors.white,
                       border: Border.all(
-                        color: const Color(0xFFFF4FA3),
-                        width: 1.5,
+                        color: const Color(0xFFFF8ACD),
+                        width: 2,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Icon(
-                      Icons.person_outline_rounded,
-                      color: Color(0xFFFF4FA3),
-                      size: 22,
+                      Icons.person_2_sharp,
+                      color: Color(0xFFFF4DA6),
+                      size: 20,
                     ),
                   ),
                 ],
