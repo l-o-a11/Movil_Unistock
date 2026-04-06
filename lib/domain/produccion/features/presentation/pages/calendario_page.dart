@@ -10,13 +10,6 @@ import '../../../app_dependencies.dart';
 import 'orden_detail_page.dart';
 import '../../data/datasources/orden_local_datasource.dart';
 
-/// Evento de calendario vinculado a una orden de producción.
-/// 
-/// Propiedades:
-/// - [title]: Descripción del evento
-/// - [date]: Fecha del evento
-/// - [color]: Color de identificación
-/// - [orden]: Referencia a la orden (opcional)
 class _CalEvent {
   final String title;
   final DateTime date;
@@ -30,19 +23,9 @@ class _CalEvent {
   });
 }
 
-/// Página de calendario de producción.
-/// 
-/// Muestra:
-/// - Vista mensual/semanal de órdenes
-/// - Eventos vinculados a órdenes (por fecha de entrega)
-/// - Panel de próximos 3 vencimientos (navegables)
-/// - Navegación entre meses/semanas
 class CalendarioPage extends StatefulWidget {
-  /// Lista de todas las órdenes para extraer las fechas.
   final List<OrdenEntity> ordenes;
-
   const CalendarioPage({super.key, required this.ordenes});
-
   @override
   State<CalendarioPage> createState() => _CalendarioPageState();
 }
@@ -53,6 +36,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
   late DateTime _weekStart;
   DateTime? _selected;
   final _sc = TextEditingController();
+  String _searchQuery = '';
   List<_CalEvent> _events = [];
   bool _loading = true;
 
@@ -62,7 +46,6 @@ class _CalendarioPageState extends State<CalendarioPage> {
       'Jul','Ago','Sep','Oct','Nov','Dic'];
   static const _wd = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
-  // Colores por estado
   static Color _colorForEstado(OrdenEstado e) {
     switch (e) {
       case OrdenEstado.enProduccion: return AppColors.primary;
@@ -77,12 +60,26 @@ class _CalendarioPageState extends State<CalendarioPage> {
     super.initState();
     _month = DateTime(DateTime.now().year, DateTime.now().month);
     _weekStart = _mon(DateTime.now());
+    _sc.addListener(_onSearchChanged);
     _loadOrdenes();
+  }
+
+  void _onSearchChanged() {
+    setState(() => _searchQuery = _sc.text.trim().toLowerCase());
+  }
+
+  List<_CalEvent> get _filteredEvents {
+    if (_searchQuery.isEmpty) return _events;
+    return _events.where((e) {
+      final numMatch = e.orden?.numero.toString().contains(_searchQuery) ?? false;
+      final clienteMatch = (e.orden?.cliente?.toLowerCase().contains(_searchQuery)) ?? false;
+      final refMatch = (e.orden?.ref?.toLowerCase().contains(_searchQuery)) ?? false;
+      return numMatch || clienteMatch || refMatch;
+    }).toList();
   }
 
   Future<void> _loadOrdenes() async {
     final ds = OrdenLocalDataSourceImpl();
-    // Carga TODAS las órdenes sin filtro
     final all = await ds.getOrdenes();
     final events = <_CalEvent>[];
     for (final o in all) {
@@ -95,7 +92,6 @@ class _CalendarioPageState extends State<CalendarioPage> {
         ));
       }
     }
-    // Navegar al mes del próximo vencimiento si está fuera del mes actual
     final upcoming = _upcomingThree(events);
     DateTime targetMonth = _month;
     if (upcoming.isNotEmpty) {
@@ -112,12 +108,14 @@ class _CalendarioPageState extends State<CalendarioPage> {
   }
 
   static DateTime _mon(DateTime d) => d.subtract(Duration(days: d.weekday - 1));
-  List<_CalEvent> _ev(DateTime d) => _events.where((e) =>
-      e.date.year == d.year && e.date.month == d.month && e.date.day == d.day).toList();
+
+  List<_CalEvent> _ev(DateTime d) => _filteredEvents
+      .where((e) => e.date.year == d.year && e.date.month == d.month && e.date.day == d.day)
+      .toList();
+
   bool _same(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  /// Los 3 eventos con fechaEntrega más próxima desde hoy
   List<_CalEvent> _upcomingThree(List<_CalEvent> src) {
     final today = DateTime.now();
     final future = src
@@ -144,7 +142,12 @@ class _CalendarioPageState extends State<CalendarioPage> {
     ));
   }
 
-  @override void dispose() { _sc.dispose(); super.dispose(); }
+  @override
+  void dispose() {
+    _sc.removeListener(_onSearchChanged);
+    _sc.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +155,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
       backgroundColor: AppColors.background,
       bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
       body: SafeArea(child: Column(children: [
-        // ── Header ────────────────────────────────────────────────────────
+        // Header
         Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
           child: Row(children: [
             AppBackButton(),
@@ -169,7 +172,6 @@ class _CalendarioPageState extends State<CalendarioPage> {
               child: const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.primary)),
           ])),
 
-        // ── Body ──────────────────────────────────────────────────────────
         if (_loading)
           const Expanded(child: Center(
               child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5)))
@@ -177,7 +179,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
           Expanded(child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             children: [
-              // Toggle mensual / semanal
+              // Toggle
               Row(children: [
                 Expanded(child: _Btn(label: 'Vista mensual', active: _isMensual,
                     onTap: () => setState(() => _isMensual = true))),
@@ -187,26 +189,44 @@ class _CalendarioPageState extends State<CalendarioPage> {
               ]),
               const SizedBox(height: 12),
 
-              // Buscador
+              // ── Buscador funcional ─────────────────────────────────────
               Container(
                 decoration: BoxDecoration(color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.cardBorder)),
-                child: TextField(controller: _sc,
+                child: TextField(
+                  controller: _sc,
                   style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar...',
-                    hintStyle: TextStyle(color: AppColors.textHint, fontSize: 13),
-                    prefixIcon: Icon(Icons.search_rounded, size: 17, color: AppColors.iconInactive),
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por orden, cliente o referencia...',
+                    hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 17, color: AppColors.iconInactive),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () => _sc.clear(),
+                            child: const Icon(Icons.close_rounded, size: 16, color: AppColors.iconInactive))
+                        : null,
                     border: InputBorder.none, isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 12)))),
-              const SizedBox(height: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12)))),
+              const SizedBox(height: 8),
+
+              // Resultados del buscador
+              if (_searchQuery.isNotEmpty) ...[
+                _buildSearchResults(),
+                const SizedBox(height: 12),
+              ],
 
               // Calendario
               _isMensual ? _buildMonth() : _buildWeek(),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
 
-              // Próximos vencimientos (3 más cercanos, navegables)
+              // ── Panel de procesos del día seleccionado ─────────────────
+              if (_selected != null) ...[
+                _buildSelectedDayPanel(context),
+                const SizedBox(height: 12),
+              ],
+
+              // Próximos vencimientos
               _buildVencimientos(context),
               const SizedBox(height: 24),
             ],
@@ -215,7 +235,140 @@ class _CalendarioPageState extends State<CalendarioPage> {
     );
   }
 
-  // ── Vista mensual ─────────────────────────────────────────────────────────
+  // ── Resultados de búsqueda ──────────────────────────────────────────────────
+
+  Widget _buildSearchResults() {
+    final results = _filteredEvents;
+    if (results.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.cardBorder)),
+        child: Row(children: const [
+          Icon(Icons.search_off_rounded, size: 16, color: AppColors.textHint),
+          SizedBox(width: 8),
+          Text('Sin resultados para esta búsqueda',
+              style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+        ]),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.cardBorder)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+          child: Text('${results.length} resultado(s)',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+        ),
+        ...results.map((ev) => _buildEventTile(context, ev, showDivider: results.last != ev)),
+      ]),
+    );
+  }
+
+  // ── Panel del día seleccionado ──────────────────────────────────────────────
+
+  Widget _buildSelectedDayPanel(BuildContext context) {
+    final evs = _ev(_selected!);
+    final dayLabel = '${_selected!.day} de ${_mn[_selected!.month]} ${_selected!.year}';
+
+    return _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // Encabezado
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.calendar_today_rounded, size: 14, color: Colors.white),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(dayLabel,
+                style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w700)),
+            Text(evs.isEmpty ? 'Sin procesos asignados' : '${evs.length} proceso(s) asignado(s)',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+          ])),
+          GestureDetector(
+            onTap: () => setState(() => _selected = null),
+            child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
+          ),
+        ]),
+      ),
+
+      if (evs.isEmpty)
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
+            Icon(Icons.inbox_outlined, size: 18, color: AppColors.textHint),
+            SizedBox(width: 8),
+            Text('No hay órdenes para este día',
+                style: TextStyle(color: AppColors.textHint, fontSize: 13)),
+          ]),
+        )
+      else
+        Column(children: evs
+            .map((ev) => _buildEventTile(context, ev, showDivider: evs.last != ev))
+            .toList()),
+    ]));
+  }
+
+  // ── Tile de evento reutilizable ─────────────────────────────────────────────
+
+  Widget _buildEventTile(BuildContext context, _CalEvent ev, {bool showDivider = false}) {
+    final orden = ev.orden;
+    return Column(children: [
+      InkWell(
+        onTap: orden != null ? () => _goToDetail(context, orden) : null,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(children: [
+            Container(
+              width: 4, height: 40,
+              decoration: BoxDecoration(color: ev.color, borderRadius: BorderRadius.circular(4)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(ev.title,
+                  style: TextStyle(color: ev.color, fontSize: 13, fontWeight: FontWeight.w600)),
+              if (orden?.cliente != null)
+                Text(orden!.cliente!,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+              if (orden?.ref != null)
+                Text('Ref: ${orden!.ref}',
+                    style: const TextStyle(color: AppColors.textHint, fontSize: 10)),
+            ])),
+            if (orden != null) ...[
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: ev.color.withAlpha(25), borderRadius: BorderRadius.circular(20)),
+                  child: Text(orden.estadoLabel,
+                      style: TextStyle(color: ev.color, fontSize: 10, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(height: 4),
+                Text('${orden.unidades} uds',
+                    style: const TextStyle(color: AppColors.textHint, fontSize: 10)),
+              ]),
+              const SizedBox(width: 6),
+              Icon(Icons.arrow_forward_ios_rounded, size: 11, color: ev.color.withAlpha(160)),
+            ],
+          ]),
+        ),
+      ),
+      if (showDivider)
+        Divider(height: 1, indent: 32, endIndent: 16, color: AppColors.cardBorder),
+    ]);
+  }
+
+  // ── Vista mensual ──────────────────────────────────────────────────────────
 
   Widget _buildMonth() {
     final first = DateTime(_month.year, _month.month, 1);
@@ -225,7 +378,6 @@ class _CalendarioPageState extends State<CalendarioPage> {
     final today = DateTime.now();
 
     return _Card(child: Column(children: [
-      // Navegación mes
       Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           GestureDetector(
@@ -241,16 +393,12 @@ class _CalendarioPageState extends State<CalendarioPage> {
             onTap: () => setState(() => _month = DateTime(_month.year, _month.month + 1)),
             child: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary, size: 22)),
         ])),
-
-      // Cabeceras días
       Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: ['LU','MA','MI','JU','VI','SA','DO'].map((d) => SizedBox(width: 36,
             child: Text(d, textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700)))).toList())),
       const SizedBox(height: 6),
-
-      // Días
       Padding(padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
         child: Column(children: List.generate(rows, (row) => Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -263,7 +411,9 @@ class _CalendarioPageState extends State<CalendarioPage> {
             final isW = col >= 5;
             final evs = _ev(date);
             return GestureDetector(
-              onTap: () => setState(() => _selected = date),
+              onTap: () => setState(() {
+                _selected = (isS) ? null : date;
+              }),
               child: SizedBox(width: 36, height: 44, child: Column(
                 mainAxisAlignment: MainAxisAlignment.center, children: [
                   AnimatedContainer(
@@ -292,7 +442,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
     ]));
   }
 
-  // ── Vista semanal ─────────────────────────────────────────────────────────
+  // ── Vista semanal ──────────────────────────────────────────────────────────
 
   Widget _buildWeek() {
     final today = DateTime.now();
@@ -322,7 +472,9 @@ class _CalendarioPageState extends State<CalendarioPage> {
             final isS = _selected != null && _same(date, _selected!);
             final evs = _ev(date);
             return GestureDetector(
-              onTap: () => setState(() => _selected = date),
+              onTap: () => setState(() {
+                _selected = (isS) ? null : date;
+              }),
               child: SizedBox(width: 42, child: Column(children: [
                 Text(_wd[date.weekday - 1],
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w600)),
@@ -351,10 +503,10 @@ class _CalendarioPageState extends State<CalendarioPage> {
     ]));
   }
 
-  // ── Próximos vencimientos (3 más cercanos, navegables) ────────────────────
+  // ── Próximos vencimientos ──────────────────────────────────────────────────
 
   Widget _buildVencimientos(BuildContext context) {
-    final list = _upcomingThree(_events);
+    final list = _upcomingThree(_filteredEvents);
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('Próximos vencimientos',
@@ -363,7 +515,10 @@ class _CalendarioPageState extends State<CalendarioPage> {
       if (list.isEmpty)
         Center(child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text('No hay vencimientos próximos',
+          child: Text(
+              _searchQuery.isNotEmpty
+                  ? 'Sin vencimientos para esta búsqueda'
+                  : 'No hay vencimientos próximos',
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))))
       else
         ...list.asMap().entries.map((en) {
