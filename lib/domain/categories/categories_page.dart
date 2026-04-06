@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../products/products_page.dart';
-// import 'menu.dart'; 
 
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
