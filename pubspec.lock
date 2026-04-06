@@ -224,6 +224,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.7"
+<<<<<<< HEAD
   typed_data:
     dependency: transitive
     description:
@@ -232,6 +233,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+=======
+>>>>>>> 06886f0729dfd5f6c91dd9d21c776c129c5add8e
   vector_math:
     dependency: transitive
     description:
