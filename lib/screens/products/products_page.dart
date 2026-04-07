@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../shared/widgets/global_bottom_nav.dart';
 
 class ProductsPage extends StatelessWidget {
   const ProductsPage({super.key});
@@ -46,7 +45,6 @@ class ProductsPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      bottomNavigationBar: const GlobalBottomNav(), // 👈 SOLO ESTO SE AGREGÓ
       backgroundColor: const Color(0xFFF6F6F6),
 
       body: SafeArea(
@@ -65,6 +63,7 @@ class ProductsPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Botón atrás: gradiente, sin sombra
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
@@ -79,13 +78,14 @@ class ProductsPage extends StatelessWidget {
                             ),
                           ),
                           child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 20,
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
 
+                      // Botón perfil: borde rosa + sombra
                       Container(
                         width: 42,
                         height: 42,
@@ -115,6 +115,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
+                  // TÍTULO
                   const Text(
                     "Productos",
                     style: TextStyle(
@@ -125,6 +126,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
+                  // BUSCADOR
                   Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -157,6 +159,8 @@ class ProductsPage extends StatelessWidget {
                 },
               ),
             ),
+
+            
           ],
         ),
       ),
@@ -170,6 +174,7 @@ class ProductsPage extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 13),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -182,6 +187,7 @@ class ProductsPage extends StatelessWidget {
             ),
           ],
         ),
+
         child: Row(
           children: [
 
@@ -266,7 +272,7 @@ class ProductsPage extends StatelessWidget {
     );
   }
 
-  // MODAL COMPLETO ORIGINAL
+  // MODAL CON DROPDOWN FUNCIONAL
   void _showBottomSheet(BuildContext context, Map item) {
     String? selectedValue;
 
@@ -287,6 +293,7 @@ class ProductsPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
 
+                  // HANDLE
                   Container(
                     width: 40,
                     height: 5,
@@ -298,6 +305,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  // TÍTULO
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -314,6 +322,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  // DROPDOWN
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
@@ -348,6 +357,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  // BOTÓN DESCARGAR
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -368,6 +378,7 @@ class ProductsPage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                  // CERRAR
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
