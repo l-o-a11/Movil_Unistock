@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/Login_page.dart';
+import 'domain/Login_page.dart';
+import 'domain/produccion/produccion.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,10 +11,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Unistock',
-      home: LoginPage(),
+      home: const LoginPage(),
+      routes: {'/produccion': (_) => const ProduccionApp()},
     );
   }
 }
