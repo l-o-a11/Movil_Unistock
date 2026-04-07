@@ -88,17 +88,17 @@ class _ComprasPageState extends State<ComprasPage> {
                   height: 42,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: pink.withOpacity(0.5),
-                      width: 1.5,
-                    ),
                     color: Colors.white,
+                    border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.person_outline_rounded,
-                    color: pink,
-                    size: 22,
-                  ),
+                  child: const Icon(Icons.person_2_sharp, color: Color(0xFFFF4DA6), size: 20),
                 ),
               ],
             ),
