@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../shared/widgets/global_bottom_nav.dart';
+import '../../../../../shared/widgets/app_back_button.dart';
 import '../../../app_dependencies.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
@@ -74,6 +75,8 @@ class _ProduccionPageState extends State<ProduccionPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                 child: Row(children: [
+                  AppBackButton(),
+                  const SizedBox(width: 10),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
                     Text('Orden de producción',
                         style: TextStyle(
