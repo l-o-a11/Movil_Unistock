@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:movil_unistock/domain/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:movil_unistock/domain/menu/menu_page.dart';
+import 'package:movil_unistock/domain/usuarios/presentation/usuarios_page.dart';
 import 'domain/Login_page.dart';
 import 'domain/produccion/produccion.dart';
 
@@ -16,7 +19,10 @@ class MainApp extends StatelessWidget {
       title: 'Unistock',
       home: const LoginPage(),
       routes: {
+        '/dashboard': (_) => const DashboardPage(),
+        '/menu': (_) => const MenuPage(),
         '/produccion': (_) => const ProduccionApp(),
+        '/usuarios': (_) => const UsuariosPage(),
       },
     );
   }

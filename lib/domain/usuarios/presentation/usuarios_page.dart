@@ -45,7 +45,7 @@ class _UsuariosViewState extends State<_UsuariosView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      bottomNavigationBar: const GlobalBottomNav(),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
       body: SafeArea(
         child: Consumer<UsuariosProvider>(
           builder: (context, provider, __) {
@@ -68,17 +68,27 @@ class _UsuariosViewState extends State<_UsuariosView> {
                       ),
                       const Spacer(),
                       Container(
-                        width: 36,
-                        height: 36,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
-                          color: _pink.withOpacity(0.12),
                           shape: BoxShape.circle,
-                          border: Border.all(color: _pink, width: 1.5),
+                          color: Colors.white,
+                          border: Border.all(
+                            color: const Color(0xFFFF8ACD),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: const Icon(
-                          Icons.category_rounded,
-                          size: 18,
-                          color: _pink,
+                          Icons.person_2_sharp,
+                          color: Color(0xFFFF4DA6),
+                          size: 20,
                         ),
                       ),
                     ],

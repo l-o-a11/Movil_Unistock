@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
 /// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = chart, 1 = people/proveedores, 2 = cart, 3 = work/producción
+///   0 = chart, 1 = people/usuarios, 2 = cart, 3 = work/producción
 /// Pasa -1 (o no pases nada) para ninguno activo.
 class GlobalBottomNav extends StatelessWidget {
   final int activeIndex;
@@ -27,9 +27,21 @@ class GlobalBottomNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _Btn(icon: Icons.show_chart_rounded,     color: _color(0), onTap: null),
-              _Btn(icon: Icons.people_outline_rounded, color: _color(1), onTap: null),
-              _Btn(icon: Icons.shopping_cart_outlined, color: _color(2), onTap: null),
+              _Btn(
+                icon: Icons.show_chart_rounded,
+                color: _color(0),
+                onTap: null,
+              ),
+              _Btn(
+                icon: Icons.people_outline_rounded,
+                color: _color(1),
+                onTap: () => _goToUsuarios(context),
+              ),
+              _Btn(
+                icon: Icons.shopping_cart_outlined,
+                color: _color(2),
+                onTap: null,
+              ),
               _Btn(
                 icon: Icons.work_outline_rounded,
                 color: _color(3),
@@ -42,11 +54,16 @@ class GlobalBottomNav extends StatelessWidget {
     );
   }
 
+  static void _goToUsuarios(BuildContext context) {
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/usuarios', (route) => route.isFirst);
+  }
+
   static void _goToProduccion(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/produccion',
-      (route) => route.isFirst,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/produccion', (route) => route.isFirst);
   }
 }
 
@@ -62,7 +79,8 @@ class _Btn extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 72, height: 64,
+        width: 72,
+        height: 64,
         child: Center(child: Icon(icon, size: 26, color: color)),
       ),
     );

@@ -45,7 +45,7 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
+      bottomNavigationBar: const GlobalBottomNav(),
       body: SafeArea(child: Column(children: [
         // Header
         Padding(padding: const EdgeInsets.fromLTRB(16,14,16,10),
