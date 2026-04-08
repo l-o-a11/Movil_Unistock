@@ -18,6 +18,11 @@ class CategoriesPage extends StatelessWidget {
       {"id": "CAT - 20", "title": "Enterizos", "desc": "Pieza completa que..."},
     ];
 
+    // 🔥 SOLUCIÓN: eliminar duplicados SIN dañar tu lista original
+    final uniqueCategories = {
+      for (var item in categories) item["title"]: item
+    }.values.toList();
+
     return Scaffold(
       bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: const Color(0xFFF6F6F6),
@@ -122,9 +127,9 @@ class CategoriesPage extends StatelessWidget {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: categories.length,
+                itemCount: uniqueCategories.length, // 🔥 aquí
                 itemBuilder: (context, index) {
-                  final item = categories[index];
+                  final item = uniqueCategories[index]; // 🔥 aquí
                   return card(context, item);
                 },
               ),
@@ -143,7 +148,9 @@ class CategoriesPage extends StatelessWidget {
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 350),
-            pageBuilder: (_, __, ___) => const ProductsPage(),
+            pageBuilder: (_, __, ___) => ProductsPage(
+              category: item["title"].toString(), // 🔥 aquí
+            ),
             transitionsBuilder: (_, animation, __, child) {
               return SlideTransition(
                 position: Tween(
