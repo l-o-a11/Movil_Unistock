@@ -7,6 +7,7 @@ import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
 import '../roles/roles_page.dart';
+import '../sedes/sedes_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -81,7 +82,6 @@ class MenuPage extends StatelessWidget {
                           MaterialPageRoute(builder: (_) => const RolesPage()),
                         ),
                       ),
-                      
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -196,6 +196,23 @@ class MenuPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Usuarios
+                  const _SH('Usuarios'), const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _MI(
+                        icon: Icons.location_on_outlined,
+                        label: 'Sedes',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SedesPage()),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
