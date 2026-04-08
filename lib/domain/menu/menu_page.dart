@@ -8,6 +8,7 @@ import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
 import '../roles/roles_page.dart';
 import '../sedes/sedes_page.dart';
+import '../categoriainsumo/categorias_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -111,7 +112,12 @@ class MenuPage extends StatelessWidget {
                       _MI(
                         icon: Icons.grid_view_rounded,
                         label: 'Categorías\nde insumo',
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CategoriasPage(),
+                          ),
+                        ),
                       ),
                       _MI(
                         icon: Icons.inventory_2_outlined,
