@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../categories/categories_page.dart';
 import '../compras/compras.dart';
+import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
 
@@ -40,7 +41,8 @@ class MenuPage extends StatelessWidget {
           const _SH('Compras'), const SizedBox(height: 12),
           Wrap(spacing: 16, runSpacing: 16, children: [
             _MI(icon: Icons.grid_view_rounded,       label: 'Categorías\nde insumo', onTap: () {}),
-            _MI(icon: Icons.inventory_2_outlined,    label: 'Insumo',      onTap: () {}),
+            _MI(icon: Icons.inventory_2_outlined,    label: 'Insumo',      
+             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InsumosPage()))),
             _MI(icon: Icons.local_shipping_outlined, label: 'Proveedores',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProveedoresPage()))),
             _MI(icon: Icons.shopping_cart_outlined,  label: 'Compras',
