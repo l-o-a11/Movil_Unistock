@@ -6,7 +6,6 @@ import '../../../../../../shared/widgets/app_back_button.dart';
 import '../../domain/entities/tercero_entity.dart';
 import '../../domain/entities/tercero_detail_entity.dart';
 import '../providers/tercero_detail_provider.dart';
-import '../state/tercero_detail_state.dart';
 import '../widgets/tercero_detail/tercero_info_tab.dart';
 import '../widgets/tercero_detail/tercero_producciones_tab.dart';
 

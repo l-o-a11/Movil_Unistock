@@ -38,7 +38,6 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
-  static const _border = Color(0xFFE8E8E8);
 
   @override void dispose() { _ctrl.dispose(); super.dispose(); }
 
@@ -46,7 +45,7 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
+      bottomNavigationBar: const GlobalBottomNav(),
       body: SafeArea(child: Column(children: [
         // Header
         Padding(padding: const EdgeInsets.fromLTRB(16,14,16,10),
