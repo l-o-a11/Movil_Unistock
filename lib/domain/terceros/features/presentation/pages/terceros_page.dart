@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../produccion/core/constants/app_colors.dart';
 import '../../../../produccion/features/presentation/widgets/app_search_bar.dart';
+import '../../../../../../shared/widgets/app_back_button.dart';
 import '../providers/terceros_provider.dart';
 import '../../../terceros_dependencies.dart';
 import '../widgets/tercero_card.dart';
@@ -53,20 +54,7 @@ class _TercerosBodyState extends State<_TercerosBody> {
         backgroundColor: AppColors.background,
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 18,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
+          child: AppBackButton(),
         ),
         title: Row(children: [
           Container(
