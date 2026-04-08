@@ -9,6 +9,7 @@ import '../produccion/produccion.dart';
 import '../roles/roles_page.dart';
 import '../sedes/sedes_page.dart';
 import '../categoriainsumo/categorias_page.dart';
+import '../products/products_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -179,7 +180,12 @@ class MenuPage extends StatelessWidget {
                       _MI(
                         icon: Icons.inventory_2_outlined,
                         label: 'Producto',
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProductsPage(),
+                          ),
+                        ),
                       ),
                       // Terceros → abre Producción en tab Terceros
                       _MI(
