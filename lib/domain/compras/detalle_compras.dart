@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
 
 class DetalleCompras extends StatelessWidget {
   final String compraNumber;

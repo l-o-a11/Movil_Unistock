@@ -18,6 +18,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Unistock',
       home: const LoginPage(),
+
       routes: {
         '/dashboard': (_) => const DashboardPage(),
         '/menu': (_) => const MenuPage(),

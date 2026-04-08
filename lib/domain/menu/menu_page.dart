@@ -3,8 +3,12 @@ import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../categories/categories_page.dart';
 import '../compras/compras.dart';
+import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
+import '../roles/roles_page.dart';
+import '../sedes/sedes_page.dart';
+import '../categoriainsumo/categorias_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -67,15 +71,31 @@ class MenuPage extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
+                  // Roles
+                  const _SH('Roles'), const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _MI(
+                        icon: Icons.admin_panel_settings_outlined,
+                        label: 'Roles',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RolesPage()),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+                  const SizedBox(height: 8),
                   // Usuarios
-                  const _SH('Usuarios'),
-                  const SizedBox(height: 12),
+                  const _SH('Usuarios'), const SizedBox(height: 12),
                   Row(
                     children: [
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Empleados',
-                        onTap: () => Navigator.push(
+                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => const EmpleadosPage(),
@@ -89,8 +109,7 @@ class MenuPage extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Compras
-                  const _SH('Compras'),
-                  const SizedBox(height: 12),
+                  const _SH('Compras'), const SizedBox(height: 12),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
@@ -98,12 +117,22 @@ class MenuPage extends StatelessWidget {
                       _MI(
                         icon: Icons.grid_view_rounded,
                         label: 'Categorías\nde insumo',
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CategoriasPage(),
+                          ),
+                        ),
                       ),
                       _MI(
                         icon: Icons.inventory_2_outlined,
                         label: 'Insumo',
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const InsumosPage(),
+                          ),
+                        ),
                       ),
                       _MI(
                         icon: Icons.local_shipping_outlined,
@@ -132,8 +161,7 @@ class MenuPage extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Producción — sin "Órdenes"
-                  const _SH('Producción'),
-                  const SizedBox(height: 12),
+                  const _SH('Producción'), const SizedBox(height: 12),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
@@ -153,16 +181,19 @@ class MenuPage extends StatelessWidget {
                         label: 'Producto',
                         onTap: () {},
                       ),
+                      // Terceros → abre Producción en tab Terceros
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Terceros',
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ProduccionApp(openTerceros: true),
+                            builder: (_) =>
+                                const ProduccionApp(openTerceros: true),
                           ),
                         ),
                       ),
+                      // Producción → abre Producción en tab Producciones
                       _MI(
                         icon: Icons.work_outline_rounded,
                         label: 'Producción',
@@ -176,6 +207,23 @@ class MenuPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Usuarios
+                  const _SH('Usuarios'), const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _MI(
+                        icon: Icons.location_on_outlined,
+                        label: 'Sedes',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SedesPage()),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
