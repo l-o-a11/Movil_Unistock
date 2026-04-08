@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
-//import '../screens/shared/global_bottom_nav.dart';
+import '../../shared/widgets/global_bottom_nav.dart';
 import 'detalle_compras.dart';
 
 class ComprasPage extends StatefulWidget {
@@ -11,7 +10,6 @@ class ComprasPage extends StatefulWidget {
 }
 
 class _ComprasPageState extends State<ComprasPage> {
-  int _currentNavIndex = 2;
 
   final List<Map<String, dynamic>> _compras = [
     {
@@ -88,17 +86,17 @@ class _ComprasPageState extends State<ComprasPage> {
                   height: 42,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: pink.withOpacity(0.5),
-                      width: 1.5,
-                    ),
                     color: Colors.white,
+                    border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.person_outline_rounded,
-                    color: pink,
-                    size: 22,
-                  ),
+                  child: const Icon(Icons.person_2_sharp, color: Color(0xFFFF4DA6), size: 20),
                 ),
               ],
             ),
@@ -204,7 +202,6 @@ class _CompraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFE91E8C);
     final statusColor = isActive
         ? const Color(0xFF4CAF50)
         : const Color(0xFF9E9E9E);

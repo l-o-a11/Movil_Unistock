@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'menu/menu_page.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -132,10 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Login button
                     _GradientButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MenuPage()),
-                        );
+                        Navigator.pushReplacementNamed(context, '/dashboard');
                       },
                       label: 'Iniciar sesión',
                     ),

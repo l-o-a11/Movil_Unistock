@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../produccion/core/constants/app_colors.dart';
 import '../providers/terceros_provider.dart';
-import '../state/terceros_state.dart';
 import 'tercero_card.dart';
 
 /// Lista de terceros sin Scaffold — diseñada para embeberse dentro

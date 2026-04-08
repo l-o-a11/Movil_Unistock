@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../shared/widgets/global_bottom_nav.dart';
-import '../../../../../shared/widgets/app_back_button.dart';
 import '../../../app_dependencies.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../domain/entities/orden_entity.dart';
@@ -107,13 +106,14 @@ class _ProduccionPageState extends State<ProduccionPage> {
                             color: AppColors.primary, size: 18)),
                     ),
                   Container(
-                    width: 36, height: 36,
+                    width: 42, height: 42,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 1.5),
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                      boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
                     ),
-                    child: const Icon(Icons.person_outline_rounded, size: 20, color: AppColors.primary)),
+                    child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6))),
                 ])),
               const SizedBox(height: 14),
 

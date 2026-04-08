@@ -166,10 +166,14 @@ class _CalendarioPageState extends State<CalendarioPage> {
               Text('Gestión de eventos y fechas',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
             ])),
-            Container(width: 36, height: 36,
-              decoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 1.5)),
-              child: const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.primary)),
+            Container(width: 42, height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
+              ),
+              child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6))),
           ])),
 
         if (_loading)

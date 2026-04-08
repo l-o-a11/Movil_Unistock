@@ -38,7 +38,6 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
-  static const _border = Color(0xFFE8E8E8);
 
   @override void dispose() { _ctrl.dispose(); super.dispose(); }
 
@@ -46,7 +45,7 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
+      bottomNavigationBar: const GlobalBottomNav(),
       body: SafeArea(child: Column(children: [
         // Header
         Padding(padding: const EdgeInsets.fromLTRB(16,14,16,10),
@@ -55,9 +54,14 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
             const SizedBox(width:14),
             const Text('Proveedores', style:TextStyle(color:_text, fontSize:20, fontWeight:FontWeight.w800, letterSpacing:-0.4)),
             const Spacer(),
-            Container(width:34, height:34,
-              decoration:BoxDecoration(color:_pink.withOpacity(0.12), shape:BoxShape.circle, border:Border.all(color:_pink, width:1.5)),
-              child:const Icon(Icons.person_outline_rounded, size:18, color:_pink)),
+            Container(width:42, height:42,
+              decoration:BoxDecoration(
+                shape:BoxShape.circle,
+                color: Colors.white,
+                border:Border.all(color:const Color(0xFFFF8ACD), width:2),
+                boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
+              ),
+              child:const Icon(Icons.person_2_sharp, size:20, color:Color(0xFFFF4DA6))),
           ])),
         // Search
         Padding(padding:const EdgeInsets.symmetric(horizontal:16),

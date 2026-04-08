@@ -5,7 +5,6 @@ import 'app_dependencies.dart';
 import 'app_shell.dart';
 import 'core/theme/app_theme.dart';
 import 'features/presentation/providers/produccion_provider.dart';
-import 'features/presentation/state/produccion_state.dart';
 import '../terceros/features/presentation/providers/terceros_provider.dart';
 import '../terceros/terceros_dependencies.dart';
 

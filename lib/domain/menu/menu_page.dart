@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../categories/categories_page.dart';
 import '../compras/compras.dart';
@@ -95,7 +95,12 @@ class MenuPage extends StatelessWidget {
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Empleados',
-                        onTap: () {},
+                         onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EmpleadosPage(),
+                          ),
+                        ),
                       ),
                     ],
                   ),

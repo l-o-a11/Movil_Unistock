@@ -32,17 +32,14 @@ class DetalleCompras extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: const Color(0xFFF2F2F7),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE5E5EA), width: 0.8),
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 18,
+                color: Color(0xFF1C1C1E),
+                size: 16,
               ),
             ),
           ),
@@ -57,15 +54,24 @@ class DetalleCompras extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: pink.withOpacity(0.4), width: 1.5),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.person_outline_rounded, color: pink),
-              onPressed: () {},
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.person_2_sharp, color: Color(0xFFFF4DA6), size: 20),
             ),
           ),
         ],
