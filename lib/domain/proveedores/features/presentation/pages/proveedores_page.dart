@@ -38,7 +38,6 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
-  static const _border = Color(0xFFE8E8E8);
 
   @override void dispose() { _ctrl.dispose(); super.dispose(); }
 

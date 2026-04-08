@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
-import 'bottom_nav.dart';
 import 'detalle_compras.dart';
 
 class ComprasPage extends StatefulWidget {
@@ -11,7 +10,6 @@ class ComprasPage extends StatefulWidget {
 }
 
 class _ComprasPageState extends State<ComprasPage> {
-  int _currentNavIndex = 2;
 
   final List<Map<String, dynamic>> _compras = [
     {
@@ -204,7 +202,6 @@ class _CompraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const pink = Color(0xFFE91E8C);
     final statusColor = isActive
         ? const Color(0xFF4CAF50)
         : const Color(0xFF9E9E9E);

@@ -1,84 +1,72 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
+import '../../../shared/widgets/app_back_button.dart';
+import 'providers/empleados_provider.dart';
+import '../domain/empleados_entity.dart';
 
-class EmpleadosPage extends StatefulWidget {
+const Color _pink = Color(0xFFFF4FA3);
+const Color _bg = Color(0xFFF5F5F7);
+const Color _text = Color(0xFF1C1C1E);
+const Color _grey = Color(0xFF8E8E93);
+const Color _border = Color(0xFFE8E8E8);
+const Color _green = Color(0xFF00C853);
+
+class EmpleadosPage extends StatelessWidget {
   const EmpleadosPage({super.key});
 
   @override
-  State<EmpleadosPage> createState() => _EmpleadosPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => EmpleadosProvider(),
+      child: const _EmpleadosView(),
+    );
+  }
 }
 
-class _EmpleadosPageState extends State<EmpleadosPage> {
+class _EmpleadosView extends StatefulWidget {
+  const _EmpleadosView();
+
+  @override
+  State<_EmpleadosView> createState() => _EmpleadosViewState();
+}
+
+class _EmpleadosViewState extends State<_EmpleadosView> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, String>> empleados = [
-    {
-      "doc": "DOC: 1883127436",
-      "name": "Sofia Osorio",
-      "email": "sofiaosorio@gmail.com",
-      "estado": "ACTIVO",
-      "cargo": "Vendedor",
-      "sede": "Parque la 93",
-    },
-    {
-      "doc": "DOC: 1123783628",
-      "name": "Mia Flores Martinez",
-      "email": "miaflorez@gmail.com",
-      "estado": "ACTIVO",
-      "cargo": "Gerente",
-      "sede": "Centro",
-    },
-    {
-      "doc": "DOC: 1566432376",
-      "name": "Antonio Sanchez",
-      "email": "asanchez@gmail.com",
-      "estado": "ACTIVO",
-      "cargo": "Asistente",
-      "sede": "Parque la 93",
-    },
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _bg,
       bottomNavigationBar: const GlobalBottomNav(),
-      backgroundColor: const Color(0xFFF6F6F6),
       body: SafeArea(
-        child: Column(
-          children: [
-            // HEADER
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // BOTONES SUPERIORES
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Consumer<EmpleadosProvider>(
+          builder: (context, provider, __) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  child: Row(
                     children: [
-                      // Botón atrás
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                      const AppBackButton(),
+                      const SizedBox(width: 14),
+                      const Text(
+                        'Empleados',
+                        style: TextStyle(
+                          color: _text,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
                         ),
                       ),
-                      // Botón perfil
+                      const Spacer(),
                       Container(
                         width: 42,
                         height: 42,
@@ -105,82 +93,208 @@ class _EmpleadosPageState extends State<EmpleadosPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  // TÍTULO CON ICONO
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _bg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _border),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: provider.search,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar empleado...',
+                        hintStyle: const TextStyle(
+                          color: Color(0xFFAEAEB2),
+                          fontSize: 13,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          size: 18,
+                          color: Color(0xFFAEAEB2),
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  provider.search('');
+                                },
+                                icon: const Icon(
+                                  Icons.clear_rounded,
+                                  size: 18,
+                                  color: Color(0xFFAEAEB2),
+                                ),
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: provider.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: _pink,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : provider.error != null
+                      ? Center(
+                          child: Text(
+                            provider.error!,
+                            style: const TextStyle(color: _grey),
+                          ),
+                        )
+                      : provider.items.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No se encontraron empleados',
+                            style: TextStyle(color: _grey, fontSize: 14),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                          itemCount: provider.items.length,
+                          itemBuilder: (context, index) {
+                            final empleado = provider.items[index];
+                            return _buildEmpleadoCard(context, empleado);
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpleadoCard(BuildContext context, EmpleadoEntity empleado) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
+        boxShadow: [
+          BoxShadow(
+            color: _pink.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    empleado.doc,
+                    style: const TextStyle(
+                      color: _grey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    empleado.nombre,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: _green,
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.supervised_user_circle,
-                          color: Colors.white,
-                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Empleados",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFFF4DA6),
+                      const SizedBox(width: 6),
+                      Text(
+                        empleado.estado,
+                        style: const TextStyle(
+                          color: _green,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // SUBTÍTULO
-                  const Text(
-                    "Empleados",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
+                  Row(
+                    children: const [
+                      Icon(Icons.email_outlined, size: 13, color: _grey),
+                      SizedBox(width: 6),
+                      Text(
+                        'CORREO',
+                        style: TextStyle(
+                          color: _grey,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    empleado.email,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // BUSCADOR
-                  Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF6F6F6),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFFFF8ACD),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: "Buscar empleado...",
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                      ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '${empleado.cargo} · ${empleado.sede}',
+                    style: const TextStyle(
+                      color: _grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            // LISTA DE EMPLEADOS
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: empleados.length,
-                itemBuilder: (context, index) {
-                  final empleado = empleados[index];
-                  return _buildEmpleadoCard(context, empleado);
-                },
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () => _showEmpleadoDetail(context, empleado),
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _pink.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _pink.withOpacity(0.4)),
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: _pink,
+                ),
               ),
             ),
           ],
@@ -189,285 +303,245 @@ class _EmpleadosPageState extends State<EmpleadosPage> {
     );
   }
 
-  Widget _buildEmpleadoCard(BuildContext context, Map<String, String> empleado) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF8ACD),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Documento y nombre
-          Row(
-            children: [
-              Text(
-                empleado["doc"]!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            empleado["name"]!,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Estado
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF00C853),
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                "ACTIVO",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF00C853),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Email
-          Row(
-            children: [
-              const Icon(
-                Icons.email,
-                size: 14,
-                color: Color(0xFFFF4DA6),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                "CORREO",
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            empleado["email"]!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Botón ver detalle
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4DA6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                _showEmpleadoDetail(context, empleado);
-              },
-              child: const Text(
-                "Ver detalle completo",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ],
+  void _showEmpleadoDetail(BuildContext context, EmpleadoEntity empleado) {
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      barrierDismissible: true,
+      barrierLabel: 'close',
+      transitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (ctx, animation, __) =>
+          _EmpleadoDetail(empleado: empleado, animation: animation),
+      transitionBuilder: (_, animation, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
       ),
     );
   }
+}
 
-  void _showEmpleadoDetail(BuildContext context, Map<String, String> empleado) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(20),
-            ),
+class _EmpleadoDetail extends StatelessWidget {
+  final EmpleadoEntity empleado;
+  final Animation<double> animation;
+
+  const _EmpleadoDetail({required this.empleado, required this.animation});
+
+  @override
+  Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(color: Colors.black.withOpacity(0.35)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Encabezado con icono y título
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                constraints: BoxConstraints(maxHeight: sh * 0.78),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF4FA3).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.category_rounded,
+                              color: Color(0xFFFF4FA3),
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Empleado',
+                            style: TextStyle(
+                              color: _text,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F0F0),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: Color(0xFF555555),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF0F0F0)),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundColor: const Color(0xFFFF4FA3),
+                                child: const Icon(
+                                  Icons.category_rounded,
+                                  size: 32,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: Text(
+                                empleado.nombre,
+                                style: const TextStyle(
+                                  color: _text,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Center(
+                              child: Text(
+                                empleado.doc,
+                                style: const TextStyle(
+                                  color: _grey,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            _DetailRow(label: 'Estado', value: empleado.estado),
+                            _DetailRow(
+                              label: 'Correo Electrónico',
+                              value: empleado.email,
+                            ),
+                            _DetailRow(label: 'Cargo', value: empleado.cargo),
+                            _DetailRow(label: 'Sede', value: empleado.sede),
+                            _DetailRow(
+                              label: 'Documento',
+                              value: empleado.doc.replaceAll('DOC: ', ''),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF4FA3), Color(0xFFFF6EC7)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text(
+                            'Cerrar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 20,
-                        ),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Empleados",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFFF4DA6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.grey,
-                      size: 24,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Contenido del detalle
-              Center(
-                child: CircleAvatar(
-                  radius: 40,
-                  backgroundColor: const Color(0xFFFF4DA6),
-                  child: const Icon(
-                    Icons.person,
-                    size: 32,
-                    color: Colors.white,
-                  ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  empleado["name"]!,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Center(
-                child: Text(
-                  empleado["doc"]!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Detalles
-              _buildDetailRow("Estado", empleado["estado"]!),
-              _buildDetailRow("Correo Electrónico", empleado["email"]!),
-              _buildDetailRow("Cargo", empleado["cargo"]!),
-              _buildDetailRow("Sede", empleado["sede"]!),
-              _buildDetailRow("Documento", empleado["doc"]!.replaceAll("DOC: ", "")),
-              const SizedBox(height: 20),
-              // Botón cerrar
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4DA6),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Cerrar",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildDetailRow(String label, String value) {
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
+              color: _grey,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: const TextStyle(
+              color: _text,
               fontSize: 14,
-              color: Colors.black,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

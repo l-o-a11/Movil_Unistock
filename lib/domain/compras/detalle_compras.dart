@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'bottom_nav.dart';
 
 class DetalleCompras extends StatelessWidget {
   final String compraNumber;

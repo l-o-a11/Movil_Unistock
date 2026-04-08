@@ -1,186 +1,290 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
+import '../../../shared/widgets/app_back_button.dart';
+import 'providers/usuarios_provider.dart';
+import '../domain/usuarios_entity.dart';
 
-class UsuariosPage extends StatefulWidget {
+const Color _pink = Color(0xFFFF4FA3);
+const Color _bg = Color(0xFFF5F5F7);
+const Color _text = Color(0xFF1C1C1E);
+const Color _grey = Color(0xFF8E8E93);
+const Color _border = Color(0xFFE8E8E8);
+const Color _green = Color(0xFF00C853);
+
+class UsuariosPage extends StatelessWidget {
   const UsuariosPage({super.key});
 
   @override
-  State<UsuariosPage> createState() => _UsuariosPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => UsuariosProvider(),
+      child: const _UsuariosView(),
+    );
+  }
 }
 
-class _UsuariosPageState extends State<UsuariosPage> {
+class _UsuariosView extends StatefulWidget {
+  const _UsuariosView();
+
+  @override
+  State<_UsuariosView> createState() => _UsuariosViewState();
+}
+
+class _UsuariosViewState extends State<_UsuariosView> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, String>> usuarios = [
-    {
-      "doc": "DOC: 1883127436",
-      "name": "Sofia Osorio",
-      "email": "sofiaosorio@gmail.com",
-      "estado": "ACTIVO",
-      "rol": "Empleado",
-      "sede": "Parque la 93",
-    },
-    {
-      "doc": "DOC: 1123783628",
-      "name": "Mia Flores Martinez",
-      "email": "miaflorez@gmail.com",
-      "estado": "ACTIVO",
-      "rol": "Empleado",
-      "sede": "Centro",
-    },
-    {
-      "doc": "DOC: 1566432376",
-      "name": "Antonio Sanchez",
-      "email": "asanchez@gmail.com",
-      "estado": "ACTIVO",
-      "rol": "Administrador",
-      "sede": "Parque la 93",
-    },
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _bg,
       bottomNavigationBar: const GlobalBottomNav(),
-      backgroundColor: const Color(0xFFF6F6F6),
       body: SafeArea(
-        child: Column(
-          children: [
-            // HEADER
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // BOTONES SUPERIORES
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Consumer<UsuariosProvider>(
+          builder: (context, provider, __) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                  child: Row(
                     children: [
-                      // Botón atrás
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      // Botón perfil
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(
-                            color: const Color(0xFFFF8ACD),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_2_sharp,
-                          color: Color(0xFFFF4DA6),
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  // TÍTULO CON ICONO
-                  Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.people,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                      const AppBackButton(),
+                      const SizedBox(width: 14),
                       const Text(
-                        "Usuarios",
+                        'Usuarios',
                         style: TextStyle(
+                          color: _text,
                           fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFFF4DA6),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: _pink.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _pink, width: 1.5),
+                        ),
+                        child: const Icon(
+                          Icons.category_rounded,
+                          size: 18,
+                          color: _pink,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  // SUBTÍTULO
-                  const Text(
-                    "Usuarios",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // BUSCADOR
-                  Container(
-                    height: 50,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF6F6F6),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFFFF8ACD),
-                        width: 1.5,
-                      ),
+                      color: _bg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _border),
                     ),
                     child: TextField(
                       controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: "Buscar usuario...",
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      onChanged: provider.search,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar usuario...',
+                        hintStyle: const TextStyle(
+                          color: Color(0xFFAEAEB2),
+                          fontSize: 13,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          size: 18,
+                          color: Color(0xFFAEAEB2),
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  provider.search('');
+                                },
+                                icon: const Icon(
+                                  Icons.clear_rounded,
+                                  size: 18,
+                                  color: Color(0xFFAEAEB2),
+                                ),
+                              )
+                            : null,
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: provider.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: _pink,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : provider.error != null
+                      ? Center(
+                          child: Text(
+                            provider.error!,
+                            style: const TextStyle(color: _grey),
+                          ),
+                        )
+                      : provider.items.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No se encontraron usuarios',
+                            style: TextStyle(color: _grey, fontSize: 14),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                          itemCount: provider.items.length,
+                          itemBuilder: (context, index) {
+                            final usuario = provider.items[index];
+                            return _buildUsuarioCard(context, usuario);
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsuarioCard(BuildContext context, UsuarioEntity usuario) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
+        boxShadow: [
+          BoxShadow(
+            color: _pink.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    usuario.doc,
+                    style: const TextStyle(
+                      color: _grey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    usuario.nombre,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: _green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        usuario.estado,
+                        style: const TextStyle(
+                          color: _green,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: const [
+                      Icon(Icons.email_outlined, size: 13, color: _grey),
+                      SizedBox(width: 6),
+                      Text(
+                        'CORREO',
+                        style: TextStyle(
+                          color: _grey,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    usuario.email,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '${usuario.rol} · ${usuario.sede}',
+                    style: const TextStyle(
+                      color: _grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            // LISTA DE USUARIOS
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: usuarios.length,
-                itemBuilder: (context, index) {
-                  final usuario = usuarios[index];
-                  return _buildUsuarioCard(context, usuario);
-                },
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () => _showUsuarioDetail(context, usuario),
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _pink.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _pink.withOpacity(0.4)),
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: _pink,
+                ),
               ),
             ),
           ],
@@ -189,285 +293,245 @@ class _UsuariosPageState extends State<UsuariosPage> {
     );
   }
 
-  Widget _buildUsuarioCard(BuildContext context, Map<String, String> usuario) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFFF8ACD),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Documento y nombre
-          Row(
-            children: [
-              Text(
-                usuario["doc"]!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            usuario["name"]!,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Estado
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF00C853),
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                "ACTIVO",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF00C853),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Email
-          Row(
-            children: [
-              const Icon(
-                Icons.email,
-                size: 14,
-                color: Color(0xFFFF4DA6),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                "CORREO",
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            usuario["email"]!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Botón ver detalle
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4DA6),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                _showUsuarioDetail(context, usuario);
-              },
-              child: const Text(
-                "Ver detalle completo",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ],
+  void _showUsuarioDetail(BuildContext context, UsuarioEntity usuario) {
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      barrierDismissible: true,
+      barrierLabel: 'close',
+      transitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (ctx, animation, __) =>
+          _UsuarioDetail(usuario: usuario, animation: animation),
+      transitionBuilder: (_, animation, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
       ),
     );
   }
+}
 
-  void _showUsuarioDetail(BuildContext context, Map<String, String> usuario) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(20),
-            ),
+class _UsuarioDetail extends StatelessWidget {
+  final UsuarioEntity usuario;
+  final Animation<double> animation;
+
+  const _UsuarioDetail({required this.usuario, required this.animation});
+
+  @override
+  Widget build(BuildContext context) {
+    final sh = MediaQuery.of(context).size.height;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(color: Colors.black.withOpacity(0.35)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Encabezado con icono y título
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                constraints: BoxConstraints(maxHeight: sh * 0.78),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF4FA3).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.category_rounded,
+                              color: Color(0xFFFF4FA3),
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Usuario',
+                            style: TextStyle(
+                              color: _text,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F0F0),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: Color(0xFF555555),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF0F0F0)),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundColor: const Color(0xFFFF4FA3),
+                                child: const Icon(
+                                  Icons.category_rounded,
+                                  size: 32,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: Text(
+                                usuario.nombre,
+                                style: const TextStyle(
+                                  color: _text,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Center(
+                              child: Text(
+                                usuario.doc,
+                                style: const TextStyle(
+                                  color: _grey,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            _DetailRow(label: 'Estado', value: usuario.estado),
+                            _DetailRow(
+                              label: 'Correo Electrónico',
+                              value: usuario.email,
+                            ),
+                            _DetailRow(label: 'Rol', value: usuario.rol),
+                            _DetailRow(label: 'Sede', value: usuario.sede),
+                            _DetailRow(
+                              label: 'Documento',
+                              value: usuario.doc.replaceAll('DOC: ', ''),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF4FA3), Color(0xFFFF6EC7)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text(
+                            'Cerrar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 20,
-                        ),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Usuarios",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFFF4DA6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.grey,
-                      size: 24,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Contenido del detalle
-              Center(
-                child: CircleAvatar(
-                  radius: 40,
-                  backgroundColor: const Color(0xFFFF4DA6),
-                  child: const Icon(
-                    Icons.person,
-                    size: 32,
-                    color: Colors.white,
-                  ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  usuario["name"]!,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Center(
-                child: Text(
-                  usuario["doc"]!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Detalles
-              _buildDetailRow("Estado", usuario["estado"]!),
-              _buildDetailRow("Correo Electrónico", usuario["email"]!),
-              _buildDetailRow("Rol", usuario["rol"]!),
-              _buildDetailRow("Sede", usuario["sede"]!),
-              _buildDetailRow("Documento", usuario["doc"]!.replaceAll("DOC: ", "")),
-              const SizedBox(height: 20),
-              // Botón cerrar
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4DA6),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Cerrar",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildDetailRow(String label, String value) {
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
+              color: _grey,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: const TextStyle(
+              color: _text,
               fontSize: 14,
-              color: Colors.black,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }
