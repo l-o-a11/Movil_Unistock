@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../products/products_page.dart';
+// import 'menu.dart'; 
 
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
@@ -39,20 +40,17 @@ class CategoriesPage extends StatelessWidget {
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFF4DA6), Color(0xFFFF8ACD)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF2F2F7),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFE5E5EA), width: 0.8),
                           ),
                           child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 20,
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Color(0xFF1C1C1E),
+                            size: 16,
                           ),
                         ),
                       ),

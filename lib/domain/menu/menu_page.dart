@@ -68,7 +68,8 @@ class MenuPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   // Usuarios
-                  const _SH('Usuarios'), const SizedBox(height: 12),
+                  const _SH('Usuarios'),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       _MI(
@@ -88,7 +89,8 @@ class MenuPage extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Compras
-                  const _SH('Compras'), const SizedBox(height: 12),
+                  const _SH('Compras'),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
@@ -130,7 +132,8 @@ class MenuPage extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Producción — sin "Órdenes"
-                  const _SH('Producción'), const SizedBox(height: 12),
+                  const _SH('Producción'),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 16,
                     runSpacing: 16,
@@ -150,19 +153,16 @@ class MenuPage extends StatelessWidget {
                         label: 'Producto',
                         onTap: () {},
                       ),
-                      // Terceros → abre Producción en tab Terceros
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Terceros',
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                const ProduccionApp(openTerceros: true),
+                            builder: (_) => const ProduccionApp(openTerceros: true),
                           ),
                         ),
                       ),
-                      // Producción → abre Producción en tab Producciones
                       _MI(
                         icon: Icons.work_outline_rounded,
                         label: 'Producción',
