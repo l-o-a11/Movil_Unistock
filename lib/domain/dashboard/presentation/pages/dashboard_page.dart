@@ -1,518 +1,343 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import '../../../../shared/widgets/global_bottom_nav.dart';
-import '../../data/dashboard_data_source.dart';
-import '../../domain/dashboard_metric_entity.dart';
-import '../../domain/dashboard_chart_point_entity.dart';
-import '../providers/dashboard_provider.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/dashboard_card.dart';
+import '../../widgets/process_item.dart';
+import '../../widgets/progress_section.dart';
+import '../../widgets/summary_card.dart';
 
-// ─── Design tokens ────────────────────────────────────────────────
-const _pink = Color(0xFFFF4FA3);
-const _pinkLight = Color(0xFFFFF0F7);
-const _green = Color(0xFF1ECB6F);
-const _greenLight = Color(0xFFEBFBF3);
-const _purple = Color(0xFF7C4DFF);
-const _purpleLight = Color(0xFFF2EEFF);
-const _amber = Color(0xFFFFAB00);
-const _amberLight = Color(0xFFFFF8E7);
-const _bg = Color(0xFFF4F5FA);
-const _card = Colors.white;
-const _ink = Color(0xFF1A1A2E);
-const _muted = Color(0xFFAAABB8);
-const _gridLine = Color(0xFFEEEFF5);
-
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+/// Página principal del dashboard administrativo.
+// ═══════════════════════════════════════════════════════════════════
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
-  @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (_) => DashboardProvider(dataSource: DashboardDataSource()),
-    child: const _DashboardView(),
-  );
-}
+  // ── Top metric cards ──────────────────────────────────────────
+  static const _cards = [
+    _CardData(
+      icon: Icons.bolt_rounded,
+      iconColor: AppTheme.purple,
+      iconBg: AppTheme.purpleLight,
+      title: 'ACTUALES',
+      value: '10',
+      subtitle: 'prod.',
+    ),
+    _CardData(
+      icon: Icons.check_rounded,
+      iconColor: AppTheme.green,
+      iconBg: AppTheme.greenLight,
+      title: 'COMPLETADAS',
+      value: '08',
+      subtitle: 'este mes',
+    ),
+    _CardData(
+      icon: Icons.schedule_rounded,
+      iconColor: AppTheme.pink,
+      iconBg: AppTheme.pinkLight,
+      title: 'POR INICIAR',
+      value: '02',
+      subtitle: 'pendientes',
+    ),
+    _CardData(
+      icon: Icons.access_time_rounded,
+      iconColor: AppTheme.purple,
+      iconBg: AppTheme.purpleLight,
+      title: 'PROMEDIO',
+      value: '4',
+      subtitle: 'días',
+    ),
+  ];
 
-// ═════════════════════════════════════════════════════════════════════════════
-class _DashboardView extends StatelessWidget {
-  const _DashboardView();
+  // ── Process rows (solo morado y verde, alternando) ────────────
+  static const _processes = [
+    _ProcessData('En espera', 50, AppTheme.purple),
+    _ProcessData('Tráfico entre sedes', 25, AppTheme.green),
+    _ProcessData('Ficha técnica', 15, AppTheme.purple),
+    _ProcessData('Corte', 5, AppTheme.green),
+    _ProcessData('Diseño', 13, AppTheme.purple),
+    _ProcessData('En producción', 10, AppTheme.green),
+    _ProcessData('Bodega', 20, AppTheme.purple),
+    _ProcessData('Mercadeo', 8, AppTheme.green),
+    _ProcessData('Cancelado', 3, AppTheme.purple),
+    _ProcessData('Compras', 10, AppTheme.green),
+    _ProcessData('Recepción', 2, AppTheme.purple),
+  ];
+
+  static const int _processMax = 50;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppTheme.bgColor,
       bottomNavigationBar: const GlobalBottomNav(activeIndex: 0),
       body: SafeArea(
-        child: Consumer<DashboardProvider>(
-          builder: (_, prov, __) => Column(
-            children: [
-              // ── Header ──────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    _HeaderIcon(
-                      icon: Icons.show_chart_rounded,
-                      color: _pink,
-                      bg: _pinkLight,
+        child: Column(
+          children: [
+            const _TopBar(),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SectionLabel('Resumen operativo'),
+                    const SizedBox(height: 12),
+
+                    // ── 2×2 Metric grid ───────────────────────
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.15,
+                      children: _cards
+                          .map(
+                            (c) => DashboardCard(
+                              icon: c.icon,
+                              iconColor: c.iconColor,
+                              iconBg: c.iconBg,
+                              title: c.title,
+                              value: c.value,
+                              subtitle: c.subtitle,
+                            ),
+                          )
+                          .toList(),
                     ),
-                    _HeaderIcon(
-                      icon: Icons.person_outline_rounded,
-                      color: _pink,
-                      bg: _pinkLight,
+
+                    const SizedBox(height: 28),
+                    const _SectionLabel('Procesos en Curso'),
+                    const SizedBox(height: 12),
+
+                    // ── Processes card ────────────────────────
+                    _ProcessesCard(
+                      processes: _processes,
+                      maxValue: _processMax,
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // ── Summary + Insumos ─────────────────────
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: SummaryCard()),
+                        SizedBox(width: 12),
+                        Expanded(child: ProgressSection()),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    const _AccessButton(),
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              // ── Scroll area ─────────────────────────────────────
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _ActionTilesCard(),
-                      const SizedBox(height: 24),
-                      _ChartCard(provider: prov),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+// ─── Top bar ──────────────────────────────────────────────────────
+class _TopBar extends StatelessWidget {
+  const _TopBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dashboard',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.titleColor,
+                  letterSpacing: -0.8,
                 ),
               ),
-
-              // ── Botón Acceder ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
-                child: SizedBox(
-                  height: 56,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _pink,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/menu'),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Acceder',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ],
-                    ),
-                  ),
+              SizedBox(height: 2),
+              Text(
+                'Panel administrativo',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.mutedColor,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],
           ),
-        ),
+          Row(
+            children: [
+              const SizedBox(width: 8),
+              const _ProfileIconBtn(),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─── Header icon ──────────────────────────────────────────────────
-class _HeaderIcon extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final Color bg;
-  const _HeaderIcon({
-    required this.icon,
-    required this.color,
-    required this.bg,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 46,
-    height: 46,
-    decoration: BoxDecoration(
-      color: bg,
-      borderRadius: BorderRadius.circular(15),
-    ),
-    child: Icon(icon, color: color, size: 22),
-  );
-}
-
-// ─── Quick-action tiles ───────────────────────────────────────────
-class _ActionTilesCard extends StatelessWidget {
-  const _ActionTilesCard();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: _card,
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x08000000),
-          blurRadius: 24,
-          offset: Offset(0, 10),
-        ),
-      ],
-    ),
-    child: const _QuickActions(),
-  );
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  static const _tiles = [
-    (Icons.trending_up_rounded, 'Producción', _purple, _purpleLight),
-    (Icons.insights_rounded, 'Resumen', _pink, _pinkLight),
-    (Icons.inventory_2_outlined, 'Insumos', _green, _greenLight),
-    (Icons.article_outlined, 'Reportes', _amber, _amberLight),
-  ];
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: _tiles
-        .map(
-          (t) => Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: _ActionTile(
-                icon: t.$1,
-                label: t.$2,
-                color: t.$3,
-                bg: t.$4,
-              ),
-            ),
-          ),
-        )
-        .toList(),
-  );
-}
-
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color bg;
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.bg,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
-    decoration: BoxDecoration(
-      color: _card,
-      borderRadius: BorderRadius.circular(22),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x08000000),
-          blurRadius: 20,
-          offset: Offset(0, 6),
-        ),
-      ],
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: _ink,
-            height: 1.1,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-// ─── Metrics row ──────────────────────────────────────────────────
-
-// ─── Chart card ───────────────────────────────────────────────────
-class _ChartCard extends StatelessWidget {
-  final DashboardProvider provider;
-  const _ChartCard({required this.provider});
+class _ProfileIconBtn extends StatelessWidget {
+  const _ProfileIconBtn();
 
   @override
   Widget build(BuildContext context) {
-    if (provider.isLoading) {
-      return const SizedBox(
-        height: 300,
-        child: Center(child: CircularProgressIndicator(color: _pink)),
-      );
-    }
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 30,
-            offset: Offset(0, 8),
+            color: const Color(0xFFFF4DA6).withOpacity(0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: const Icon(
+        Icons.person_2_sharp,
+        color: Color(0xFFFF4DA6),
+        size: 20,
+      ),
+    );
+  }
+}
+
+// ─── Section label ────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.titleColor,
+        letterSpacing: -0.3,
+      ),
+    );
+  }
+}
+
+// ─── Processes card container ─────────────────────────────────────
+class _ProcessesCard extends StatelessWidget {
+  final List<_ProcessData> processes;
+  final int maxValue;
+  const _ProcessesCard({required this.processes, required this.maxValue});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Estado general de los procesos de producción',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: _ink,
-              height: 1.3,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 22),
-          _BarChart(points: provider.chartPoints),
-        ],
+        children: processes
+            .map(
+              (p) => ProcessItem(
+                label: p.label,
+                value: p.value,
+                maxValue: maxValue,
+                barColor: p.color,
+              ),
+            )
+            .toList(),
       ),
     );
   }
 }
 
-// ─── Bar chart ────────────────────────────────────────────────────
-class _BarChart extends StatefulWidget {
-  final List<DashboardChartPointEntity> points;
-  const _BarChart({required this.points});
-
-  @override
-  State<_BarChart> createState() => _BarChartState();
-}
-
-class _BarChartState extends State<_BarChart>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    );
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
-    _ctrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+// ─── CTA button ───────────────────────────────────────────────────
+class _AccessButton extends StatelessWidget {
+  const _AccessButton();
 
   @override
   Widget build(BuildContext context) {
-    if (widget.points.isEmpty) return const SizedBox.shrink();
-
-    final maxRaw = widget.points
-        .map((p) => p.value)
-        .reduce(math.max)
-        .toDouble();
-
-    // Techo del eje Y: múltiplo de 12 por encima del máximo
-    const int yDivisions = 4;
-    final double step = ((maxRaw / yDivisions) / 12.0).ceilToDouble() * 12.0;
-    final double yMax = step * yDivisions;
-
-    const double chartH = 170.0;
-    const double labelH = 64.0;
-    const double yAxisW = 28.0;
-
-    return SizedBox(
-      height: chartH + labelH,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Eje Y ──
-          SizedBox(
-            width: yAxisW,
-            height: chartH,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(yDivisions + 1, (i) {
-                final val = (yMax - i * step).toInt();
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Text(
-                    '$val',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: _muted,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          // ── Área de barras ──
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _anim,
-              builder: (_, __) => CustomPaint(
-                painter: _GridLinesPainter(steps: yDivisions, chartH: chartH),
-                child: SizedBox(
-                  height: chartH + labelH,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-children: widget.points.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final p = entry.value;
-                        final ratio = yMax > 0 ? p.value / yMax : 0.0;
-                        final barH = math.max(ratio * chartH * _anim.value, 3.0);
-                        final barColor = index == 0 ? _pink : _green;
-
-                      return Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Barra
-                            SizedBox(
-                              height: chartH,
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  width: 12,
-                                  height: barH,
-                                  decoration: BoxDecoration(
-                                    color: barColor,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(6),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: labelH - 8,
-                              child: Text(
-                                p.label,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 9,
-                                  color: _muted,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.pink.withOpacity(0.45),
+            blurRadius: 20,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
           ),
         ],
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.pink,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: () => Navigator.of(context).pushNamed('/menu'),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Acceder al sistema',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ─── Pintor de líneas de guía ─────────────────────────────────────
-class _GridLinesPainter extends CustomPainter {
-  final int steps;
-  final double chartH;
-  const _GridLinesPainter({required this.steps, required this.chartH});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = _gridLine
-      ..strokeWidth = 0.8;
-    for (int i = 0; i <= steps; i++) {
-      final y = (i / steps) * chartH;
-      const double dashWidth = 6.0;
-      const double dashSpace = 4.0;
-      var startX = 0.0;
-      while (startX < size.width) {
-        final endX = (startX + dashWidth).clamp(0.0, size.width);
-        canvas.drawLine(Offset(startX, y), Offset(endX, y), paint);
-        startX += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GridLinesPainter old) =>
-      old.steps != steps || old.chartH != chartH;
+// ─── Local data models (private to this file) ─────────────────────
+class _CardData {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String title;
+  final String value;
+  final String subtitle;
+  const _CardData({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.value,
+    required this.subtitle,
+  });
 }
 
-// ─── Legend dot ───────────────────────────────────────────────────
-class _LegendDot extends StatelessWidget {
-  final Color color;
+class _ProcessData {
   final String label;
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 5),
-      Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          color: _muted,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    ],
-  );
+  final int value;
+  final Color color;
+  const _ProcessData(this.label, this.value, this.color);
 }

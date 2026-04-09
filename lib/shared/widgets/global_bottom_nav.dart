@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
 /// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = chart, 1 = people/usuarios, 2 = cart, 3 = work/producción
+///   0 = dashboard, 1 = people/usuarios, 2 = cart, 3 = work/producción
 /// Pasa -1 (o no pases nada) para ninguno activo.
 class GlobalBottomNav extends StatelessWidget {
   final int activeIndex;
@@ -30,7 +30,7 @@ class GlobalBottomNav extends StatelessWidget {
               _Btn(
                 icon: Icons.show_chart_rounded,
                 color: _color(0),
-                onTap: null,
+                onTap: () => _goToDashboard(context),
               ),
               _Btn(
                 icon: Icons.people_outline_rounded,
@@ -52,6 +52,12 @@ class GlobalBottomNav extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static void _goToDashboard(BuildContext context) {
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/dashboard', (route) => route.isFirst);
   }
 
   static void _goToUsuarios(BuildContext context) {
