@@ -67,9 +67,23 @@ class SedeCard extends StatelessWidget {
                     children: [
                       _Chip(label: sede.telefono, color: _pink),
                       const SizedBox(width: 6),
-                      _Chip(
-                        label: sede.estadoLabel,
-                        color: sede.isActivo ? _green : _red,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: sede.isActivo ? _green : _red,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            sede.isActivo ? 'ACTIVO' : 'INACTIVO',
+                            style: TextStyle(
+                              color: sede.isActivo ? _green : _red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

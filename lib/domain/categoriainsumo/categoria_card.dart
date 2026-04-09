@@ -58,9 +58,23 @@ class CategoriaCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      _Chip(
-                        label: categoria.estadoLabel,
-                        color: categoria.isActivo ? _green : _red,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: categoria.isActivo ? _green : _red,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            categoria.isActivo ? 'ACTIVO' : 'INACTIVO',
+                            style: TextStyle(
+                              color: categoria.isActivo ? _green : _red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
