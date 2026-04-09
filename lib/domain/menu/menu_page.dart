@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../categories/categories_page.dart';
-import '../compras/compras.dart';
+import '../compras/compras_page.dart';
 import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
