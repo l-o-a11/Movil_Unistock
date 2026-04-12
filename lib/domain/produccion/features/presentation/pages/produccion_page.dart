@@ -77,9 +77,10 @@ class _ProduccionPageState extends State<ProduccionPage> {
                 child: Row(children: [
                   AppBackButton(),
                   const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-                    Text('Orden de producción',
-                        style: TextStyle(
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(
+                        isProduccion ? 'Orden de producción' : 'Terceros',
+                        style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
