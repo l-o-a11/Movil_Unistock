@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../theme/app_theme.dart';
 
 class DashboardCard extends StatelessWidget {
@@ -22,8 +21,11 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppTheme.scale(context);
+    final pad = AppTheme.sp(context, 14);
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
@@ -37,48 +39,54 @@ class DashboardCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 36 * s,
+                height: 36 * s,
                 decoration: BoxDecoration(
                   color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                child: Icon(icon, color: iconColor, size: 18 * s),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: iconColor,
-                    letterSpacing: 0.8,
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.sp(context, 6),
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: AppTheme.fs(context, 8),
+                      fontWeight: FontWeight.w700,
+                      color: iconColor,
+                      letterSpacing: 0.6,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppTheme.sp(context, 8)),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 32,
+            style: TextStyle(
+              fontSize: AppTheme.fs(context, 28),
               fontWeight: FontWeight.w800,
               color: AppTheme.titleColor,
               height: 1.0,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 3),
           Text(
             subtitle,
-            style: const TextStyle(
-              fontSize: 12,
+            style: TextStyle(
+              fontSize: AppTheme.fs(context, 11),
               color: AppTheme.mutedColor,
               fontWeight: FontWeight.w500,
             ),

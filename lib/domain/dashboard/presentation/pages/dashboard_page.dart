@@ -12,7 +12,6 @@ import '../../widgets/summary_card.dart';
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
-  // ── Top metric cards ──────────────────────────────────────────
   static const _cards = [
     _CardData(
       icon: Icons.bolt_rounded,
@@ -48,25 +47,32 @@ class DashboardPage extends StatelessWidget {
     ),
   ];
 
-  // ── Process rows (solo morado y verde, alternando) ────────────
   static const _processes = [
-    _ProcessData('En espera', 50, AppTheme.purple),
+    _ProcessData('En espera',           50, AppTheme.purple),
     _ProcessData('Tráfico entre sedes', 25, AppTheme.green),
-    _ProcessData('Ficha técnica', 15, AppTheme.purple),
-    _ProcessData('Corte', 5, AppTheme.green),
-    _ProcessData('Diseño', 13, AppTheme.purple),
-    _ProcessData('En producción', 10, AppTheme.green),
-    _ProcessData('Bodega', 20, AppTheme.purple),
-    _ProcessData('Mercadeo', 8, AppTheme.green),
-    _ProcessData('Cancelado', 3, AppTheme.purple),
-    _ProcessData('Compras', 10, AppTheme.green),
-    _ProcessData('Recepción', 2, AppTheme.purple),
+    _ProcessData('Ficha técnica',       15, AppTheme.purple),
+    _ProcessData('Corte',                5, AppTheme.green),
+    _ProcessData('Diseño',              13, AppTheme.purple),
+    _ProcessData('En producción',       10, AppTheme.green),
+    _ProcessData('Bodega',              20, AppTheme.purple),
+    _ProcessData('Mercadeo',             8, AppTheme.green),
+    _ProcessData('Cancelado',            3, AppTheme.purple),
+    _ProcessData('Compras',             10, AppTheme.green),
+    _ProcessData('Recepción',            2, AppTheme.purple),
   ];
 
   static const int _processMax = 50;
 
   @override
   Widget build(BuildContext context) {
+    final hPad = AppTheme.sp(context, 16);
+    final s    = AppTheme.scale(context);
+
+    // Pixel 4 width ≈ 360 dp → childAspectRatio needs to be a bit taller
+    // S20 Ultra  width ≈ 412 dp → original 1.15 looks great
+    // We interpolate: smaller screen → smaller ratio (taller card).
+    final cardRatio = 0.95 + 0.20 * (s - 0.78) / 0.22; // 0.95 … 1.15
+
     return Scaffold(
       backgroundColor: AppTheme.bgColor,
       bottomNavigationBar: const GlobalBottomNav(activeIndex: 0),
@@ -77,58 +83,58 @@ class DashboardPage extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _SectionLabel('Resumen operativo'),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppTheme.sp(context, 10)),
 
-                    // ── 2×2 Metric grid ───────────────────────
+                    // ── 2×2 Metric grid ───────────────────────────
                     GridView.count(
                       crossAxisCount: 2,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.15,
+                      crossAxisSpacing: AppTheme.sp(context, 10),
+                      mainAxisSpacing: AppTheme.sp(context, 10),
+                      childAspectRatio: cardRatio,
                       children: _cards
-                          .map(
-                            (c) => DashboardCard(
-                              icon: c.icon,
-                              iconColor: c.iconColor,
-                              iconBg: c.iconBg,
-                              title: c.title,
-                              value: c.value,
-                              subtitle: c.subtitle,
-                            ),
-                          )
+                          .map((c) => DashboardCard(
+                                icon: c.icon,
+                                iconColor: c.iconColor,
+                                iconBg: c.iconBg,
+                                title: c.title,
+                                value: c.value,
+                                subtitle: c.subtitle,
+                              ))
                           .toList(),
                     ),
 
-                    const SizedBox(height: 28),
+                    SizedBox(height: AppTheme.sp(context, 24)),
                     const _SectionLabel('Procesos en Curso'),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppTheme.sp(context, 10)),
 
-                    // ── Processes card ────────────────────────
+                    // ── Processes card ────────────────────────────
                     _ProcessesCard(
                       processes: _processes,
                       maxValue: _processMax,
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppTheme.sp(context, 14)),
 
-                    // ── Summary + Insumos ─────────────────────
-                    const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: SummaryCard()),
-                        SizedBox(width: 12),
-                        Expanded(child: ProgressSection()),
-                      ],
+                    // ── Summary + Insumos ─────────────────────────
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Expanded(child: SummaryCard()),
+                          SizedBox(width: AppTheme.sp(context, 10)),
+                          const Expanded(child: ProgressSection()),
+                        ],
+                      ),
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppTheme.sp(context, 20)),
                     const _AccessButton(),
                   ],
                 ),
@@ -148,39 +154,39 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.sp(context, 20),
+        AppTheme.sp(context, 14),
+        AppTheme.sp(context, 20),
+        8,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Dashboard',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: AppTheme.fs(context, 22),
                   fontWeight: FontWeight.w800,
                   color: AppTheme.titleColor,
                   letterSpacing: -0.8,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 'Panel administrativo',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: AppTheme.fs(context, 12),
                   color: AppTheme.mutedColor,
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ],
           ),
-          Row(
-            children: [
-              const SizedBox(width: 8),
-              const _ProfileIconBtn(),
-            ],
-          ),
+          const _ProfileIconBtn(),
         ],
       ),
     );
@@ -192,9 +198,10 @@ class _ProfileIconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = AppTheme.sp(context, 40);
     return Container(
-      width: 42,
-      height: 42,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -207,10 +214,10 @@ class _ProfileIconBtn extends StatelessWidget {
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.person_2_sharp,
-        color: Color(0xFFFF4DA6),
-        size: 20,
+        color: const Color(0xFFFF4DA6),
+        size: AppTheme.sp(context, 18),
       ),
     );
   }
@@ -225,8 +232,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 16,
+      style: TextStyle(
+        fontSize: AppTheme.fs(context, 15),
         fontWeight: FontWeight.w700,
         color: AppTheme.titleColor,
         letterSpacing: -0.3,
@@ -244,7 +251,10 @@ class _ProcessesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppTheme.sp(context, 16),
+        vertical: AppTheme.sp(context, 14),
+      ),
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
@@ -252,14 +262,12 @@ class _ProcessesCard extends StatelessWidget {
       ),
       child: Column(
         children: processes
-            .map(
-              (p) => ProcessItem(
-                label: p.label,
-                value: p.value,
-                maxValue: maxValue,
-                barColor: p.color,
-              ),
-            )
+            .map((p) => ProcessItem(
+                  label: p.label,
+                  value: p.value,
+                  maxValue: maxValue,
+                  barColor: p.color,
+                ))
             .toList(),
       ),
     );
@@ -274,7 +282,7 @@ class _AccessButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: AppTheme.sp(context, 52),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -296,20 +304,21 @@ class _AccessButton extends StatelessWidget {
           ),
         ),
         onPressed: () => Navigator.of(context).pushNamed('/menu'),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               'Acceder al sistema',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: AppTheme.fs(context, 15),
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
                 letterSpacing: 0.2,
               ),
             ),
-            SizedBox(width: 8),
-            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Icon(Icons.arrow_forward_rounded, color: Colors.white,
+                size: AppTheme.sp(context, 18)),
           ],
         ),
       ),
@@ -317,7 +326,7 @@ class _AccessButton extends StatelessWidget {
   }
 }
 
-// ─── Local data models (private to this file) ─────────────────────
+// ─── Local data models ────────────────────────────────────────────
 class _CardData {
   final IconData icon;
   final Color iconColor;
