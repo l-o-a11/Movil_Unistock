@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../theme/app_theme.dart';
 
 class ProcessItem extends StatelessWidget {
@@ -18,10 +17,11 @@ class ProcessItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double progress = maxValue > 0 ? (value / maxValue).clamp(0.0, 1.0) : 0.0;
+    final double progress =
+        maxValue > 0 ? (value / maxValue).clamp(0.0, 1.0) : 0.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
+      padding: EdgeInsets.symmetric(vertical: AppTheme.sp(context, 6)),
       child: Column(
         children: [
           Row(
@@ -30,31 +30,31 @@ class ProcessItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: AppTheme.fs(context, 12),
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
                 value.toString().padLeft(2, '0'),
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: AppTheme.fs(context, 12),
                   fontWeight: FontWeight.w700,
                   color: barColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6,
+              minHeight: 5,
               backgroundColor: barColor.withOpacity(0.12),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
