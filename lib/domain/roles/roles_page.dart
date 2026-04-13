@@ -90,18 +90,25 @@ class _RolesPageState extends State<RolesPage> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  width: 34,
-                  height: 34,
+                 Container(
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: _pink.withOpacity(0.12),
                     shape: BoxShape.circle,
-                    border: Border.all(color: _pink, width: 1.5),
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: const Icon(
-                    Icons.person_outline_rounded,
-                    size: 18,
-                    color: _pink,
+                    Icons.person_2_sharp,
+                    color: Color(0xFFFF4DA6),
+                    size: 20,
                   ),
                 ),
               ],

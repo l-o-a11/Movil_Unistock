@@ -12,9 +12,12 @@ class CategoriaService {
 
   // ─── Datos de ejemplo ─────────────────────────────────────────────────────
   static final List<Map<String, dynamic>> _mockData = [
-    {'id': 1, 'nombre': 'General', 'estado': true},
-    {'id': 2, 'nombre': 'Electrónica', 'estado': true},
-    {'id': 3, 'nombre': 'Limpieza', 'estado': false},
+    {'id': 1, 'nombre': 'Hilos', 'estado': true},
+    {'id': 2, 'nombre': 'Botones', 'estado': true},
+    {'id': 3, 'nombre': 'Telas', 'estado': false},
+    {'id': 4, 'nombre': 'Cierres', 'estado': false},
+    {'id': 5, 'nombre': 'Elásticos', 'estado': true},
+
   ];
 
   // ─── Métodos públicos ─────────────────────────────────────────────────────

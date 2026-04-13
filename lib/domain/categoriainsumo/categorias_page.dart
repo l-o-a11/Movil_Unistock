@@ -3,7 +3,6 @@ import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/app_back_button.dart';
 import 'categoria.dart';
 import 'categoria_card.dart';
-import 'categoria_detail.dart';
 import 'categoria_service.dart';
 
 class CategoriasPage extends StatefulWidget {
@@ -90,17 +89,27 @@ class _CategoriasPageState extends State<CategoriasPage> {
                 ),
                 const Spacer(),
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: _pink.withOpacity(0.12),
                     shape: BoxShape.circle,
-                    border: Border.all(color: _pink, width: 1.5),
+                    color: Colors.white,
+                    border: Border.all(
+                      color: const Color(0xFFFF8ACD),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: const Icon(
-                    Icons.person_outline_rounded,
-                    size: 18,
-                    color: _pink,
+                    Icons.person_2_sharp,
+                    color: Color(0xFFFF4DA6),
+                    size: 20,
                   ),
                 ),
               ],
@@ -193,11 +202,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final categoria = _filtrados[index];
-                              return CategoriaCard(
-                                categoria: categoria,
-                                onDetailTap: () =>
-                                    showCategoriaDetail(context, categoria),
-                              );
+                              return CategoriaCard(categoria: categoria);
                             },
                           ),
                   ),
