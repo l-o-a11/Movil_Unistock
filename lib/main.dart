@@ -4,6 +4,7 @@ import 'package:movil_unistock/domain/menu/menu_page.dart';
 import 'package:movil_unistock/domain/usuarios/presentation/usuarios_page.dart';
 import 'domain/Login_page.dart';
 import 'domain/produccion/produccion.dart';
+import 'domain/compras/compras_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -24,6 +25,7 @@ class MainApp extends StatelessWidget {
         '/menu': (_) => const MenuPage(),
         '/produccion': (_) => const ProduccionApp(),
         '/usuarios': (_) => const UsuariosPage(),
+        '/compras': (_) => const ComprasPage(),
       },
     );
   }

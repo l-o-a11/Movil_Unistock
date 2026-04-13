@@ -22,7 +22,14 @@ class SedeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: const Color(0xFFFFD6E7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withOpacity(0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(14),
         child: Row(
