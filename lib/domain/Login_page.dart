@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
+import 'package:movil_unistock/domain/dashboard/presentation/pages/dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,6 +14,8 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void initState() {
@@ -29,6 +33,21 @@ class _LoginPageState extends State<LoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() { _isLoading = true; _error = null; });
+    final auth = AuthService();
+    final success = await auth.login(
+      username: _emailController.text,
+      password: _passwordController.text,
+    );
+    setState(() { _isLoading = false; });
+    if (success && mounted) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      setState(() { _error = 'Credenciales incorrectas'; });
+    }
   }
 
   @override
@@ -129,14 +148,16 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Login button
-                    _GradientButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
-                      },
-                      label: 'Iniciar sesión',
-                    ),
-                    const SizedBox(height: 14),
+// Login button
+                     _GradientButton(
+                       onPressed: _isLoading ? null : _handleLogin,
+                       label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
+                     ),
+                     if (_error != null) ...[
+                       const SizedBox(height: 12),
+                       Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
+                     ],
+                     const SizedBox(height: 14),
 
                     // Forgot password
                     Center(

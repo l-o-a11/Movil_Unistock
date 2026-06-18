@@ -1,18 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/orden_entity.dart';
 import '../../domain/usecases/get_ordenes_usecase.dart';
 import '../state/produccion_state.dart';
 
-/// Proveedor de estado para la lista de órdenes.
-///
-/// Gestiona:
-/// - Carga de órdenes desde [GetOrdenesUseCase]
-/// - Filtros por estado y tipo
-/// - Búsqueda de texto
-/// - Alternancia de tabs (Producciones/Terceros)
-/// - Expansión de tarjetas individuales
-///
-/// Emite estado a través de [ProduccionState].
 class ProduccionProvider extends ChangeNotifier {
   final GetOrdenesUseCase getOrdenesUseCase;
 
@@ -28,16 +17,13 @@ class ProduccionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga la lista de órdenes con filtros actuales.
-  /// Dispara emisor de emisiones de estado durante la carga.
+  /// Carga TODAS las órdenes sin filtrar (igual que el web).
+  /// El filtrado se hace localmente en [ProduccionState.ordenesFiltradas].
   Future<void> loadOrdenes() async {
     _emit(_state.copyWith(isLoading: true));
     try {
+      // Sin pasar estado ni tipo: traer todo y filtrar en cliente
       final ordenes = await getOrdenesUseCase(
-        estado: _state.filtroEstado,
-        tipo: _state.activeTab == ProduccionTab.terceros
-            ? OrdenTipo.terceros
-            : OrdenTipo.produccion,
         query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
       );
       _emit(_state.copyWith(isLoading: false, ordenes: ordenes));
@@ -46,35 +32,36 @@ class ProduccionProvider extends ChangeNotifier {
     }
   }
 
-  /// Actualiza el filtro por estado y recarga las órdenes.
-  /// Si [estado] es null, limpia el filtro.
-  void setFiltroEstado(OrdenEstado? estado) {
-    if (estado == null) {
-      _emit(_state.copyWith(clearFiltroEstado: true));
-    } else {
-      _emit(_state.copyWith(filtroEstado: estado));
-    }
-    loadOrdenes();
+  /// Filtrar por estado (String exacto del backend)
+  void setFiltroEstado(String? estado) {
+    _emit(_state.copyWith(
+      filtroEstado: estado,
+      clearFiltroEstado: estado == null,
+    ));
+    // No rellamamos API — el filtro es local
+    notifyListeners();
   }
 
-  /// Actualiza la consulta de búsqueda y recarga las órdenes.
   void setSearch(String q) {
     _emit(_state.copyWith(searchQuery: q));
     loadOrdenes();
   }
 
-  /// Cambia el tab activo (Producciones o Terceros) y recarga.
   void changeTab(ProduccionTab tab) {
     _emit(_state.copyWith(activeTab: tab, expandedIds: {}));
-    loadOrdenes();
+    notifyListeners();
   }
 
-  /// Alterna la expansión de una tarjeta de orden.
-  /// Sólo una tarjeta se puede expandir a la vez.
   void toggleExpanded(String id) {
-    // Solo una tarjeta abierta a la vez
     final isOpen = _state.expandedIds.contains(id);
     final newSet = isOpen ? <String>{} : <String>{id};
     _emit(_state.copyWith(expandedIds: newSet));
+  }
+
+  /// Estados únicos disponibles para los chips de filtro
+  List<String> get estadosDisponibles {
+    final all = _state.ordenes.map((o) => o.estado).toSet().toList();
+    all.sort();
+    return all;
   }
 }

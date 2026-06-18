@@ -1,17 +1,19 @@
-enum OrdenEstado { enProduccion, pendiente, completado, cancelado }
-
-enum OrdenTipo { produccion, terceros }
+// Estados reales del backend: "Diseño","Ficha Técnica","Corte","Compras",
+// "Producción","En producción","Empaque","Enviado","Anulada", etc.
+// HIDDEN por defecto: "Anulada" y "Enviado" (igual que HIDDEN_STATUSES del web)
 
 class OrdenEntity {
   final String id;
   final int numero;
   final int unidades;
-  final OrdenEstado estado;
-  final OrdenTipo tipo;
+  final String estado;   // String exacto del backend — nunca enum
+  final String tipo;     // "produccion" | "terceros"
   final String? cliente;
   final DateTime? fechaEntrega;
   final String? refCorte;
   final String? ref;
+  final String? producto;
+  final String? color;
   final DateTime? fechaEstado;
 
   const OrdenEntity({
@@ -24,22 +26,14 @@ class OrdenEntity {
     this.fechaEntrega,
     this.refCorte,
     this.ref,
+    this.producto,
+    this.color,
     this.fechaEstado,
   });
 
-  String get estadoLabel {
-    switch (estado) {
-      case OrdenEstado.enProduccion:
-        return 'En producción';
-      case OrdenEstado.pendiente:
-        return 'Pendiente';
-      case OrdenEstado.completado:
-        return 'Completado';
-      case OrdenEstado.cancelado:
-        return 'Cancelado';
-    }
-  }
-
-  bool get isEnProduccion => estado == OrdenEstado.enProduccion;
-  bool get isPendiente => estado == OrdenEstado.pendiente;
+  // Helpers (reemplazan al enum y estadoLabel)
+  bool get isHidden       => estado == 'Anulada' || estado == 'Enviado';
+  bool get isEnProduccion => estado == 'Producción' || estado == 'En producción';
+  bool get isTerceros     => tipo == 'terceros';
+  String get estadoLabel  => estado; // ya es el string correcto del backend
 }

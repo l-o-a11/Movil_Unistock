@@ -15,8 +15,8 @@ class OrdenRepositoryImpl implements OrdenRepository {
 
   @override
   Future<List<OrdenEntity>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   }) async {
     return localDataSource.getOrdenes(estado: estado, tipo: tipo, query: query);

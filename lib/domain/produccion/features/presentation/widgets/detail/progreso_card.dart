@@ -46,7 +46,7 @@ class ProgresoCard extends StatelessWidget {
                 Text(detail.cliente ?? '—',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               ]),
-              _EstadoChip(estado: detail.estadoLabel,
+              _EstadoChip(estado: detail.estado,
                   isActive: detail.isEnProduccion),
             ],
           ),

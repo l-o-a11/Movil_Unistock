@@ -17,30 +17,21 @@ import '../../../../../domain/terceros/features/presentation/widgets/terceros_em
 import 'orden_detail_page.dart';
 import 'calendario_page.dart';
 
-/// Página principal del módulo Producción.
-/// 
-/// Muestra:
-/// - Buscador de órdenes
-/// - Selector de tabs (Producciones / Terceros)
-/// - Filtros por estado
-/// - Lista de órdenes expandibles
-/// - Botón flotante de calendario
 class ProduccionPage extends StatefulWidget {
   const ProduccionPage({super.key});
-  @override State<ProduccionPage> createState() => _ProduccionPageState();
+  @override
+  State<ProduccionPage> createState() => _ProduccionPageState();
 }
 
 class _ProduccionPageState extends State<ProduccionPage> {
   final _searchCtrl = TextEditingController();
 
   @override
-  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
-  /// Navega al detalle de una orden con animación slide.
-  /// 
-  /// Parámetros:
-  /// - [context]: Contexto de navegación
-  /// - [orden]: Orden a mostrar en detalle
   void _goToDetail(BuildContext context, OrdenEntity orden) {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (_, animation, __) => ChangeNotifierProvider<OrdenDetailProvider>(
@@ -77,26 +68,28 @@ class _ProduccionPageState extends State<ProduccionPage> {
                 child: Row(children: [
                   AppBackButton(),
                   const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(
-                        isProduccion ? 'Orden de producción' : 'Terceros',
-                        style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4)),
-                  ])),
+                  Expanded(child: Text(
+                    isProduccion ? 'Orden de producción' : 'Terceros',
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4),
+                  )),
+                  // Botón calendario — CalendarioPage ya lee el provider
                   if (isProduccion)
                     GestureDetector(
                       onTap: () => Navigator.of(context).push(PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => CalendarioPage(ordenes: state.ordenes),
-                        transitionsBuilder: (_, animation, __, child) => SlideTransition(
-                          position: animation.drive(
-                            Tween(begin: const Offset(1, 0), end: Offset.zero)
-                                .chain(CurveTween(curve: Curves.easeOutCubic)),
-                          ),
-                          child: child,
-                        ),
+                        // Sin parámetros: CalendarioPage lee de ProduccionProvider
+                        pageBuilder: (_, __, ___) => const CalendarioPage(),
+                        transitionsBuilder: (_, animation, __, child) =>
+                            SlideTransition(
+                              position: animation.drive(
+                                Tween(begin: const Offset(1, 0), end: Offset.zero)
+                                    .chain(CurveTween(curve: Curves.easeOutCubic)),
+                              ),
+                              child: child,
+                            ),
                         transitionDuration: const Duration(milliseconds: 320),
                       )),
                       child: Container(
@@ -107,7 +100,8 @@ class _ProduccionPageState extends State<ProduccionPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.calendar_month_rounded,
-                            color: AppColors.primary, size: 18)),
+                            color: AppColors.primary, size: 18),
+                      ),
                     ),
                   Container(
                     width: 42, height: 42,
@@ -115,9 +109,13 @@ class _ProduccionPageState extends State<ProduccionPage> {
                       shape: BoxShape.circle,
                       color: Colors.white,
                       border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-                      boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(
+                          color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                          blurRadius: 14, offset: const Offset(0, 4))],
                     ),
-                    child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6))),
+                    child: const Icon(Icons.person_2_sharp,
+                        size: 20, color: Color(0xFFFF4DA6)),
+                  ),
                 ])),
               const SizedBox(height: 14),
 
@@ -144,10 +142,13 @@ class _ProduccionPageState extends State<ProduccionPage> {
               ),
               const SizedBox(height: 12),
 
-              // ── Filtros (solo en Producciones) ────────────────────────
+              // ── Filtros por estado (strings reales del backend) ───────
               if (isProduccion) ...[
                 FilterChipsRow(
                   filtroEstado: state.filtroEstado,
+                  // estadosDisponibles viene del provider con los estados
+                  // reales cargados desde la API
+                  estadosDisponibles: provider.estadosDisponibles,
                   onEstadoChanged: provider.setFiltroEstado,
                 ),
                 const SizedBox(height: 10),
@@ -191,11 +192,14 @@ class _OrdenList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (state.isLoading) {
       return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5));
+          child: CircularProgressIndicator(
+              color: AppColors.primary, strokeWidth: 2.5));
     }
     if (state.hasError) {
-      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.error_outline_rounded, color: AppColors.primary, size: 48),
+      return Center(child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, children: [
+        const Icon(Icons.error_outline_rounded,
+            color: AppColors.primary, size: 48),
         const SizedBox(height: 12),
         Text(state.error!,
             style: const TextStyle(color: AppColors.textSecondary),
@@ -206,13 +210,21 @@ class _OrdenList extends StatelessWidget {
           style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-          child: const Text('Reintentar')),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10))),
+          child: const Text('Reintentar'),
+        ),
       ]));
     }
-    if (state.ordenes.isEmpty) {
-      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.inbox_rounded, size: 52, color: AppColors.textHint.withAlpha(120)),
+
+    // Usar ordenesFiltradas (aplica HIDDEN_STATUSES y filtroEstado)
+    final ordenes = state.ordenesFiltradas;
+
+    if (ordenes.isEmpty) {
+      return Center(child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Icons.inbox_rounded,
+            size: 52, color: AppColors.textHint.withAlpha(120)),
         const SizedBox(height: 12),
         const Text('No hay órdenes',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
@@ -221,9 +233,9 @@ class _OrdenList extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      itemCount: state.ordenes.length,
+      itemCount: ordenes.length,
       itemBuilder: (_, i) {
-        final orden = state.ordenes[i];
+        final orden = ordenes[i];
         return OrdenCard(
           orden: orden,
           isExpanded: state.isExpanded(orden.id),
