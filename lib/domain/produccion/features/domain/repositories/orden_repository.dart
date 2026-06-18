@@ -13,8 +13,8 @@ abstract class OrdenRepository {
   ///
   /// Retorna lista de [OrdenEntity] que coinciden con los filtros.
   Future<List<OrdenEntity>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   });
 

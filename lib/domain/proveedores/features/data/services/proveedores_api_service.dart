@@ -8,36 +8,37 @@ import '../datasources/proveedor_datasource.dart';
 /// Intenta consumir el backend REST; si no está disponible, cae en el
 /// datasource local (mock) para mantener la app funcional en desarrollo.
 class ProveedoresApiService {
+  // ── URL real de la API ─────────────────────────────────────────────────────
+  // Emulador Android  → http://10.0.2.2:3000/api
+  // Dispositivo físico → http://<IP-de-tu-PC>:3000/api
   final String baseUrl;
   final ProveedorDataSource _local;
 
   ProveedoresApiService({
-    this.baseUrl = 'https://api.example.com',
+    this.baseUrl = 'http://10.0.2.2:3000/api',
     ProveedorDataSource? local,
   }) : _local = local ?? ProveedorDataSource();
 
   // ── Obtener lista de proveedores ──────────────────────────────────────────
-
-  /// Obtiene lista de proveedores del API.
-  /// 
-  /// Parámetro:
-  /// - [query]: Término de búsqueda (opcional)
-  /// 
-  /// Si el API no está disponible, cae al datasource local (mock).
   Future<List<ProveedorEntity>> getAll({String? query}) async {
     try {
       final params = <String, String>{};
-      if (query != null && query.isNotEmpty) params['q'] = query;
+      if (query != null && query.isNotEmpty) params['search'] = query; // La API usa 'search'
 
-      final uri = Uri.parse('$baseUrl/proveedores')
-          .replace(queryParameters: params);
-      final response = await http.get(uri, headers: _headers).timeout(
-            const Duration(seconds: 10),
-          );
+      final uri = Uri.parse('$baseUrl/suppliers')
+          .replace(queryParameters: params.isEmpty ? null : params);
+
+      final response = await http
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => _mapFromJson(e)).toList();
+        final body = jsonDecode(response.body);
+        final List<dynamic> data =
+            body is List ? body : (body['data'] as List? ?? []);
+        return data
+            .map((e) => _mapFromJson(e as Map<String, dynamic>))
+            .toList();
       }
     } catch (_) {
       // Fallback silencioso al datasource local
@@ -47,27 +48,24 @@ class ProveedoresApiService {
   }
 
   // ── Obtener detalle de un proveedor ───────────────────────────────────────
-
-  /// Obtiene un proveedor por su ID.
-  /// 
-  /// Si el API no está disponible, busca en el datasource local.
-  /// Retorna null si no encuentra el proveedor.
   Future<ProveedorEntity?> getById(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/proveedores/$id');
-      final response = await http.get(uri, headers: _headers).timeout(
-            const Duration(seconds: 10),
-          );
+      final uri = Uri.parse('$baseUrl/suppliers/$id');
+      final response = await http
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final body = jsonDecode(response.body);
+        final data = body is Map && body.containsKey('data')
+            ? body['data'] as Map<String, dynamic>
+            : body as Map<String, dynamic>;
         return _mapFromJson(data);
       }
     } catch (_) {
       // Fallback silencioso al datasource local
     }
 
-    // Busca en mock local por id
     final todos = await _local.getAll();
     try {
       return todos.firstWhere((p) => p.id == id);
@@ -77,26 +75,30 @@ class ProveedoresApiService {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 
+  /// Mapea la respuesta real del backend (snake_case) a la entidad Flutter.
+  /// Campos de la API: id, nit, nombre_de_empresa, nombre_del_contacto,
+  ///                   direccion, telefono, correo, sitio_web, activo
   ProveedorEntity _mapFromJson(Map<String, dynamic> json) {
+    final activo = json['activo'];
+    final estado = (activo == true || activo == 'activo')
+        ? ProveedorEstado.activo
+        : ProveedorEstado.inactivo;
+
     return ProveedorEntity(
-      id: json['id'] as String,
-      nit: json['nit'] as String,
-      nombre: json['nombre'] as String,
-      contacto: json['contacto'] as String,
-      direccion: json['direccion'] as String,
-      telefono: json['telefono'] as String,
-      correo: json['correo'] as String,
-      sitioWeb: json['sitioWeb'] as String,
-      estado: ProveedorEstado.values.firstWhere(
-        (e) => e.name == json['estado'],
-        orElse: () => ProveedorEstado.activo,
-      ),
+      id:        (json['id'] ?? json['_id'] ?? '').toString(),
+      nit:       (json['nit'] ?? '').toString(),
+      nombre:    (json['nombre_de_empresa'] ?? json['nombre'] ?? '').toString(),
+      contacto:  (json['nombre_del_contacto'] ?? json['contacto'] ?? '').toString(),
+      direccion: (json['direccion'] ?? '').toString(),
+      telefono:  (json['telefono'] ?? '').toString(),
+      correo:    (json['correo'] ?? '').toString(),
+      sitioWeb:  (json['sitio_web'] ?? json['sitioWeb'] ?? '').toString(),
+      estado:    estado,
     );
   }
 }
