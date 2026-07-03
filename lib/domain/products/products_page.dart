@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/profile_menu_button.dart';
 
 class ProductsPage extends StatelessWidget {
   final String? category;

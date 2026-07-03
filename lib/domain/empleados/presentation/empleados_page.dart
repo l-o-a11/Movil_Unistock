@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
 import '../../../shared/widgets/app_back_button.dart';
+import '../../../shared/widgets/profile_menu_button.dart';
 import 'providers/empleados_provider.dart';
-import '../domain/empleados_entity.dart';
+import '../../usuarios/domain/usuario_model.dart'; // Reutiliza el mismo modelo que Usuarios
 
 const Color _pink = Color(0xFFFF4FA3);
 const Color _bg = Color(0xFFF5F5F7);
@@ -12,6 +13,7 @@ const Color _text = Color(0xFF1C1C1E);
 const Color _grey = Color(0xFF8E8E93);
 const Color _border = Color(0xFFE8E8E8);
 const Color _green = Color(0xFF00C853);
+const Color _red = Color(0xFFE53935);
 
 class EmpleadosPage extends StatelessWidget {
   const EmpleadosPage({super.key});
@@ -41,6 +43,92 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
     super.dispose();
   }
 
+  // ── Toggle activo/inactivo con confirmación ────────────────────────────
+  Future<void> _handleToggle(
+    BuildContext context,
+    EmpleadosProvider provider,
+    UsuarioModel usuario,
+  ) async {
+    final isActive = usuario.estado;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isActive ? 'Inactivar empleado' : 'Activar empleado'),
+        content: Text(
+          isActive
+              ? '¿Deseas inactivar a "${usuario.nombreCompleto}"? No podrá iniciar sesión.'
+              : '¿Deseas activar a "${usuario.nombreCompleto}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isActive ? 'Inactivar' : 'Activar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final error = await provider.toggleStatus(usuario.id);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error ??
+              (isActive
+                  ? 'Empleado inactivado correctamente'
+                  : 'Empleado activado correctamente'),
+        ),
+        backgroundColor: error != null ? _red : _green,
+      ),
+    );
+  }
+
+  // ── Eliminar con confirmación ───────────────────────────────────────────
+  Future<void> _handleDelete(
+    BuildContext context,
+    EmpleadosProvider provider,
+    UsuarioModel usuario,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar empleado'),
+        content: Text(
+          '¿Deseas eliminar a "${usuario.nombreCompleto}"? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar', style: TextStyle(color: _red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final error = await provider.deleteEmpleado(usuario.id);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Empleado eliminado correctamente'),
+        backgroundColor: error != null ? _red : _green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,29 +155,9 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                         ),
                       ),
                       const Spacer(),
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(
-                            color: const Color(0xFFFF8ACD),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_2_sharp,
-                          color: Color(0xFFFF4DA6),
-                          size: 20,
-                        ),
+                      ProfileMenuButton(
+                        size: 42,
+                        iconSize: 20,
                       ),
                     ],
                   ),
@@ -149,9 +217,23 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                         )
                       : provider.error != null
                       ? Center(
-                          child: Text(
-                            provider.error!,
-                            style: const TextStyle(color: _grey),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  provider.error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: _grey),
+                                ),
+                                const SizedBox(height: 12),
+                                TextButton(
+                                  onPressed: () => provider.load(),
+                                  child: const Text('Reintentar'),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       : provider.items.isEmpty
@@ -161,13 +243,21 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                             style: TextStyle(color: _grey, fontSize: 14),
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                          itemCount: provider.items.length,
-                          itemBuilder: (context, index) {
-                            final empleado = provider.items[index];
-                            return _buildEmpleadoCard(context, empleado);
-                          },
+                      : RefreshIndicator(
+                          color: _pink,
+                          onRefresh: () => provider.load(),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                            itemCount: provider.items.length,
+                            itemBuilder: (context, index) {
+                              final usuario = provider.items[index];
+                              return _buildEmpleadoCard(
+                                context,
+                                provider,
+                                usuario,
+                              );
+                            },
+                          ),
                         ),
                 ),
               ],
@@ -178,7 +268,14 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
     );
   }
 
-  Widget _buildEmpleadoCard(BuildContext context, EmpleadoEntity empleado) {
+  Widget _buildEmpleadoCard(
+    BuildContext context,
+    EmpleadosProvider provider,
+    UsuarioModel usuario, // FIX: antes UsuarioEntity
+  ) {
+    final isActive = usuario.estado;
+    final statusColor = isActive ? _green : _red;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -202,8 +299,9 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // FIX: usuario.doc → "DOC: " + numeroDocumento
                   Text(
-                    empleado.doc,
+                    'DOC: ${usuario.numeroDocumento}',
                     style: const TextStyle(
                       color: _grey,
                       fontSize: 11,
@@ -213,7 +311,7 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    empleado.nombre,
+                    usuario.nombreCompleto, // FIX: usuario.nombre
                     style: const TextStyle(
                       color: _text,
                       fontSize: 17,
@@ -227,15 +325,16 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: _green,
+                          color: statusColor, // FIX: ya no siempre verde
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        empleado.estado,
-                        style: const TextStyle(
-                          color: _green,
+                        usuario
+                            .estadoLabel, // FIX: usuario.estado (era String fijo)
+                        style: TextStyle(
+                          color: statusColor,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -260,7 +359,7 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    empleado.email,
+                    usuario.correo, // FIX: usuario.email
                     style: const TextStyle(
                       color: _text,
                       fontSize: 13,
@@ -268,8 +367,10 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // FIX: usuario.rol/usuario.sede ya no existen como texto legible.
+                  // La API solo da rolNombre y sedeId (ObjectId, sin nombre).
                   Text(
-                    '${empleado.cargo} · ${empleado.sede}',
+                    usuario.rolNombre ?? 'Sin rol',
                     style: const TextStyle(
                       color: _grey,
                       fontSize: 12,
@@ -279,23 +380,66 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => _showEmpleadoDetail(context, empleado),
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _pink.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _pink.withOpacity(0.4)),
+            const SizedBox(width: 8),
+            // ── Acciones: toggle, eliminar, ver detalle ──────────────────
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: () => _handleToggle(context, provider, usuario),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: statusColor.withOpacity(0.4)),
+                    ),
+                    child: Icon(
+                      isActive
+                          ? Icons.toggle_on_outlined
+                          : Icons.toggle_off_outlined,
+                      size: 18,
+                      color: statusColor,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: _pink,
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => _handleDelete(context, provider, usuario),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _red.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _red.withOpacity(0.4)),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 16,
+                      color: _red,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => _showEmpleadoDetail(context, usuario),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _pink.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _pink.withOpacity(0.4)),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: _pink,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -303,7 +447,7 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
     );
   }
 
-  void _showEmpleadoDetail(BuildContext context, EmpleadoEntity empleado) {
+  void _showEmpleadoDetail(BuildContext context, UsuarioModel usuario) {
     showGeneralDialog(
       context: context,
       barrierColor: Colors.transparent,
@@ -311,7 +455,7 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
       barrierLabel: 'close',
       transitionDuration: const Duration(milliseconds: 320),
       pageBuilder: (ctx, animation, __) =>
-          _EmpleadoDetail(empleado: empleado, animation: animation),
+          _EmpleadoDetail(usuario: usuario, animation: animation),
       transitionBuilder: (_, animation, __, child) => FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
         child: child,
@@ -321,10 +465,10 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
 }
 
 class _EmpleadoDetail extends StatelessWidget {
-  final EmpleadoEntity empleado;
+  final UsuarioModel usuario; // FIX: antes UsuarioEntity
   final Animation<double> animation;
 
-  const _EmpleadoDetail({required this.empleado, required this.animation});
+  const _EmpleadoDetail({required this.usuario, required this.animation});
 
   @override
   Widget build(BuildContext context) {
@@ -437,7 +581,7 @@ class _EmpleadoDetail extends StatelessWidget {
                             const SizedBox(height: 16),
                             Center(
                               child: Text(
-                                empleado.nombre,
+                                usuario.nombreCompleto, // FIX
                                 style: const TextStyle(
                                   color: _text,
                                   fontSize: 20,
@@ -448,7 +592,7 @@ class _EmpleadoDetail extends StatelessWidget {
                             const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                empleado.doc,
+                                'DOC: ${usuario.numeroDocumento}', // FIX
                                 style: const TextStyle(
                                   color: _grey,
                                   fontSize: 13,
@@ -456,16 +600,26 @@ class _EmpleadoDetail extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 18),
-                            _DetailRow(label: 'Estado', value: empleado.estado),
+                            _DetailRow(
+                              label: 'Estado',
+                              value: usuario.estadoLabel, // FIX
+                            ),
                             _DetailRow(
                               label: 'Correo Electrónico',
-                              value: empleado.email,
+                              value: usuario.correo, // FIX
                             ),
-                            _DetailRow(label: 'Cargo', value: empleado.cargo),
-                            _DetailRow(label: 'Sede', value: empleado.sede),
+                            _DetailRow(
+                              label: 'Rol',
+                              value: usuario.rolNombre ?? 'Sin rol', // FIX
+                            ),
+                            _DetailRow(
+                              label: 'Tipo de documento',
+                              value: usuario
+                                  .tipoDocumento, // FIX: ya no hay "sede" legible
+                            ),
                             _DetailRow(
                               label: 'Documento',
-                              value: empleado.doc.replaceAll('DOC: ', ''),
+                              value: usuario.numeroDocumento, // FIX
                             ),
                           ],
                         ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../produccion/core/constants/app_colors.dart';
 import '../../../../produccion/features/presentation/widgets/app_search_bar.dart';
 import '../../../../../../shared/widgets/app_back_button.dart';
+import '../../../../../../shared/widgets/profile_menu_button.dart';
 import '../providers/terceros_provider.dart';
 import '../../../terceros_dependencies.dart';
 import '../widgets/tercero_card.dart';
@@ -75,16 +76,10 @@ class _TercerosBodyState extends State<_TercerosBody> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Container(
-              width: 42, height: 42,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-                boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
-              ),
-              child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6)),
-            ),
+             child: ProfileMenuButton(
+               size: 42,
+               iconSize: 20,
+             ),
           ),
         ],
       ),

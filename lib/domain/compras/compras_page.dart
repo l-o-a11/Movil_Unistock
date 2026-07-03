@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/app_back_button.dart';
+import '../../shared/widgets/profile_menu_button.dart';
 import 'compra.dart';
 import 'compra_card.dart';
 import 'compra_detail.dart';
@@ -92,29 +93,9 @@ class _ComprasPageState extends State<ComprasPage> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(
-                      color: const Color(0xFFFF8ACD),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person_2_sharp,
-                    color: Color(0xFFFF4DA6),
-                    size: 20,
-                  ),
+                ProfileMenuButton(
+                  size: 42,
+                  iconSize: 20,
                 ),
               ],
             ),
