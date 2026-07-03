@@ -156,7 +156,6 @@ class _LoginPageState extends State<LoginPage> {
                             controller: _emailController,
                             hintText: 'Nombre del usuario o correo electrónico',
                             prefixIcon: Icons.person_outline_rounded,
-                            keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                           ),
                           const SizedBox(height: 12),
