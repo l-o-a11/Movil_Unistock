@@ -14,6 +14,8 @@ class OrdenModel extends OrdenEntity {
     super.producto,
     super.color,
     super.fechaEstado,
+    super.sede,
+    super.terceroNombre,
   });
 
   /// Mapea la respuesta real del backend exactamente como lo hace
@@ -80,18 +82,22 @@ class OrdenModel extends OrdenEntity {
         _parseDate(lastFecha ?? json['updatedAt'] ?? json['createdAt']);
 
     return OrdenModel(
-      id:           id,
-      numero:       numero,
-      unidades:     unidades,
-      estado:       estado,
-      tipo:         tipo,
-      cliente:      cliente,
-      fechaEntrega: fechaEntrega,
-      refCorte:     refCorte,
-      ref:          ref,
-      producto:     productoRaw,
-      color:        color,
-      fechaEstado:  fechaEstado,
+      id:            id,
+      numero:        numero,
+      unidades:      unidades,
+      estado:        estado,
+      tipo:          tipo,
+      cliente:       cliente,
+      fechaEntrega:  fechaEntrega,
+      refCorte:      refCorte,
+      ref:           ref,
+      producto:      productoRaw,
+      color:         color,
+      fechaEstado:   fechaEstado,
+      sede:          (json['sede'] ?? json['sede_nombre'])?.toString(),
+      terceroNombre: (json['terceros'] as List<dynamic>?)?.isNotEmpty == true
+          ? ((json['terceros'] as List)[0]['nombre'] ?? (json['terceros'] as List)[0]['nombreEmpresa'])?.toString()
+          : null,
     );
   }
 

@@ -19,8 +19,8 @@ class ProduccionApiService implements OrdenLocalDataSource {
     this.baseUrl = 'http://10.0.2.2:3000/api',
     OrdenLocalDataSource? local,
     AuthService? auth,
-  })  : _local = local ?? OrdenLocalDataSourceImpl(),
-        _auth = auth ?? AuthService();
+  }) : _local = local ?? OrdenLocalDataSourceImpl(),
+       _auth = auth ?? AuthService();
 
   @override
   Future<List<OrdenModel>> getOrdenes({
@@ -34,14 +34,28 @@ class ProduccionApiService implements OrdenLocalDataSource {
       if (tipo != null) params['tipo'] = tipo;
       if (query != null && query.isNotEmpty) params['q'] = query;
 
-      final uri = Uri.parse('$baseUrl/produccion/ordenes').replace(queryParameters: params);
-      final response = await http.get(uri, headers: await _authHeaders).timeout(
-        const Duration(seconds: 10),
-      );
+      final uri = Uri.parse(
+        '$baseUrl/produccion/ordenes',
+      ).replace(queryParameters: params);
+      final response = await http
+          .get(uri, headers: await _authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => OrdenModel.fromJson(e)).toList();
+        final body = json.decode(response.body);
+        List<dynamic> data = [];
+        if (body is List)
+          data = body;
+        else if (body is Map && body['data'] is List)
+          data = (body['data'] as List);
+        if (data.isNotEmpty) {
+          return data.map((e) => OrdenModel.fromJson(e)).toList();
+        }
+        // Fallback: if API returns an object with the entity under 'data'
+        // and it's a single item, try to map it as a single-element list.
+        if (body is Map && body['data'] is Map) {
+          return [OrdenModel.fromJson(body['data'])];
+        }
       }
     } catch (_) {}
     return _local.getOrdenes(estado: estado, tipo: tipo, query: query);
@@ -53,13 +67,17 @@ class ProduccionApiService implements OrdenLocalDataSource {
       final uri = Uri.parse('$baseUrl/produccion/ordenes/$id');
       final response = await http
           .get(uri, headers: await _authHeaders)
-          .timeout(
-            const Duration(seconds: 10),
-          );
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return OrdenDetailModel.fromJson(data);
+        final body = json.decode(response.body);
+        if (body is Map && body['data'] is Map) {
+          return OrdenDetailModel.fromJson(
+            Map<String, dynamic>.from(body['data']),
+          );
+        }
+        if (body is Map)
+          return OrdenDetailModel.fromJson(Map<String, dynamic>.from(body));
       }
     } catch (_) {}
     return _local.getOrdenDetail(id);
