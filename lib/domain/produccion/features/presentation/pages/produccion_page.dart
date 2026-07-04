@@ -33,20 +33,25 @@ class _ProduccionPageState extends State<ProduccionPage> {
   }
 
   void _goToDetail(BuildContext context, OrdenEntity orden) {
-    Navigator.of(context).push(PageRouteBuilder(
-      pageBuilder: (_, animation, __) => ChangeNotifierProvider<OrdenDetailProvider>(
-        create: (_) => AppDependencies.createOrdenDetailProvider(),
-        child: OrdenDetailPage(orden: orden),
-      ),
-      transitionsBuilder: (_, animation, __, child) => SlideTransition(
-        position: animation.drive(
-          Tween(begin: const Offset(1, 0), end: Offset.zero)
-              .chain(CurveTween(curve: Curves.easeOutCubic)),
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) =>
+            ChangeNotifierProvider<OrdenDetailProvider>(
+              create: (_) => AppDependencies.createOrdenDetailProvider(),
+              child: OrdenDetailPage(orden: orden),
+            ),
+        transitionsBuilder: (_, animation, __, child) => SlideTransition(
+          position: animation.drive(
+            Tween(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOutCubic)),
+          ),
+          child: child,
         ),
-        child: child,
+        transitionDuration: const Duration(milliseconds: 320),
       ),
-      transitionDuration: const Duration(milliseconds: 320),
-    ));
+    );
   }
 
   @override
@@ -59,114 +64,154 @@ class _ProduccionPageState extends State<ProduccionPage> {
         return Scaffold(
           backgroundColor: AppColors.background,
           bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
-          body: SafeArea(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                child: Row(children: [
-                  AppBackButton(),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(
-                    isProduccion ? 'Orden de producción' : 'Terceros',
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4),
-                  )),
-                  // Botón calendario — CalendarioPage ya lee el provider
-                  if (isProduccion)
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).push(PageRouteBuilder(
-                        // Sin parámetros: CalendarioPage lee de ProduccionProvider
-                        pageBuilder: (_, __, ___) => const CalendarioPage(),
-                        transitionsBuilder: (_, animation, __, child) =>
-                            SlideTransition(
-                              position: animation.drive(
-                                Tween(begin: const Offset(1, 0), end: Offset.zero)
-                                    .chain(CurveTween(curve: Curves.easeOutCubic)),
-                              ),
-                              child: child,
-                            ),
-                        transitionDuration: const Duration(milliseconds: 320),
-                      )),
-                      child: Container(
-                        width: 36, height: 36,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(10),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ────────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Row(
+                    children: [
+                      AppBackButton(),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isProduccion ? 'Orden de producción' : 'Terceros',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                        child: const Icon(Icons.calendar_month_rounded,
-                            color: AppColors.primary, size: 18),
                       ),
-                    ),
-                  Container(
-                    width: 42, height: 42,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-                      boxShadow: [BoxShadow(
-                          color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                          blurRadius: 14, offset: const Offset(0, 4))],
-                    ),
-                    child: const Icon(Icons.person_2_sharp,
-                        size: 20, color: Color(0xFFFF4DA6)),
+                      // Botón calendario — CalendarioPage ya lee el provider
+                      if (isProduccion)
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(
+                            PageRouteBuilder(
+                              // Proveer explicitamente el ProduccionProvider a la nueva ruta
+                              pageBuilder: (_, __, ___) =>
+                                  ChangeNotifierProvider<
+                                    ProduccionProvider
+                                  >.value(
+                                    value: provider,
+                                    child: const CalendarioPage(),
+                                  ),
+                              transitionsBuilder: (_, animation, __, child) =>
+                                  SlideTransition(
+                                    position: animation.drive(
+                                      Tween(
+                                        begin: const Offset(1, 0),
+                                        end: Offset.zero,
+                                      ).chain(
+                                        CurveTween(curve: Curves.easeOutCubic),
+                                      ),
+                                    ),
+                                    child: child,
+                                  ),
+                              transitionDuration: const Duration(
+                                milliseconds: 320,
+                              ),
+                            ),
+                          ),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_month_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          border: Border.all(
+                            color: const Color(0xFFFF8ACD),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.person_2_sharp,
+                          size: 20,
+                          color: Color(0xFFFF4DA6),
+                        ),
+                      ),
+                    ],
                   ),
-                ])),
-              const SizedBox(height: 14),
-
-              // ── Buscador ──────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AppSearchBar(
-                  controller: _searchCtrl,
-                  onChanged: provider.setSearch,
-                  hintText: 'Buscar...',
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-              // ── Toggle Producciones / Terceros ────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ToggleTabBar(
-                  labels: const ['Producciones', 'Terceros'],
-                  activeIndex: isProduccion ? 0 : 1,
-                  onChanged: (i) => provider.changeTab(
-                      i == 0 ? ProduccionTab.produccion : ProduccionTab.terceros),
+                // ── Buscador ──────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AppSearchBar(
+                    controller: _searchCtrl,
+                    onChanged: provider.setSearch,
+                    hintText: 'Buscar...',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              // ── Filtros por estado (strings reales del backend) ───────
-              if (isProduccion) ...[
-                FilterChipsRow(
-                  filtroEstado: state.filtroEstado,
-                  // estadosDisponibles viene del provider con los estados
-                  // reales cargados desde la API
-                  estadosDisponibles: provider.estadosDisponibles,
-                  onEstadoChanged: provider.setFiltroEstado,
+                // ── Toggle Producciones / Terceros ────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ToggleTabBar(
+                    labels: const ['Producciones', 'Terceros'],
+                    activeIndex: isProduccion ? 0 : 1,
+                    onChanged: (i) => provider.changeTab(
+                      i == 0
+                          ? ProduccionTab.produccion
+                          : ProduccionTab.terceros,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+
+                // ── Filtros por estado (strings reales del backend) ───────
+                if (isProduccion) ...[
+                  FilterChipsRow(
+                    filtroEstado: state.filtroEstado,
+                    // estadosDisponibles viene del provider con los estados
+                    // reales cargados desde la API
+                    estadosDisponibles: provider.estadosDisponibles,
+                    onEstadoChanged: provider.setFiltroEstado,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+
+                // ── Lista ─────────────────────────────────────────────────
+                Expanded(
+                  child: isProduccion
+                      ? _OrdenList(
+                          state: state,
+                          onTap: (o) => _goToDetail(context, o),
+                          onToggle: provider.toggleExpanded,
+                          onRetry: provider.loadOrdenes,
+                        )
+                      : const TercerosEmbeddedList(),
+                ),
               ],
-
-              // ── Lista ─────────────────────────────────────────────────
-              Expanded(
-                child: isProduccion
-                    ? _OrdenList(
-                        state: state,
-                        onTap: (o) => _goToDetail(context, o),
-                        onToggle: provider.toggleExpanded,
-                        onRetry: provider.loadOrdenes,
-                      )
-                    : const TercerosEmbeddedList(),
-              ),
-            ],
-          )),
+            ),
+          ),
         );
       },
     );
@@ -192,43 +237,66 @@ class _OrdenList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (state.isLoading) {
       return const Center(
-          child: CircularProgressIndicator(
-              color: AppColors.primary, strokeWidth: 2.5));
+        child: CircularProgressIndicator(
+          color: AppColors.primary,
+          strokeWidth: 2.5,
+        ),
+      );
     }
     if (state.hasError) {
-      return Center(child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.error_outline_rounded,
-            color: AppColors.primary, size: 48),
-        const SizedBox(height: 12),
-        Text(state.error!,
-            style: const TextStyle(color: AppColors.textSecondary),
-            textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: onRetry,
-          style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10))),
-          child: const Text('Reintentar'),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: AppColors.primary,
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              state.error!,
+              style: const TextStyle(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Reintentar'),
+            ),
+          ],
         ),
-      ]));
+      );
     }
 
     // Usar ordenesFiltradas (aplica HIDDEN_STATUSES y filtroEstado)
     final ordenes = state.ordenesFiltradas;
 
     if (ordenes.isEmpty) {
-      return Center(child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.inbox_rounded,
-            size: 52, color: AppColors.textHint.withAlpha(120)),
-        const SizedBox(height: 12),
-        const Text('No hay órdenes',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-      ]));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_rounded,
+              size: 52,
+              color: AppColors.textHint.withAlpha(120),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'No hay órdenes',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+            ),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
