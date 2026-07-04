@@ -1,47 +1,16 @@
 import 'package:flutter/material.dart';
-
 import '../../../../core/constants/app_colors.dart';
-import '../../../../features/domain/entities/orden_entity.dart';
+import '../../../domain/entities/tercero_asignacion_entity.dart';
 
-// Modelo interno de tercero (mock mientras la API no lo devuelva embebido)
-class _TerceroData {
-  final String nombre, contacto, telefono, proceso, estado;
-  final int unidadesAsignadas;
-  final DateTime fechaEntregaTercero;
-  final double costoUnitario;
-  const _TerceroData({
-    required this.nombre, required this.contacto, required this.telefono,
-    required this.proceso, required this.unidadesAsignadas,
-    required this.fechaEntregaTercero, required this.costoUnitario,
-    required this.estado,
-  });
-}
-
-final _mockTerceros = <String, _TerceroData>{
-  '1': _TerceroData(
-    nombre: 'Confecciones Moda Nova', contacto: 'Luisa Fernanda Pérez',
-    telefono: '+57 314 820 4411', proceso: 'Confección y ensamble',
-    unidadesAsignadas: 300, fechaEntregaTercero: DateTime(2025, 4, 10),
-    costoUnitario: 12500, estado: 'en_proceso'),
-  '2': _TerceroData(
-    nombre: 'Bordados El Hilo de Oro', contacto: 'Ricardo Molina',
-    telefono: '+57 300 551 9922', proceso: 'Bordado y decoración',
-    unidadesAsignadas: 50, fechaEntregaTercero: DateTime(2025, 4, 14),
-    costoUnitario: 8800, estado: 'pendiente'),
-};
-
-/// Tarjeta de producción con terceros.
-/// Usa [OrdenEntity.isTerceros] (String) en lugar del enum [OrdenTipo].
+/// Tarjeta de terceros asignados a la orden — usa datos REALES del API.
+/// Muestra lista expandible de cada tercero con nombre, proceso y cantidad.
 class ProduccionTercerosCard extends StatefulWidget {
-  final VoidCallback? onTap;
-  final String? ordenId;
-  final String? tipo; // "produccion" | "terceros" — String exacto del backend
-
+  final bool esTerceros;
+  final List<TerceroAsignacion> terceros;
   const ProduccionTercerosCard({
     super.key,
-    this.onTap,
-    this.ordenId,
-    this.tipo,
+    required this.esTerceros,
+    this.terceros = const [],
   });
 
   @override
@@ -53,9 +22,7 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
 
   @override
   Widget build(BuildContext context) {
-    final tercero = widget.ordenId != null ? _mockTerceros[widget.ordenId] : null;
-    // Comparación de String en vez de enum
-    final esTerceros = widget.tipo == 'terceros';
+    final hasTerceros = widget.esTerceros && widget.terceros.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -64,69 +31,101 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.cardBorder),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 12, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
         children: [
+          // Header tap
           InkWell(
-            onTap: esTerceros && tercero != null
+            onTap: hasTerceros
                 ? () => setState(() => _expanded = !_expanded)
-                : widget.onTap,
+                : null,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: esTerceros ? AppColors.primaryLight : AppColors.chipBackground,
-                    borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: widget.esTerceros
+                          ? AppColors.primaryLight
+                          : AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      widget.esTerceros
+                          ? Icons.people_alt_rounded
+                          : Icons.factory_rounded,
+                      color: widget.esTerceros
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      size: 20,
+                    ),
                   ),
-                  child: Icon(
-                    esTerceros ? Icons.people_alt_rounded : Icons.factory_rounded,
-                    color: esTerceros ? AppColors.primary : AppColors.textSecondary,
-                    size: 20,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.esTerceros
+                              ? 'Producción con Tercero'
+                              : 'Producción interna',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          hasTerceros
+                              ? widget.terceros.length == 1
+                                    ? 'En tercero: ${widget.terceros.first.nombre}'
+                                    : 'En terceros: ${widget.terceros.map((t) => t.nombre).join(', ')}'
+                              : widget.esTerceros
+                              ? 'Sin tercero asignado'
+                              : '',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(
-                    esTerceros ? 'Producción con Tercero' : 'Producción interna',
-                    style: const TextStyle(color: AppColors.textPrimary,
-                        fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    esTerceros && tercero != null
-                        ? tercero.nombre
-                        : esTerceros
-                            ? 'Sin tercero asignado'
-                            : 'Producción en planta propia',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                ])),
-                if (esTerceros && tercero != null)
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.textSecondary),
-                  ),
-              ]),
+                  if (hasTerceros)
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-          if (esTerceros && tercero != null && _expanded)
+
+          // Lista de terceros expandible
+          if (hasTerceros && _expanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                _Row('Contacto',  tercero.contacto),
-                _Row('Teléfono',  tercero.telefono),
-                _Row('Proceso',   tercero.proceso),
-                _Row('Unidades',  '${tercero.unidadesAsignadas}'),
-                _Row('Costo/ud',  '\$${tercero.costoUnitario.toStringAsFixed(0)}'),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  ...widget.terceros.map((t) => _TerceroItem(tercero: t)),
+                ],
+              ),
             ),
         ],
       ),
@@ -134,16 +133,110 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
   }
 }
 
-class _Row extends StatelessWidget {
-  final String label, value;
-  const _Row(this.label, this.value);
+class _TerceroItem extends StatelessWidget {
+  final TerceroAsignacion tercero;
+  const _TerceroItem({required this.tercero});
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-      Text(value,  style: const TextStyle(color: AppColors.textPrimary,
-          fontSize: 12, fontWeight: FontWeight.w600)),
-    ]),
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.chipBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nombre + estado badge
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  tercero.nombre,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              _EstadoBadge(estado: tercero.estado),
+            ],
+          ),
+          if (tercero.contacto != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              tercero.contacto!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              if (tercero.proceso != null)
+                _Chip(icon: Icons.build_rounded, label: tercero.proceso!),
+              _Chip(
+                icon: Icons.inventory_2_rounded,
+                label: '${tercero.cantidad} uds',
+              ),
+              if (tercero.telefono != null)
+                _Chip(icon: Icons.phone_rounded, label: tercero.telefono!),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _Chip({required this.icon, required this.label});
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 12, color: AppColors.textSecondary),
+      const SizedBox(width: 4),
+      Text(
+        label,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+      ),
+    ],
   );
+}
+
+class _EstadoBadge extends StatelessWidget {
+  final String estado;
+  const _EstadoBadge({required this.estado});
+  @override
+  Widget build(BuildContext context) {
+    final isPending =
+        estado.toLowerCase().contains('pendiente') ||
+        estado.toLowerCase().contains('pending');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isPending ? const Color(0xFFFFF3E0) : AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        estado,
+        style: TextStyle(
+          color: isPending ? const Color(0xFFFF9500) : AppColors.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 }
