@@ -1,87 +1,67 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:movil_unistock/config/api_config.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
 import 'sede.dart';
 
+/// Servicio de datos para Sedes.
+///
+/// Consume el backend real (`GET /api/sites`). Si la petición falla, la
+/// excepción se propaga hacia la UI (que muestra el mensaje de error o el
+/// estado vacío correspondiente) — no hay datos mock de respaldo.
 class SedeService {
-  // ─── Configuración ────────────────────────────────────────────────────────
-  // TODO: reemplaza esta URL por la de tu backend real
-  static const _baseUrl = 'https://tu-api.com/api';
+  final String baseUrl;
+  final String _resource = 'sites';
+  final AuthService _auth;
 
-  // Pon en false cuando tu API esté lista
-  static const bool _useMock = true;
-
-  // ─── Datos de ejemplo (INITIAL_SEDES) ─────────────────────────────────────
-  static final List<Map<String, dynamic>> _mockData = [
-    {
-      'id': 1,
-      'nombre': 'Sede Principal',
-      'ciudad': 'Medellín',
-      'barrio': 'Parque Berrío',
-      'direccion': 'Calle 50 #45-30',
-      'telefono': '6042345678',
-      'estado': true,
-    },
-    {
-      'id': 2,
-      'nombre': 'Sucursal Norte',
-      'ciudad': 'Medellín',
-      'barrio': 'Laureles',
-      'direccion': 'Avenida 80 #20-10',
-      'telefono': '6049876543',
-      'estado': true,
-    },
-  ];
+  SedeService({String? baseUrl, AuthService? auth})
+      : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
+        _auth = auth ?? AuthService();
 
   // ─── Métodos públicos ─────────────────────────────────────────────────────
 
   Future<List<Sede>> getSedes() async {
-    if (_useMock) return _mockSedes();
-    return _fetchSedes();
-  }
+    final uri = Uri.parse('$baseUrl/$_resource');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
 
-  Future<Sede> getSedeById(int id) async {
-    if (_useMock) return _mockSedeById(id);
-    return _fetchSedeById(id);
-  }
-
-  // ─── Mock ─────────────────────────────────────────────────────────────────
-
-  Future<List<Sede>> _mockSedes() async {
-    await Future.delayed(const Duration(milliseconds: 350));
-    return _mockData.map((e) => Sede.fromJson(e)).toList();
-  }
-
-  Future<Sede> _mockSedeById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final json = _mockData.firstWhere(
-      (e) => e['id'] == id,
-      orElse: () => throw Exception('Sede $id no encontrada'),
-    );
-    return Sede.fromJson(json);
-  }
-
-  // ─── API real ─────────────────────────────────────────────────────────────
-
-  Future<List<Sede>> _fetchSedes() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/sedes'),
-      headers: {'Content-Type': 'application/json'},
-    );
     if (response.statusCode == 200) {
-      final List<dynamic> json = jsonDecode(response.body);
-      return json.map((e) => Sede.fromJson(e as Map<String, dynamic>)).toList();
+      final body = jsonDecode(response.body);
+      final List<dynamic> data =
+          body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+      return data.map((e) => Sede.fromJson(e as Map<String, dynamic>)).toList();
     }
     throw Exception('Error al cargar sedes (${response.statusCode})');
   }
 
-  Future<Sede> _fetchSedeById(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/sedes/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  Future<Sede> getSedeById(String id) async {
+    final uri = Uri.parse('$baseUrl/$_resource/$id');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+
     if (response.statusCode == 200) {
-      return Sede.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body['data'] is Map)
+          ? Map<String, dynamic>.from(body['data'])
+          : Map<String, dynamic>.from(body as Map);
+      return Sede.fromJson(data);
     }
     throw Exception('Error al cargar sede $id (${response.statusCode})');
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

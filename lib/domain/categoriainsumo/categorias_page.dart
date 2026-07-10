@@ -43,7 +43,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'No se pudo cargar la información de categorías.';
         _loading = false;
       });
     }

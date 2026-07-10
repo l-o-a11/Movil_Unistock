@@ -202,7 +202,7 @@ class _RolDetailSheet extends StatelessWidget {
                             const SizedBox(height: 12),
                             ...rol.modulos.map((m) => _ModuloTile(
                                   modulo: m,
-                                  moduloNombre: rol.moduloNombre(m.moduloId),
+                                  moduloNombre: rol.moduloNombre(m),
                                   privilegioNombre: rol.privilegioNombre,
                                   privColors: _privColors,
                                 )),
@@ -252,7 +252,7 @@ class _RolDetailSheet extends StatelessWidget {
 class _ModuloTile extends StatelessWidget {
   final ModuloRol modulo;
   final String moduloNombre;
-  final String Function(int) privilegioNombre;
+  final String Function(String) privilegioNombre;
   final Map<int, Color> privColors;
 
   const _ModuloTile({
@@ -296,7 +296,7 @@ class _ModuloTile extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: modulo.privilegios.map((privId) {
-              final color = privColors[privId] ?? const Color(0xFF8E8E93);
+              final color = privColors[int.tryParse(privId)] ?? const Color(0xFF8E8E93);
               return Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
