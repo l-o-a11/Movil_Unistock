@@ -44,7 +44,7 @@ class _SedesPageState extends State<SedesPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'No se pudo cargar la información de sedes.';
         _loading = false;
       });
     }

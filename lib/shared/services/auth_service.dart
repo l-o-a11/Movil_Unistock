@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-const String kAuthBaseUrl = 'http://10.0.2.2:3000/api';
+import 'package:movil_unistock/config/api_config.dart';
+
+//const String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
+final String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
