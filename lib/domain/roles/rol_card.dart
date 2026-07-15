@@ -5,11 +5,7 @@ class RolCard extends StatelessWidget {
   final Rol rol;
   final VoidCallback onDetailTap;
 
-  const RolCard({
-    super.key,
-    required this.rol,
-    required this.onDetailTap,
-  });
+  const RolCard({super.key, required this.rol, required this.onDetailTap});
 
   static const _pink = Color(0xFFE91E8C);
   static const _text = Color(0xFF1C1C1E);
@@ -25,7 +21,14 @@ class RolCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: const Color(0xFFFFD6E7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withOpacity(0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -38,11 +41,7 @@ class RolCard extends StatelessWidget {
                 color: _pink.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.shield_outlined,
-                color: _pink,
-                size: 26,
-              ),
+              child: const Icon(Icons.shield_outlined, color: _pink, size: 26),
             ),
             const SizedBox(width: 12),
             // Contenido
@@ -67,7 +66,9 @@ class RolCard extends StatelessWidget {
                       if (rol.isAdmin)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: _pink.withOpacity(0.10),
                             borderRadius: BorderRadius.circular(6),
@@ -93,14 +94,25 @@ class RolCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      _Chip(
-                        label: '${rol.totalModulos} módulos',
-                        color: _pink,
-                      ),
+                      _Chip(label: '${rol.totalModulos} módulos', color: _pink),
                       const SizedBox(width: 6),
-                      _Chip(
-                        label: rol.estadoLabel,
-                        color: rol.isActivo ? _green : _red,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: rol.isActivo ? _green : _red,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            rol.isActivo ? 'ACTIVO' : 'INACTIVO',
+                            style: TextStyle(
+                              color: rol.isActivo ? _green : _red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

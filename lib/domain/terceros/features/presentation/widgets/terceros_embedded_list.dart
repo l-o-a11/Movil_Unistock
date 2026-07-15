@@ -5,8 +5,6 @@ import '../../../../produccion/core/constants/app_colors.dart';
 import '../providers/terceros_provider.dart';
 import 'tercero_card.dart';
 
-/// Lista de terceros sin Scaffold — diseñada para embeberse dentro
-/// del body de [ProduccionPage] cuando el tab activo es "Terceros".
 class TercerosEmbeddedList extends StatelessWidget {
   const TercerosEmbeddedList({super.key});
 

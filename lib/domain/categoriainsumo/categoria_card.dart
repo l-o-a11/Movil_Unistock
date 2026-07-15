@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'categoria.dart';
-import 'categoria_detail.dart';
 
 class CategoriaCard extends StatelessWidget {
   final Categoria categoria;
-  final VoidCallback onDetailTap;
 
-  const CategoriaCard({
-    super.key,
-    required this.categoria,
-    required this.onDetailTap,
-  });
+  const CategoriaCard({super.key, required this.categoria});
 
   static const _pink = Color(0xFFE91E8C);
   static const _text = Color(0xFF1C1C1E);
@@ -20,61 +14,79 @@ class CategoriaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onDetailTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
-        ),
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: _pink.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.label_outline, color: _pink, size: 26),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    categoria.nombre,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      _Chip(
-                        label: categoria.estadoLabel,
-                        color: categoria.isActivo ? _green : _red,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFFCCCCCC),
-              size: 20,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFD6E7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withOpacity(0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
-        ),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: _pink.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.label_outline, color: _pink, size: 26),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  categoria.nombre,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 8,
+                          color: categoria.isActivo ? _green : _red,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          categoria.isActivo ? 'ACTIVO' : 'INACTIVO',
+                          style: TextStyle(
+                            color: categoria.isActivo ? _green : _red,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: Color(0xFFCCCCCC),
+            size: 20,
+          ),
+        ],
       ),
     );
   }

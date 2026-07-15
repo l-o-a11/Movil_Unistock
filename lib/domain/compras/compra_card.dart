@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'insumo.dart';
+import 'compra.dart';
 
-class InsumoCard extends StatelessWidget {
-  final Insumo insumo;
+class CompraCard extends StatelessWidget {
+  final Compra compra;
   final VoidCallback onDetailTap;
 
-  const InsumoCard({
+  const CompraCard({
     super.key,
-    required this.insumo,
+    required this.compra,
     required this.onDetailTap,
   });
 
@@ -25,8 +25,7 @@ class InsumoCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-        
-         border: Border.all(color: const Color(0xFFFFD6E7)),
+          border: Border.all(color: const Color(0xFFFFD6E7)),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF4DA6).withOpacity(0.10),
@@ -38,7 +37,6 @@ class InsumoCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            // Ícono / imagen
             Container(
               width: 52,
               height: 52,
@@ -46,25 +44,15 @@ class InsumoCard extends StatelessWidget {
                 color: _pink.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: insumo.image != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        insumo.image!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _defaultIcon(),
-                      ),
-                    )
-                  : _defaultIcon(),
+              child: const Icon(Icons.receipt_long, color: _pink, size: 26),
             ),
             const SizedBox(width: 12),
-            // Nombre + categoría
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    insumo.nombre,
+                    'Factura: ${compra.numeroFactura}',
                     style: const TextStyle(
                       color: _text,
                       fontSize: 15,
@@ -73,16 +61,20 @@ class InsumoCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
-                    insumo.categoria,
+                    compra.proveedor,
                     style: const TextStyle(color: _grey, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
+                      _Chip(label: compra.fecha, color: _pink),
+                      const SizedBox(width: 6),
                       _Chip(
-                        label: '${insumo.stock} ${insumo.medida}',
+                        label: '\$${compra.costoTotal.toStringAsFixed(2)}',
                         color: _pink,
                       ),
                       const SizedBox(width: 6),
@@ -92,15 +84,15 @@ class InsumoCard extends StatelessWidget {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: insumo.isActivo ? _green : _red,
+                              color: compra.anulada ? _red : _green,
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            insumo.isActivo ? 'Activo' : 'Inactivo',
+                            compra.anulada ? 'Anulada' : 'Activo',
                             style: TextStyle(
-                              color: insumo.isActivo ? _green : _red,
+                              color: compra.anulada ? _red : _green,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -123,9 +115,6 @@ class InsumoCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _defaultIcon() =>
-      const Icon(Icons.inventory_2_outlined, color: _pink, size: 26);
 }
 
 class _Chip extends StatelessWidget {

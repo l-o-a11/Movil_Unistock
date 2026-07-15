@@ -1,76 +1,69 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:movil_unistock/config/api_config.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
 import 'categoria.dart';
 
+/// Servicio de datos para Categorías de insumo.
+///
+/// Consume el backend real (`GET /api/categorias-insumos`). Si la petición
+/// falla, la excepción se propaga hacia la UI (que muestra el mensaje de
+/// error o el estado vacío correspondiente) — no hay datos mock de respaldo.
 class CategoriaService {
-  // ─── Configuración ────────────────────────────────────────────────────────
-  // TODO: reemplaza esta URL por la de tu backend real
-  static const _baseUrl = 'https://tu-api.com/api';
+  final String baseUrl;
+  final String _resource = 'categorias-insumos';
+  final AuthService _auth;
 
-  // Pon en false cuando tu API esté lista
-  static const bool _useMock = true;
-
-  // ─── Datos de ejemplo ─────────────────────────────────────────────────────
-  static final List<Map<String, dynamic>> _mockData = [
-    {'id': 1, 'nombre': 'General', 'estado': true},
-    {'id': 2, 'nombre': 'Electrónica', 'estado': true},
-    {'id': 3, 'nombre': 'Limpieza', 'estado': false},
-  ];
+  CategoriaService({String? baseUrl, AuthService? auth})
+      : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
+        _auth = auth ?? AuthService();
 
   // ─── Métodos públicos ─────────────────────────────────────────────────────
 
   Future<List<Categoria>> getCategorias() async {
-    if (_useMock) return _mockCategorias();
-    return _fetchCategorias();
-  }
+    final uri = Uri.parse('$baseUrl/$_resource');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
 
-  Future<Categoria> getCategoriaById(int id) async {
-    if (_useMock) return _mockCategoriaById(id);
-    return _fetchCategoriaById(id);
-  }
-
-  // ─── Mock ─────────────────────────────────────────────────────────────────
-
-  Future<List<Categoria>> _mockCategorias() async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return _mockData.map((e) => Categoria.fromJson(e)).toList();
-  }
-
-  Future<Categoria> _mockCategoriaById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-    final json = _mockData.firstWhere(
-      (e) => e['id'] == id,
-      orElse: () => throw Exception('Categoria $id no encontrada'),
-    );
-    return Categoria.fromJson(json);
-  }
-
-  // ─── API real ─────────────────────────────────────────────────────────────
-
-  Future<List<Categoria>> _fetchCategorias() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/categorias'),
-      headers: {'Content-Type': 'application/json'},
-    );
     if (response.statusCode == 200) {
-      final List<dynamic> json = jsonDecode(response.body);
-      return json
+      final body = jsonDecode(response.body);
+      final List<dynamic> data =
+          body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+      return data
           .map((e) => Categoria.fromJson(e as Map<String, dynamic>))
           .toList();
     }
     throw Exception('Error al cargar categorias (${response.statusCode})');
   }
 
-  Future<Categoria> _fetchCategoriaById(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/categorias/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  Future<Categoria> getCategoriaById(String id) async {
+    final uri = Uri.parse('$baseUrl/$_resource/$id');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+
     if (response.statusCode == 200) {
-      return Categoria.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>,
-      );
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body['data'] is Map)
+          ? Map<String, dynamic>.from(body['data'])
+          : Map<String, dynamic>.from(body as Map);
+      return Categoria.fromJson(data);
     }
     throw Exception('Error al cargar categoria $id (${response.statusCode})');
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

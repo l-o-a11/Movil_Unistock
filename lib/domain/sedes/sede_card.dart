@@ -22,7 +22,14 @@ class SedeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: const Color(0xFFFFD6E7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withOpacity(0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -67,9 +74,23 @@ class SedeCard extends StatelessWidget {
                     children: [
                       _Chip(label: sede.telefono, color: _pink),
                       const SizedBox(width: 6),
-                      _Chip(
-                        label: sede.estadoLabel,
-                        color: sede.isActivo ? _green : _red,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: sede.isActivo ? _green : _red,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            sede.isActivo ? 'ACTIVO' : 'INACTIVO',
+                            style: TextStyle(
+                              color: sede.isActivo ? _green : _red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

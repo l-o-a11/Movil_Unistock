@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
+<<<<<<< HEAD
 import '../product_categories/product_categories_page.dart';
 import '../compras/compras.dart';
+=======
+import '../categories/categories_page.dart';
+import '../compras/compras_page.dart';
+>>>>>>> 565520826840e8882d73a0563882425b9e290a32
 import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
@@ -83,6 +88,8 @@ class MenuPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(builder: (_) => const RolesPage()),
                         ),
+                        size: 74,
+                        iconSize: 30,
                       ),
                     ],
                   ),
@@ -96,12 +103,16 @@ class MenuPage extends StatelessWidget {
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Empleados',
-                         onTap: () => Navigator.push(
+                        onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => const EmpleadosPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFFF4DB8),
+                        shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                        size: 74,
+                        iconSize: 30,
                       ),
                     ],
                   ),
@@ -124,6 +135,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const CategoriasPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFC63A8F),
+                        shadowColor: Colors.black.withOpacity(0.20),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       _MI(
                         icon: Icons.inventory_2_outlined,
@@ -134,6 +149,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const InsumosPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFC63A8F),
+                        shadowColor: Colors.black.withOpacity(0.20),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       _MI(
                         icon: Icons.local_shipping_outlined,
@@ -144,6 +163,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const ProveedoresPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFC63A8F),
+                        shadowColor: Colors.black.withOpacity(0.20),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       _MI(
                         icon: Icons.shopping_cart_outlined,
@@ -154,6 +177,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const ComprasPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFC63A8F),
+                        shadowColor: Colors.black.withOpacity(0.20),
+                        size: 74,
+                        iconSize: 30,
                       ),
                     ],
                   ),
@@ -176,6 +203,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const ProductCategoriesPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFFB8FD0),
+                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       _MI(
                         icon: Icons.inventory_2_outlined,
@@ -186,6 +217,10 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const ProductsPage(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFFB8FD0),
+                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       // Terceros → abre Producción en tab Terceros
                       _MI(
@@ -198,6 +233,10 @@ class MenuPage extends StatelessWidget {
                                 const ProduccionApp(openTerceros: true),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFFB8FD0),
+                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+                        size: 74,
+                        iconSize: 30,
                       ),
                       // Producción → abre Producción en tab Producciones
                       _MI(
@@ -209,12 +248,16 @@ class MenuPage extends StatelessWidget {
                             builder: (_) => const ProduccionApp(),
                           ),
                         ),
+                        backgroundColor: const Color(0xFFFB8FD0),
+                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+                        size: 74,
+                        iconSize: 30,
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Usuarios
-                  const _SH('Usuarios'), const SizedBox(height: 12),
+                  // Sedes
+                  const _SH('Sedes'), const SizedBox(height: 12),
                   Row(
                     children: [
                       _MI(
@@ -255,28 +298,49 @@ class _SH extends StatelessWidget {
 }
 
 class _MI extends StatelessWidget {
-  const _MI({required this.icon, required this.label, required this.onTap});
+  const _MI({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.backgroundColor = const Color(0xFFFF4FA3),
+    this.shadowColor = const Color(0x33FF4FA3),
+    this.size = 74,
+    this.iconSize = 30,
+  });
+
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final Color backgroundColor;
+  final Color shadowColor;
+  final double size;
+  final double iconSize;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 72,
+        width: size,
         child: Column(
           children: [
             Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFF4FA3),
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: backgroundColor,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                    spreadRadius: 0.3,
+                  ),
+                ],
               ),
-              child: Icon(icon, color: Colors.white, size: 26),
+              child: Icon(icon, color: Colors.white, size: iconSize),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               label,
               textAlign: TextAlign.center,

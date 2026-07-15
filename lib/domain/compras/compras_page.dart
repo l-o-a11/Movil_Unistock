@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/app_back_button.dart';
-import 'rol.dart';
-import 'rol_card.dart';
-import 'rol_detail.dart';
-import 'rol_service.dart';
+import 'compra.dart';
+import 'compra_card.dart';
+import 'compra_detail.dart';
+import 'compra_service.dart';
 
-class RolesPage extends StatefulWidget {
-  const RolesPage({super.key});
+class ComprasPage extends StatefulWidget {
+  const ComprasPage({super.key});
 
   @override
-  State<RolesPage> createState() => _RolesPageState();
+  State<ComprasPage> createState() => _ComprasPageState();
 }
 
-class _RolesPageState extends State<RolesPage> {
-  final RolService _service = RolService();
+class _ComprasPageState extends State<ComprasPage> {
+  final CompraService _service = CompraService();
   final TextEditingController _busqueda = TextEditingController();
 
-  List<Rol> _roles = [];
+  List<Compra> _compras = [];
   bool _loading = true;
   String? _error;
 
@@ -37,25 +37,27 @@ class _RolesPageState extends State<RolesPage> {
         _loading = true;
         _error = null;
       });
-      final data = await _service.getRoles();
+      final data = await _service.getCompras();
       setState(() {
-        _roles = data;
+        _compras = data;
         _loading = false;
       });
     } catch (e) {
       setState(() {
-        _error = 'No se pudo cargar la información de roles.';
+        _error = e.toString();
         _loading = false;
       });
     }
   }
 
-  List<Rol> get _filtrados {
+  List<Compra> get _filtrados {
     final q = _busqueda.text.toLowerCase();
-    if (q.isEmpty) return _roles;
-    return _roles.where((r) {
-      return r.nombre.toLowerCase().contains(q) ||
-          r.descripcion.toLowerCase().contains(q);
+    if (q.isEmpty) return _compras;
+    return _compras.where((c) {
+      return c.numeroFactura.toLowerCase().contains(q) ||
+          c.proveedor.toLowerCase().contains(q) ||
+          c.fecha.toLowerCase().contains(q) ||
+          c.observaciones.toLowerCase().contains(q);
     }).toList();
   }
 
@@ -81,7 +83,7 @@ class _RolesPageState extends State<RolesPage> {
                 AppBackButton(),
                 const SizedBox(width: 14),
                 const Text(
-                  'Roles',
+                  'Compras',
                   style: TextStyle(
                     color: _text,
                     fontSize: 20,
@@ -90,13 +92,16 @@ class _RolesPageState extends State<RolesPage> {
                   ),
                 ),
                 const Spacer(),
-                 Container(
+                Container(
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
-                    border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFFFF8ACD),
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFFFF4DA6).withOpacity(0.35),
@@ -128,17 +133,22 @@ class _RolesPageState extends State<RolesPage> {
               child: Row(
                 children: [
                   const SizedBox(width: 12),
-                  const Icon(Icons.search_rounded,
-                      color: Color(0xFFAAAAAA), size: 20),
+                  const Icon(
+                    Icons.search_rounded,
+                    color: Color(0xFFAAAAAA),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _busqueda,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Buscar por nombre o descripción...',
+                        hintText: 'Buscar por factura, proveedor o fecha...',
                         hintStyle: TextStyle(
-                            color: Color(0xFFAAAAAA), fontSize: 15),
+                          color: Color(0xFFAAAAAA),
+                          fontSize: 15,
+                        ),
                         border: InputBorder.none,
                         isDense: true,
                       ),
@@ -154,54 +164,56 @@ class _RolesPageState extends State<RolesPage> {
           // ── Lista ───────────────────────────────────────────────────────
           Expanded(
             child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: _pink))
+                ? const Center(child: CircularProgressIndicator(color: _pink))
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.error_outline_rounded,
-                                color: Colors.red, size: 40),
-                            const SizedBox(height: 8),
-                            Text(_error!,
-                                style:
-                                    const TextStyle(color: Colors.red),
-                                textAlign: TextAlign.center),
-                            const SizedBox(height: 12),
-                            TextButton(
-                                onPressed: _cargar,
-                                child: const Text('Reintentar')),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.red,
+                          size: 40,
                         ),
-                      )
-                    : RefreshIndicator(
-                        color: _pink,
-                        onRefresh: _cargar,
-                        child: _filtrados.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'No se encontraron roles.',
-                                  style:
-                                      TextStyle(color: Color(0xFFAAAAAA)),
-                                ),
-                              )
-                            : ListView.separated(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
-                                itemCount: _filtrados.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final rol = _filtrados[index];
-                                  return RolCard(
-                                    rol: rol,
-                                    onDetailTap: () =>
-                                        showRolDetail(context, rol),
-                                  );
-                                },
-                              ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _cargar,
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: _pink,
+                    onRefresh: _cargar,
+                    child: _filtrados.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No se encontraron compras.',
+                              style: TextStyle(color: Color(0xFFAAAAAA)),
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _filtrados.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final compra = _filtrados[index];
+                              return CompraCard(
+                                compra: compra,
+                                onDetailTap: () =>
+                                    showCompraDetail(context, compra),
+                              );
+                            },
+                          ),
+                  ),
           ),
         ],
       ),

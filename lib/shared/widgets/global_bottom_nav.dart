@@ -40,7 +40,7 @@ class GlobalBottomNav extends StatelessWidget {
               _Btn(
                 icon: Icons.shopping_cart_outlined,
                 color: _color(2),
-                onTap: null,
+                onTap: () => _goToCompras(context),
               ),
               _Btn(
                 icon: Icons.work_outline_rounded,
@@ -59,7 +59,11 @@ class GlobalBottomNav extends StatelessWidget {
       context,
     ).pushNamedAndRemoveUntil('/usuarios', (route) => route.isFirst);
   }
-
+static void _goToCompras(BuildContext context) {
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/compras', (route) => route.isFirst);
+  }
   static void _goToProduccion(BuildContext context) {
     Navigator.of(
       context,

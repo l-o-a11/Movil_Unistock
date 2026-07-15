@@ -1,518 +1,264 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../shared/widgets/global_bottom_nav.dart';
-import '../../data/dashboard_data_source.dart';
-import '../../domain/dashboard_metric_entity.dart';
-import '../../domain/dashboard_chart_point_entity.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/dashboard_card.dart';
+import '../../widgets/process_item.dart';
+import '../../widgets/progress_section.dart';
+import '../../widgets/summary_card.dart';
 import '../providers/dashboard_provider.dart';
+import '../../data/dashboard_data_source.dart';
 
-// ─── Design tokens ────────────────────────────────────────────────
-const _pink = Color(0xFFFF4FA3);
-const _pinkLight = Color(0xFFFFF0F7);
-const _green = Color(0xFF1ECB6F);
-const _greenLight = Color(0xFFEBFBF3);
-const _purple = Color(0xFF7C4DFF);
-const _purpleLight = Color(0xFFF2EEFF);
-const _amber = Color(0xFFFFAB00);
-const _amberLight = Color(0xFFFFF8E7);
-const _bg = Color(0xFFF4F5FA);
-const _card = Colors.white;
-const _ink = Color(0xFF1A1A2E);
-const _muted = Color(0xFFAAABB8);
-const _gridLine = Color(0xFFEEEFF5);
-
-// ═════════════════════════════════════════════════════════════════════════════
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
+  static const int _processMax = 50;
+  static const _processLabels = [
+    'En espera', 'Tráfico entre sedes', 'Ficha técnica', 'Corte', 'Diseño',
+    'En producción', 'Bodega', 'Mercadeo', 'Cancelado', 'Compras', 'Recepción',
+  ];
+
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-    create: (_) => DashboardProvider(dataSource: DashboardDataSource()),
-    child: const _DashboardView(),
-  );
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => DashboardProvider(),
+      child: const _DashboardView(),
+    );
+  }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 class _DashboardView extends StatelessWidget {
   const _DashboardView();
 
   @override
   Widget build(BuildContext context) {
+    final provider  = context.watch<DashboardProvider>();
+    final stats     = provider.stats;
+    final hPad      = AppTheme.sp(context, 16);
+    final s         = AppTheme.scale(context);
+    final cardRatio = 0.95 + 0.20 * (s - 0.78) / 0.22;
+
+    final cards = [
+      _CardData(icon: Icons.bolt_rounded, iconColor: AppTheme.purple, iconBg: AppTheme.purpleLight,
+        title: 'ACTUALES', value: provider.isLoading ? '…' : '${stats.activas}', subtitle: 'prod.'),
+      _CardData(icon: Icons.check_rounded, iconColor: AppTheme.green, iconBg: AppTheme.greenLight,
+        title: 'COMPLETADAS', value: provider.isLoading ? '…' : '${stats.completadasMes}', subtitle: provider.period.label.toLowerCase()),
+      _CardData(icon: Icons.schedule_rounded, iconColor: AppTheme.pink, iconBg: AppTheme.pinkLight,
+        title: 'POR INICIAR', value: provider.isLoading ? '…' : '${stats.porIniciar}', subtitle: 'pendientes'),
+      _CardData(icon: Icons.access_time_rounded, iconColor: AppTheme.purple, iconBg: AppTheme.purpleLight,
+        title: 'PROMEDIO', value: provider.isLoading ? '…' : stats.avgTime, subtitle: 'días (mes ant.)'),
+    ];
+
+    final processes = DashboardPage._processLabels.map((label) {
+      final count = stats.procesoCounts[label] ?? 0;
+      return _ProcessData(label, count, count > 0 ? AppTheme.purple : AppTheme.green);
+    }).toList();
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppTheme.bgColor,
       bottomNavigationBar: const GlobalBottomNav(activeIndex: 0),
       body: SafeArea(
-        child: Consumer<DashboardProvider>(
-          builder: (_, prov, __) => Column(
-            children: [
-              // ── Header ──────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    _HeaderIcon(
-                      icon: Icons.show_chart_rounded,
-                      color: _pink,
-                      bg: _pinkLight,
+        child: Column(
+          children: [
+            const _TopBar(),
+            // ── Filtro Semana / Mes / Año ──────────────────────────────────
+            _PeriodFilter(current: provider.period,
+              onChanged: (p) => provider.setPeriod(p)),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SectionLabel('Resumen operativo'),
+                    SizedBox(height: AppTheme.sp(context, 10)),
+
+                    // 2×2 grid de KPIs
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: AppTheme.sp(context, 10),
+                      mainAxisSpacing:  AppTheme.sp(context, 10),
+                      childAspectRatio: cardRatio,
+                      children: cards.map((c) => DashboardCard(
+                        icon: c.icon, iconColor: c.iconColor, iconBg: c.iconBg,
+                        title: c.title, value: c.value, subtitle: c.subtitle,
+                      )).toList(),
                     ),
-                    _HeaderIcon(
-                      icon: Icons.person_outline_rounded,
-                      color: _pink,
-                      bg: _pinkLight,
+
+                    SizedBox(height: AppTheme.sp(context, 24)),
+                    const _SectionLabel('Procesos en Curso'),
+                    SizedBox(height: AppTheme.sp(context, 10)),
+
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppTheme.sp(context, 16),
+                        vertical:   AppTheme.sp(context, 14),
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardColor,
+                        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                        boxShadow: AppTheme.cardShadow,
+                      ),
+                      child: provider.isLoading
+                          ? const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+                          : Column(children: processes.map((p) => ProcessItem(
+                              label: p.label, value: p.value,
+                              maxValue: DashboardPage._processMax, barColor: p.color,
+                            )).toList()),
                     ),
+
+                    SizedBox(height: AppTheme.sp(context, 14)),
+
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Expanded(child: SummaryCard()),
+                          SizedBox(width: AppTheme.sp(context, 10)),
+                          const Expanded(child: ProgressSection()),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: AppTheme.sp(context, 20)),
+                    const _AccessButton(),
                   ],
                 ),
               ),
-
-              // ── Scroll area ─────────────────────────────────────
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _ActionTilesCard(),
-                      const SizedBox(height: 24),
-                      _ChartCard(provider: prov),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Botón Acceder ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
-                child: SizedBox(
-                  height: 56,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _pink,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/menu'),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Acceder',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ─── Header icon ──────────────────────────────────────────────────
-class _HeaderIcon extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final Color bg;
-  const _HeaderIcon({
-    required this.icon,
-    required this.color,
-    required this.bg,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 46,
-    height: 46,
-    decoration: BoxDecoration(
-      color: bg,
-      borderRadius: BorderRadius.circular(15),
-    ),
-    child: Icon(icon, color: color, size: 22),
-  );
-}
-
-// ─── Quick-action tiles ───────────────────────────────────────────
-class _ActionTilesCard extends StatelessWidget {
-  const _ActionTilesCard();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: _card,
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x08000000),
-          blurRadius: 24,
-          offset: Offset(0, 10),
-        ),
-      ],
-    ),
-    child: const _QuickActions(),
-  );
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  static const _tiles = [
-    (Icons.trending_up_rounded, 'Producción', _purple, _purpleLight),
-    (Icons.insights_rounded, 'Resumen', _pink, _pinkLight),
-    (Icons.inventory_2_outlined, 'Insumos', _green, _greenLight),
-    (Icons.article_outlined, 'Reportes', _amber, _amberLight),
-  ];
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: _tiles
-        .map(
-          (t) => Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: _ActionTile(
-                icon: t.$1,
-                label: t.$2,
-                color: t.$3,
-                bg: t.$4,
-              ),
-            ),
-          ),
-        )
-        .toList(),
-  );
-}
-
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color bg;
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.bg,
-  });
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
-    decoration: BoxDecoration(
-      color: _card,
-      borderRadius: BorderRadius.circular(22),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x08000000),
-          blurRadius: 20,
-          offset: Offset(0, 6),
-        ),
-      ],
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: _ink,
-            height: 1.1,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-// ─── Metrics row ──────────────────────────────────────────────────
-
-// ─── Chart card ───────────────────────────────────────────────────
-class _ChartCard extends StatelessWidget {
-  final DashboardProvider provider;
-  const _ChartCard({required this.provider});
+// ── Filtro de período ─────────────────────────────────────────────────────────
+class _PeriodFilter extends StatelessWidget {
+  final DashboardPeriod current;
+  final ValueChanged<DashboardPeriod> onChanged;
+  const _PeriodFilter({required this.current, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    if (provider.isLoading) {
-      return const SizedBox(
-        height: 300,
-        child: Center(child: CircularProgressIndicator(color: _pink)),
-      );
-    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: DashboardPeriod.values.map((p) {
+            final selected = p == current;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(p),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: selected ? AppTheme.pink : Colors.transparent,
+                    borderRadius: BorderRadius.circular(9),
+                    boxShadow: selected ? [BoxShadow(color: AppTheme.pink.withOpacity(0.35), blurRadius: 6, offset: const Offset(0, 2))] : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(p.label,
+                    style: TextStyle(
+                      color: selected ? Colors.white : AppTheme.mutedColor,
+                      fontSize: 12, fontWeight: FontWeight.w600,
+                    )),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Widgets auxiliares ────────────────────────────────────────────────────────
+class _TopBar extends StatelessWidget {
+  const _TopBar();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(AppTheme.sp(context, 20), AppTheme.sp(context, 14), AppTheme.sp(context, 20), 4),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Dashboard', style: TextStyle(fontSize: AppTheme.fs(context, 22), fontWeight: FontWeight.w800, color: AppTheme.titleColor, letterSpacing: -0.8)),
+          const SizedBox(height: 2),
+          Text('Panel administrativo', style: TextStyle(fontSize: AppTheme.fs(context, 12), color: AppTheme.mutedColor, fontWeight: FontWeight.w400)),
+        ]),
+        const _ProfileIconBtn(),
+      ]),
+    );
+  }
+}
+
+class _ProfileIconBtn extends StatelessWidget {
+  const _ProfileIconBtn();
+  @override
+  Widget build(BuildContext context) {
+    final size = AppTheme.sp(context, 40);
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      width: size, height: size,
       decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 30,
-            offset: Offset(0, 8),
-          ),
-        ],
+        shape: BoxShape.circle, color: Colors.white,
+        border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+        boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Estado general de los procesos de producción',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: _ink,
-              height: 1.3,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 22),
-          _BarChart(points: provider.chartPoints),
-        ],
-      ),
+      child: Icon(Icons.person_2_sharp, color: const Color(0xFFFF4DA6), size: AppTheme.sp(context, 18)),
     );
   }
 }
 
-// ─── Bar chart ────────────────────────────────────────────────────
-class _BarChart extends StatefulWidget {
-  final List<DashboardChartPointEntity> points;
-  const _BarChart({required this.points});
-
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
   @override
-  State<_BarChart> createState() => _BarChartState();
+  Widget build(BuildContext context) => Text(text,
+    style: TextStyle(fontSize: AppTheme.fs(context, 15), fontWeight: FontWeight.w700, color: AppTheme.titleColor, letterSpacing: -0.3));
 }
 
-class _BarChartState extends State<_BarChart>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    );
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
-    _ctrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
+class _AccessButton extends StatelessWidget {
+  const _AccessButton();
   @override
   Widget build(BuildContext context) {
-    if (widget.points.isEmpty) return const SizedBox.shrink();
-
-    final maxRaw = widget.points
-        .map((p) => p.value)
-        .reduce(math.max)
-        .toDouble();
-
-    // Techo del eje Y: múltiplo de 12 por encima del máximo
-    const int yDivisions = 4;
-    final double step = ((maxRaw / yDivisions) / 12.0).ceilToDouble() * 12.0;
-    final double yMax = step * yDivisions;
-
-    const double chartH = 170.0;
-    const double labelH = 64.0;
-    const double yAxisW = 28.0;
-
-    return SizedBox(
-      height: chartH + labelH,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Eje Y ──
-          SizedBox(
-            width: yAxisW,
-            height: chartH,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(yDivisions + 1, (i) {
-                final val = (yMax - i * step).toInt();
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Text(
-                    '$val',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: _muted,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          // ── Área de barras ──
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _anim,
-              builder: (_, __) => CustomPaint(
-                painter: _GridLinesPainter(steps: yDivisions, chartH: chartH),
-                child: SizedBox(
-                  height: chartH + labelH,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-children: widget.points.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final p = entry.value;
-                        final ratio = yMax > 0 ? p.value / yMax : 0.0;
-                        final barH = math.max(ratio * chartH * _anim.value, 3.0);
-                        final barColor = index == 0 ? _pink : _green;
-
-                      return Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Barra
-                            SizedBox(
-                              height: chartH,
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  width: 12,
-                                  height: barH,
-                                  decoration: BoxDecoration(
-                                    color: barColor,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(6),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: labelH - 8,
-                              child: Text(
-                                p.label,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 9,
-                                  color: _muted,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+    return Container(
+      width: double.infinity, height: AppTheme.sp(context, 52),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: AppTheme.pink.withOpacity(0.45), blurRadius: 20, spreadRadius: 1, offset: const Offset(0, 6))],
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.pink, elevation: 0, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+        onPressed: () => Navigator.of(context).pushNamed('/menu'),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text('Acceder al sistema', style: TextStyle(fontSize: AppTheme.fs(context, 15), fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.2)),
+          const SizedBox(width: 8),
+          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: AppTheme.sp(context, 18)),
+        ]),
       ),
     );
   }
 }
 
-// ─── Pintor de líneas de guía ─────────────────────────────────────
-class _GridLinesPainter extends CustomPainter {
-  final int steps;
-  final double chartH;
-  const _GridLinesPainter({required this.steps, required this.chartH});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = _gridLine
-      ..strokeWidth = 0.8;
-    for (int i = 0; i <= steps; i++) {
-      final y = (i / steps) * chartH;
-      const double dashWidth = 6.0;
-      const double dashSpace = 4.0;
-      var startX = 0.0;
-      while (startX < size.width) {
-        final endX = (startX + dashWidth).clamp(0.0, size.width);
-        canvas.drawLine(Offset(startX, y), Offset(endX, y), paint);
-        startX += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GridLinesPainter old) =>
-      old.steps != steps || old.chartH != chartH;
+class _CardData {
+  final IconData icon;
+  final Color iconColor, iconBg;
+  final String title, value, subtitle;
+  const _CardData({required this.icon, required this.iconColor, required this.iconBg, required this.title, required this.value, required this.subtitle});
 }
 
-// ─── Legend dot ───────────────────────────────────────────────────
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 5),
-      Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          color: _muted,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    ],
-  );
+class _ProcessData {
+  final String label; final int value; final Color color;
+  const _ProcessData(this.label, this.value, this.color);
 }
