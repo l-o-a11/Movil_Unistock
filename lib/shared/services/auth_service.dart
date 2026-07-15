@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movil_unistock/config/api_config.dart';
 
-//const String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
-final String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
+String get kAuthBaseUrl => '${ApiConfig.baseUrl}/api';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
