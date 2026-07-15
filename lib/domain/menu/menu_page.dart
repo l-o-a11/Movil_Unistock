@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
-<<<<<<< HEAD
 import '../product_categories/product_categories_page.dart';
 import '../compras/compras.dart';
-=======
-import '../categories/categories_page.dart';
 import '../compras/compras_page.dart';
->>>>>>> 565520826840e8882d73a0563882425b9e290a32
 import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
