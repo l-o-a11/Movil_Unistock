@@ -155,7 +155,7 @@ class ProductsPage extends StatelessWidget {
                     child: const TextField(
                       decoration: InputDecoration(
                         hintText: "Buscar productos...",
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        prefixIcon: Icon(Icons.search, color: Color(0xFFAEAEB2)),
                         border: InputBorder.none,
                       ),
                     ),

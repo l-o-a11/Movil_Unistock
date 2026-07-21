@@ -21,7 +21,7 @@ class _ComprasPageState extends State<ComprasPage> {
   bool _loading = true;
   String? _error;
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
 
@@ -44,7 +44,7 @@ class _ComprasPageState extends State<ComprasPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'No se pudo cargar la información de compras.';
         _loading = false;
       });
     }
@@ -55,7 +55,7 @@ class _ComprasPageState extends State<ComprasPage> {
     if (q.isEmpty) return _compras;
     return _compras.where((c) {
       return c.numeroFactura.toLowerCase().contains(q) ||
-          c.proveedor.toLowerCase().contains(q) ||
+          (c.proveedorNombre?.toLowerCase().contains(q) ?? false) ||
           c.fecha.toLowerCase().contains(q) ||
           c.observaciones.toLowerCase().contains(q);
     }).toList();
@@ -72,7 +72,8 @@ class _ComprasPageState extends State<ComprasPage> {
     return Scaffold(
       bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: _bg,
-      body: Column(
+      body: SafeArea(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ──────────────────────────────────────────────────────
@@ -135,7 +136,7 @@ class _ComprasPageState extends State<ComprasPage> {
                   const SizedBox(width: 12),
                   const Icon(
                     Icons.search_rounded,
-                    color: Color(0xFFAAAAAA),
+                    color: Color(0xFFAEAEB2),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -146,7 +147,7 @@ class _ComprasPageState extends State<ComprasPage> {
                       decoration: const InputDecoration(
                         hintText: 'Buscar por factura, proveedor o fecha...',
                         hintStyle: TextStyle(
-                          color: Color(0xFFAAAAAA),
+                          color: Color(0xFFAEAEB2),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -181,11 +182,6 @@ class _ComprasPageState extends State<ComprasPage> {
                           style: const TextStyle(color: Colors.red),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: _cargar,
-                          child: const Text('Reintentar'),
-                        ),
                       ],
                     ),
                   )
@@ -196,7 +192,7 @@ class _ComprasPageState extends State<ComprasPage> {
                         ? const Center(
                             child: Text(
                               'No se encontraron compras.',
-                              style: TextStyle(color: Color(0xFFAAAAAA)),
+                              style: TextStyle(color: Color(0xFF8E8E93)),
                             ),
                           )
                         : ListView.separated(
@@ -216,6 +212,7 @@ class _ComprasPageState extends State<ComprasPage> {
                   ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -11,7 +11,7 @@ class InsumoCard extends StatelessWidget {
     required this.onDetailTap,
   });
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
