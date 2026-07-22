@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
-import '../categories/categories_page.dart';
+import '../product_categories/product_categories_page.dart';
+import '../compras/compra.dart';
 import '../compras/compras_page.dart';
 import '../insumos/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
@@ -195,7 +196,7 @@ class MenuPage extends StatelessWidget {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CategoriesPage(),
+                            builder: (_) => const ProductCategoriesPage(),
                           ),
                         ),
                         backgroundColor: const Color(0xFFFB8FD0),
