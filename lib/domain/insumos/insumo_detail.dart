@@ -22,7 +22,7 @@ class _InsumoDetailSheet extends StatelessWidget {
 
   const _InsumoDetailSheet({required this.insumo, required this.animation});
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
@@ -204,9 +204,7 @@ class _InsumoDetailSheet extends StatelessWidget {
                               ...insumo.propiedades.asMap().entries.map(
                                 (e) => _InfoRow(
                                   icon: Icons.label_outline_rounded,
-                                  label: insumo.propiedadNombre(
-                                    e.value.propiedadId,
-                                  ),
+                                  label: insumo.propiedadNombre(e.value),
                                   value: e.value.valor,
                                   isLast:
                                       e.key == insumo.propiedades.length - 1,

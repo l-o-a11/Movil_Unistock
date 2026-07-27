@@ -75,7 +75,7 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
               style:const TextStyle(fontSize:13, color:Color(0xFF1C1C1E)),
               decoration:InputDecoration(
                 hintText:'Buscar...',
-                hintStyle:const TextStyle(color:Color(0xFFAEAEB2), fontSize:13),
+                hintStyle:const TextStyle(color: Color(0xFFAEAEB2), fontSize:13),
                 prefixIcon:const Icon(Icons.search_rounded, size:17, color:Color(0xFFAEAEB2)),
                 suffixIcon:_ctrl.text.isNotEmpty
                   ? IconButton(icon:const Icon(Icons.clear_rounded, size:16, color:Color(0xFFAEAEB2)),

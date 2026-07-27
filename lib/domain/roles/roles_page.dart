@@ -21,7 +21,7 @@ class _RolesPageState extends State<RolesPage> {
   bool _loading = true;
   String? _error;
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
 
@@ -70,7 +70,8 @@ class _RolesPageState extends State<RolesPage> {
     return Scaffold(
       bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: _bg,
-      body: Column(
+      body: SafeArea(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ──────────────────────────────────────────────────────
@@ -121,15 +122,15 @@ class _RolesPageState extends State<RolesPage> {
             child: Container(
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF5F5F7),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
+                border: Border.all(color: const Color(0xFFE8E8E8)),
               ),
               child: Row(
                 children: [
                   const SizedBox(width: 12),
                   const Icon(Icons.search_rounded,
-                      color: Color(0xFFAAAAAA), size: 20),
+                      color: Color(0xFFAEAEB2), size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -138,7 +139,7 @@ class _RolesPageState extends State<RolesPage> {
                       decoration: const InputDecoration(
                         hintText: 'Buscar por nombre o descripción...',
                         hintStyle: TextStyle(
-                            color: Color(0xFFAAAAAA), fontSize: 15),
+                            color: Color(0xFFAEAEB2), fontSize: 15),
                         border: InputBorder.none,
                         isDense: true,
                       ),
@@ -168,10 +169,6 @@ class _RolesPageState extends State<RolesPage> {
                                 style:
                                     const TextStyle(color: Colors.red),
                                 textAlign: TextAlign.center),
-                            const SizedBox(height: 12),
-                            TextButton(
-                                onPressed: _cargar,
-                                child: const Text('Reintentar')),
                           ],
                         ),
                       )
@@ -183,7 +180,7 @@ class _RolesPageState extends State<RolesPage> {
                                 child: Text(
                                   'No se encontraron roles.',
                                   style:
-                                      TextStyle(color: Color(0xFFAAAAAA)),
+                                      TextStyle(color: Color(0xFF8E8E93)),
                                 ),
                               )
                             : ListView.separated(
@@ -204,6 +201,7 @@ class _RolesPageState extends State<RolesPage> {
                       ),
           ),
         ],
+      ),
       ),
     );
   }

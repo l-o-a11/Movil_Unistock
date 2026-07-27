@@ -169,7 +169,7 @@ class _ProduccionPageState extends State<ProduccionPage> {
                     hintText: 'Buscar...',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 12), 
 
                 // ── Toggle Producciones / Terceros ────────────────────────
                 Padding(

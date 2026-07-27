@@ -18,7 +18,7 @@ class _CompraDetailSheet extends StatelessWidget {
 
   const _CompraDetailSheet({required this.compra, required this.animation});
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
@@ -67,7 +67,7 @@ class _CompraDetailSheet extends StatelessWidget {
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text('ID: ${compra.id}', style: const TextStyle(color: _grey, fontSize: 13)),
                           const SizedBox(height: 8),
-                          Text('Proveedor: ${compra.proveedor}', style: const TextStyle(color: _grey, fontSize: 13)),
+                          Text('Proveedor: ${compra.proveedorNombre ?? "Sin resolver"}', style: const TextStyle(color: _grey, fontSize: 13)),
                           const SizedBox(height: 8),
                           Text('Fecha: ${compra.fecha}', style: const TextStyle(color: _grey, fontSize: 13)),
                           const SizedBox(height: 12),
@@ -76,17 +76,17 @@ class _CompraDetailSheet extends StatelessWidget {
                           ...compra.detalles.map((d) => Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
                                 child: Row(children: [
-                                  Expanded(child: Text(d.nombre, style: const TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w600))),
+                                  Expanded(child: Text(d.nombreMostrar, style: const TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w600))),
                                   const SizedBox(width: 8),
-                                  Text('${d.cantidad} x \$${d.costoUnitario.toStringAsFixed(2)}', style: const TextStyle(color: _grey)),
+                                  Text('${d.cantidad} x \$${d.precioUnitario.toStringAsFixed(2)}', style: const TextStyle(color: _grey)),
                                   const SizedBox(width: 8),
-                                  Text('\$${d.costo.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontWeight: FontWeight.w700)),
+                                  Text('\$${d.subtotal.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontWeight: FontWeight.w700)),
                                 ]),
                               )),
                           const SizedBox(height: 12),
                           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                             const Text('Total', style: TextStyle(color: _grey, fontSize: 14, fontWeight: FontWeight.w600)),
-                            Text('\$${compra.costoTotal.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w800)),
+                            Text('\$${compra.total.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w800)),
                           ]),
                           const SizedBox(height: 12),
                           Row(children: [
