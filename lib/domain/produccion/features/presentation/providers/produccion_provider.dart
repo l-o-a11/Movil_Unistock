@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
 import '../../domain/usecases/get_ordenes_usecase.dart';
 import '../state/produccion_state.dart';
 
 class ProduccionProvider extends ChangeNotifier {
   final GetOrdenesUseCase getOrdenesUseCase;
+  final AuthService _auth;
 
-  ProduccionProvider({required this.getOrdenesUseCase}) {
+  ProduccionProvider({required this.getOrdenesUseCase, AuthService? auth})
+      : _auth = auth ?? AuthService() {
     loadOrdenes();
   }
 
@@ -17,16 +20,24 @@ class ProduccionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga TODAS las órdenes sin filtrar (igual que el web).
-  /// El filtrado se hace localmente en [ProduccionState.ordenesFiltradas].
+  /// Carga TODAS las órdenes sin filtrar (igual que el web) junto con el
+  /// rol/usuario logueado. El filtrado (incluido el alcance por rol) se
+  /// hace localmente en [ProduccionState.ordenesFiltradas].
   Future<void> loadOrdenes() async {
     _emit(_state.copyWith(isLoading: true));
     try {
+      final rolNombre = await _auth.getRolNombre();
+      final userId = await _auth.getUserId();
       // Sin pasar estado ni tipo: traer todo y filtrar en cliente
       final ordenes = await getOrdenesUseCase(
         query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
       );
-      _emit(_state.copyWith(isLoading: false, ordenes: ordenes));
+      _emit(_state.copyWith(
+        isLoading: false,
+        ordenes: ordenes,
+        rolNombre: rolNombre,
+        userId: userId,
+      ));
     } catch (e) {
       _emit(_state.copyWith(isLoading: false, error: e.toString()));
     }

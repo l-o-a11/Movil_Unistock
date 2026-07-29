@@ -11,6 +11,10 @@ abstract class OrdenLocalDataSource {
   });
 
   Future<OrdenDetailEntity?> getOrdenDetail(String id);
+
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado);
+
+  Future<OrdenDetailEntity?> confirmarEtapa(String id);
 }
 
 /// Implementación local de [OrdenLocalDataSource].
@@ -184,4 +188,37 @@ class OrdenLocalDataSourceImpl implements OrdenLocalDataSource {
       return null;
     }
   }
+
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final current = await getOrdenDetail(id);
+    if (current == null) return null;
+    return OrdenDetailModel.fromJson({
+      ..._toMockJson(current),
+      'estado': nuevoEstado,
+      'etapaConfirmada': false,
+    });
+  }
+
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final current = await getOrdenDetail(id);
+    if (current == null) return null;
+    return OrdenDetailModel.fromJson({
+      ..._toMockJson(current),
+      'etapaConfirmada': true,
+    });
+  }
+
+  Map<String, dynamic> _toMockJson(OrdenDetailEntity d) => {
+    '_id': d.id,
+    'numero_orden': d.numero,
+    'unidades': d.unidades,
+    'estado': d.estado,
+    'tipo': d.tipo,
+    'cliente': d.cliente,
+    'fechaEntrega': d.fechaEntrega?.toIso8601String(),
+  };
 }
