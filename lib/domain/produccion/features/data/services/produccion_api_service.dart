@@ -83,6 +83,55 @@ class ProduccionApiService implements OrdenLocalDataSource {
     return _local.getOrdenDetail(id);
   }
 
+  /// Avanza la orden al [nuevoEstado] — rol Gerente.
+  /// Espejo de `ProductionAPIClient.changeOrderStatus` (PATCH .../estado).
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) async {
+    final userId = await _auth.getUserId();
+    final uri = Uri.parse('$baseUrl/produccion/ordenes/$id/estado');
+    final response = await http
+        .patch(
+          uri,
+          headers: await _authHeaders,
+          body: json.encode({'estado': nuevoEstado, 'id_usuario': userId}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      final data = (body is Map && body['data'] != null) ? body['data'] : body;
+      if (data is Map) {
+        return OrdenDetailModel.fromJson(Map<String, dynamic>.from(data));
+      }
+    }
+    throw Exception('No se pudo avanzar la orden (HTTP ${response.statusCode})');
+  }
+
+  /// El empleado asignado confirma que terminó la etapa actual. NO cambia
+  /// el estado — solo marca `etapaConfirmada: true`. Espejo de
+  /// `ProductionAPIClient.confirmarEtapa` (PATCH .../confirmar-etapa).
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) async {
+    final userId = await _auth.getUserId();
+    final uri = Uri.parse('$baseUrl/produccion/ordenes/$id/confirmar-etapa');
+    final response = await http
+        .patch(
+          uri,
+          headers: await _authHeaders,
+          body: json.encode({'id_usuario': userId}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      final data = (body is Map && body['data'] != null) ? body['data'] : body;
+      if (data is Map) {
+        return OrdenDetailModel.fromJson(Map<String, dynamic>.from(data));
+      }
+    }
+    throw Exception('No se pudo confirmar la etapa (HTTP ${response.statusCode})');
+  }
+
   Future<Map<String, String>> get _authHeaders async {
     final token = await _auth.getToken();
     final headers = {

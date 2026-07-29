@@ -13,6 +13,13 @@ class OrdenEntity {
   final DateTime? fechaEstado;
   final String? sede;          // sede asignada (puede venir como string)
   final String? terceroNombre; // nombre del tercero principal (resumen rápido)
+  // ── Asignación / confirmación de etapa (empleado) ─────────────────────
+  // Necesarios ya en la ENTIDAD BASE (no solo en el detalle) porque el
+  // listado de órdenes (ProduccionState.ordenesFiltradas) filtra por
+  // estos campos para que un Empleado solo vea SU orden asignada — igual
+  // que `matchesSede` en ProductionPage.jsx del frontend web.
+  final String? empleadoAsignadoId;
+  final bool etapaConfirmada;
 
   const OrdenEntity({
     required this.id,
@@ -29,6 +36,8 @@ class OrdenEntity {
     this.fechaEstado,
     this.sede,
     this.terceroNombre,
+    this.empleadoAsignadoId,
+    this.etapaConfirmada = false,
   });
 
   bool get isHidden       => estado == 'Anulada' || estado == 'Enviado';

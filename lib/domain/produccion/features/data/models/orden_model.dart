@@ -16,6 +16,8 @@ class OrdenModel extends OrdenEntity {
     super.fechaEstado,
     super.sede,
     super.terceroNombre,
+    super.empleadoAsignadoId,
+    super.etapaConfirmada,
   });
 
   /// Mapea la respuesta real del backend exactamente como lo hace
@@ -81,6 +83,15 @@ class OrdenModel extends OrdenEntity {
     final fechaEstado =
         _parseDate(lastFecha ?? json['updatedAt'] ?? json['createdAt']);
 
+    // Asignación/confirmación de etapa por parte del empleado — mismo
+    // mapeo que toFrontendFormat() en ProductionAPIClient.js del web.
+    // Necesario aquí (y no solo en el detalle) porque el listado filtra
+    // por estos campos para que el Empleado solo vea su orden asignada.
+    final empleadoAsignaciones = json['empleadoAsignaciones'];
+    final empleadoAsignadoId = json['empleadoAsignadoId']?.toString() ??
+        _resolveEmpleadoAsignadoId(empleadoAsignaciones, estado);
+    final etapaConfirmada = json['etapaConfirmada'] == true;
+
     return OrdenModel(
       id:            id,
       numero:        numero,
@@ -98,9 +109,19 @@ class OrdenModel extends OrdenEntity {
       terceroNombre: (json['terceros'] as List<dynamic>?)?.isNotEmpty == true
           ? ((json['terceros'] as List)[0]['nombre'] ?? (json['terceros'] as List)[0]['nombreEmpresa'])?.toString()
           : null,
+      empleadoAsignadoId: empleadoAsignadoId,
+      etapaConfirmada:    etapaConfirmada,
     );
   }
 
-  static DateTime? _parseDate(dynamic v) =>
-      v == null ? null : DateTime.tryParse(v.toString());
+static DateTime? _parseDate(dynamic v) =>
+       v == null ? null : DateTime.tryParse(v.toString());
+
+  static String? _resolveEmpleadoAsignadoId(dynamic asignaciones, String estado) {
+    if (asignaciones is Map) {
+      final asig = asignaciones[estado] as Map?;
+      return asig?['id_empleado']?.toString();
+    }
+    return null;
+  }
 }

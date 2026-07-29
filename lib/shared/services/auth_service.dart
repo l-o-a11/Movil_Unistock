@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:movil_unistock/config/api_config.dart';
-
-String get kAuthBaseUrl => '${ApiConfig.baseUrl}/api';
+const String kAuthBaseUrl = 'http://10.0.2.2:3000/api';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
@@ -78,5 +76,21 @@ class AuthService {
   Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
+  }
+
+  /// Nombre del rol del usuario logueado, en minúsculas (ej. 'gerente',
+  /// 'administrador', 'empleado'). Espejo de `rolNombre` en useSedeScope.js
+  /// del frontend web.
+  Future<String> getRolNombre() async {
+    final user = await getUser();
+    return (user?['rolNombre'] ?? user?['rol'] ?? '').toString().toLowerCase();
+  }
+
+  /// ObjectId de Mongo del usuario logueado — necesario para acciones como
+  /// confirmar-etapa, donde el backend valida contra el empleado asignado.
+  Future<String?> getUserId() async {
+    final user = await getUser();
+    final id = user?['id'] ?? user?['_id'];
+    return id?.toString();
   }
 }

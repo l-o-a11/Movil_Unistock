@@ -20,6 +20,9 @@ class OrdenDetailEntity extends OrdenEntity {
   final List<HistorialEntryEntity> historial;
   final FichaCostoEntity? fichaCosto;
   final List<TerceroAsignacion> terceros;
+  // Nombre del empleado asignado — solo disponible en el detalle (el id y
+  // etapaConfirmada ya viven en OrdenEntity, ver comentario allá).
+  final String? empleadoAsignadoNombre;
 
   const OrdenDetailEntity({
     required super.id,
@@ -36,10 +39,13 @@ class OrdenDetailEntity extends OrdenEntity {
     super.fechaEstado,
     super.sede,
     super.terceroNombre,
+    super.empleadoAsignadoId,
+    super.etapaConfirmada,
     required this.referencias,
     required this.historial,
     this.fichaCosto,
     this.terceros = const [],
+    this.empleadoAsignadoNombre,
   });
 
   /// Progreso real calculado desde la posición del estado en el flujo
@@ -61,5 +67,18 @@ class OrdenDetailEntity extends OrdenEntity {
   String get siguienteEtapaLabel {
     final next = estadoIndex + 1;
     return next < kProductionStates.length ? kProductionStates[next] : 'Finalizado';
+  }
+
+  bool get isAnulada => estado == 'Anulada';
+
+  /// Nombre del siguiente estado del flujo, o null si la orden ya está en
+  /// el último paso (o fue anulada). Se usa para habilitar el botón
+  /// "Siguiente" — igual que `nextStep` en ProductionDetailsPage.jsx.
+  String? get nextEstado {
+    if (isAnulada) return null;
+    final idx = estadoIndex;
+    if (idx < 0) return null;
+    final next = idx + 1;
+    return next < kProductionStates.length ? kProductionStates[next] : null;
   }
 }

@@ -36,4 +36,14 @@ class OrdenRepositoryImpl implements OrdenRepository {
   Future<OrdenDetailEntity?> getOrdenDetail(String id) {
     return localDataSource.getOrdenDetail(id);
   }
+
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) {
+    return localDataSource.avanzarEstado(id, nuevoEstado);
+  }
+
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) {
+    return localDataSource.confirmarEtapa(id);
+  }
 }
