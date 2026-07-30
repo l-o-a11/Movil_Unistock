@@ -1,152 +1,146 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:movil_unistock/shared/services/auth_service.dart';
 
-import '../../domain/entities/orden_entity.dart';
 import '../../domain/entities/orden_detail_entity.dart';
-import '../../domain/entities/orden_referencia_entity.dart';
-import '../../domain/entities/historial_entry_entity.dart';
-import '../../domain/entities/ficha_costo_entity.dart';
 import '../models/orden_model.dart';
+import '../models/orden_detail_model.dart';
 import '../datasources/orden_local_datasource.dart';
 
 /// Servicio de API para producción.
 /// Intenta consumir el backend REST; si no está disponible, cae en el
-/// datasource local (mock) para mantener la app funcional en desarrollo.
-class ProduccionApiService {
+/// datasource local para mantener la app funcional en desarrollo.
+class ProduccionApiService implements OrdenLocalDataSource {
   final String baseUrl;
   final OrdenLocalDataSource _local;
+  final AuthService _auth;
 
   ProduccionApiService({
-    this.baseUrl = 'https://api.example.com',
+    this.baseUrl = 'http://10.0.2.2:3000/api',
     OrdenLocalDataSource? local,
-  }) : _local = local ?? OrdenLocalDataSourceImpl();
+    AuthService? auth,
+  }) : _local = local ?? OrdenLocalDataSourceImpl(),
+       _auth = auth ?? AuthService();
 
-  // ── Obtener lista de órdenes ──────────────────────────────────────────────
-
-  Future<List<OrdenEntity>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+  @override
+  Future<List<OrdenModel>> getOrdenes({
+    String? estado,
+    String? tipo,
     String? query,
   }) async {
     try {
       final params = <String, String>{};
-      if (estado != null) params['estado'] = estado.name;
-      if (tipo != null) params['tipo'] = tipo.name;
+      if (estado != null) params['estado'] = estado;
+      if (tipo != null) params['tipo'] = tipo;
       if (query != null && query.isNotEmpty) params['q'] = query;
 
-      final uri = Uri.parse('$baseUrl/ordenes').replace(queryParameters: params);
-      final response = await http.get(uri, headers: _headers).timeout(
-        const Duration(seconds: 10),
-      );
+      final uri = Uri.parse(
+        '$baseUrl/produccion/ordenes',
+      ).replace(queryParameters: params);
+      final response = await http
+          .get(uri, headers: await _authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => OrdenModel.fromJson(e)).toList();
+        final body = json.decode(response.body);
+        List<dynamic> data = [];
+        if (body is List)
+          data = body;
+        else if (body is Map && body['data'] is List)
+          data = (body['data'] as List);
+        if (data.isNotEmpty) {
+          return data.map((e) => OrdenModel.fromJson(e)).toList();
+        }
+        // Fallback: if API returns an object with the entity under 'data'
+        // and it's a single item, try to map it as a single-element list.
+        if (body is Map && body['data'] is Map) {
+          return [OrdenModel.fromJson(body['data'])];
+        }
       }
-    } catch (_) {
-      // Fallback silencioso al datasource local
-    }
-
-    // Fallback: datos locales mock
+    } catch (_) {}
     return _local.getOrdenes(estado: estado, tipo: tipo, query: query);
   }
 
-  // ── Obtener detalle de una orden ──────────────────────────────────────────
-
+  @override
   Future<OrdenDetailEntity?> getOrdenDetail(String id) async {
     try {
-      final uri = Uri.parse('$baseUrl/ordenes/$id');
-      final response = await http.get(uri, headers: _headers).timeout(
-        const Duration(seconds: 10),
-      );
+      final uri = Uri.parse('$baseUrl/produccion/ordenes/$id');
+      final response = await http
+          .get(uri, headers: await _authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return _mapDetailFromJson(data);
+        final body = json.decode(response.body);
+        if (body is Map && body['data'] is Map) {
+          return OrdenDetailModel.fromJson(
+            Map<String, dynamic>.from(body['data']),
+          );
+        }
+        if (body is Map)
+          return OrdenDetailModel.fromJson(Map<String, dynamic>.from(body));
       }
-    } catch (_) {
-      // Fallback silencioso al datasource local
-    }
-
-    // Fallback: datos locales mock
+    } catch (_) {}
     return _local.getOrdenDetail(id);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  /// Avanza la orden al [nuevoEstado] — rol Gerente.
+  /// Espejo de `ProductionAPIClient.changeOrderStatus` (PATCH .../estado).
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) async {
+    final userId = await _auth.getUserId();
+    final uri = Uri.parse('$baseUrl/produccion/ordenes/$id/estado');
+    final response = await http
+        .patch(
+          uri,
+          headers: await _authHeaders,
+          body: json.encode({'estado': nuevoEstado, 'id_usuario': userId}),
+        )
+        .timeout(const Duration(seconds: 10));
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-
-  OrdenDetailEntity _mapDetailFromJson(Map<String, dynamic> json) {
-    return OrdenDetailEntity(
-      id: json['id'] as String,
-      numero: json['numero'] as int,
-      unidades: json['unidades'] as int,
-      estado: OrdenEstado.values.firstWhere(
-        (e) => e.name == json['estado'],
-        orElse: () => OrdenEstado.pendiente,
-      ),
-      tipo: OrdenTipo.values.firstWhere(
-        (e) => e.name == json['tipo'],
-        orElse: () => OrdenTipo.produccion,
-      ),
-      cliente: json['cliente'] as String?,
-      fechaEntrega: json['fechaEntrega'] != null
-          ? DateTime.tryParse(json['fechaEntrega'])
-          : null,
-      refCorte: json['refCorte'] as String?,
-      ref: json['ref'] as String?,
-      fechaEstado: json['fechaEstado'] != null
-          ? DateTime.tryParse(json['fechaEstado'])
-          : null,
-      progreso: (json['progreso'] as num).toDouble(),
-      etapaActual: json['etapaActual'] as int,
-      referencias: (json['referencias'] as List<dynamic>?)
-              ?.map((r) => _mapReferencia(r))
-              .toList() ??
-          [],
-      historial: (json['historial'] as List<dynamic>?)
-              ?.map((h) => _mapHistorial(h))
-              .toList() ??
-          [],
-      fichaCosto: json['fichaCosto'] != null
-          ? _mapFicha(json['fichaCosto'])
-          : null,
-    );
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      final data = (body is Map && body['data'] != null) ? body['data'] : body;
+      if (data is Map) {
+        return OrdenDetailModel.fromJson(Map<String, dynamic>.from(data));
+      }
+    }
+    throw Exception('No se pudo avanzar la orden (HTTP ${response.statusCode})');
   }
 
-  OrdenReferenciaEntity _mapReferencia(Map<String, dynamic> r) {
-    return OrdenReferenciaEntity(
-      codigo: r['codigo'] as String,
-      cantidad: r['cantidad'] as int,
-      color: _parseColor(r['colorHex'] as String? ?? '#000000'),
-      colorName: r['colorName'] as String,
-    );
+  /// El empleado asignado confirma que terminó la etapa actual. NO cambia
+  /// el estado — solo marca `etapaConfirmada: true`. Espejo de
+  /// `ProductionAPIClient.confirmarEtapa` (PATCH .../confirmar-etapa).
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) async {
+    final userId = await _auth.getUserId();
+    final uri = Uri.parse('$baseUrl/produccion/ordenes/$id/confirmar-etapa');
+    final response = await http
+        .patch(
+          uri,
+          headers: await _authHeaders,
+          body: json.encode({'id_usuario': userId}),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      final data = (body is Map && body['data'] != null) ? body['data'] : body;
+      if (data is Map) {
+        return OrdenDetailModel.fromJson(Map<String, dynamic>.from(data));
+      }
+    }
+    throw Exception('No se pudo confirmar la etapa (HTTP ${response.statusCode})');
   }
 
-  HistorialEntryEntity _mapHistorial(Map<String, dynamic> h) {
-    return HistorialEntryEntity(
-      etapa: h['etapa'] as String,
-      fecha: DateTime.parse(h['fecha'] as String),
-      responsable: h['responsable'] as String,
-    );
-  }
-
-  FichaCostoEntity _mapFicha(Map<String, dynamic> f) {
-    return FichaCostoEntity(
-      nombre: f['nombre'] as String,
-      version: f['version'] as String,
-      costoPorUnidad: (f['costoPorUnidad'] as num).toDouble(),
-      costoTotal: (f['costoTotal'] as num).toDouble(),
-      completado: f['completado'] as bool,
-    );
-  }
-
-  // ignore: unused_element
-  static dynamic _parseColor(String hex) {
-    final h = hex.replaceFirst('#', '');
-    return int.parse('FF$h', radix: 16);
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

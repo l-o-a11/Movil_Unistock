@@ -1,131 +1,151 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:movil_unistock/config/api_config.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
 import 'compra.dart';
 
+/// Servicio de datos para Compras.
+///
+/// Consume el backend real (`GET /api/compras`). Si la petición falla, la
+/// excepción se propaga hacia la UI (que muestra el mensaje de error o el
+/// estado vacío correspondiente) — no hay datos mock de respaldo.
+///
+/// El backend NO incluye el nombre del proveedor en la respuesta de
+/// compras (solo `proveedorId`), así que este servicio lo resuelve aparte
+/// consultando `GET /api/proveedores` y lo inyecta en cada [Compra]. Para
+/// el detalle de una compra puntual, también resuelve el nombre de los
+/// insumos cuyo `nombre` libre venga null (solo tienen `insumoId`).
 class CompraService {
-  // ─── Configuración ────────────────────────────────────────────────────────
-  // TODO: reemplaza esta URL por la de tu backend real
-  static const _baseUrl = 'https://tu-api.com/api';
+  final String baseUrl;
+  final String _resource = 'compras';
+  final AuthService _auth;
 
-  // Pon en false cuando tu API esté lista
-  static const bool _useMock = true;
-
-  // ─── Datos de ejemplo ─────────────────────────────────────────────────────
-  static final List<Map<String, dynamic>> _mockData = [
-    {
-      'id': 1,
-      'numeroFactura': '1873',
-      'proveedorId': 1,
-      'proveedor': 'Compras Corseteros',
-      'fecha': '2025-12-10',
-      'observaciones': 'Compra para la orden x para la ref x',
-      'costoTotal': 13300.0,
-      'anulada': false,
-      'detalles': [
-        {
-          'id': 101,
-          'nombre': 'Tela Rosada',
-          'cantidad': 50,
-          'costoUnitario': 200.0,
-          'costo': 10000.0,
-        },
-        {
-          'id': 102,
-          'nombre': 'Hilos',
-          'cantidad': 100,
-          'costoUnitario': 3.0,
-          'costo': 300.0,
-        },
-        {
-          'id': 103,
-          'nombre': 'Botones',
-          'cantidad': 300,
-          'costoUnitario': 10.0,
-          'costo': 3000.0,
-        },
-      ],
-    },
-    {
-      'id': 2,
-      'numeroFactura': '1874',
-      'proveedorId': 2,
-      'proveedor': 'Distribuciones S.A.',
-      'fecha': '2025-12-12',
-      'observaciones': 'Reposición de insumos',
-      'costoTotal': 2500.0,
-      'anulada': false,
-      'detalles': [
-        {
-          'id': 201,
-          'nombre': 'Elástico plano 2 cm',
-          'cantidad': 100,
-          'costoUnitario': 0.8,
-          'costo': 80.0,
-        },
-        {
-          'id': 202,
-          'nombre': 'Velcro adhesivo 2 cm',
-          'cantidad': 200,
-          'costoUnitario': 1.8,
-          'costo': 360.0,
-        },
-      ],
-    },
-  ];
+  CompraService({String? baseUrl, AuthService? auth})
+      : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
+        _auth = auth ?? AuthService();
 
   // ─── Métodos públicos ─────────────────────────────────────────────────────
 
   Future<List<Compra>> getCompras() async {
-    if (_useMock) return _mockCompras();
-    return _fetchCompras();
-  }
+    final uri = Uri.parse('$baseUrl/$_resource');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
 
-  Future<Compra> getCompraById(int id) async {
-    if (_useMock) return _mockCompraById(id);
-    return _fetchCompraById(id);
-  }
-
-  // ─── Mock ─────────────────────────────────────────────────────────────────
-
-  Future<List<Compra>> _mockCompras() async {
-    // Simula latencia de red
-    await Future.delayed(const Duration(milliseconds: 600));
-    return _mockData.map((e) => Compra.fromJson(e)).toList();
-  }
-
-  Future<Compra> _mockCompraById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final json = _mockData.firstWhere(
-      (e) => e['id'] == id,
-      orElse: () => throw Exception('Compra $id no encontrado'),
-    );
-    return Compra.fromJson(json);
-  }
-
-  // ─── API real ─────────────────────────────────────────────────────────────
-
-  Future<List<Compra>> _fetchCompras() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/compras'),
-      headers: {'Content-Type': 'application/json'},
-    );
     if (response.statusCode == 200) {
-      final List<dynamic> json = jsonDecode(response.body);
-      return json
-          .map((e) => Compra.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final body = jsonDecode(response.body);
+      final List<dynamic> data =
+          body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+      final compras =
+          data.map((e) => Compra.fromJson(e as Map<String, dynamic>)).toList();
+      return _enriquecerProveedores(compras);
     }
     throw Exception('Error al cargar compras (${response.statusCode})');
   }
 
-  Future<Compra> _fetchCompraById(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/compras/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  Future<Compra> getCompraById(String id) async {
+    final uri = Uri.parse('$baseUrl/$_resource/$id');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+
     if (response.statusCode == 200) {
-      return Compra.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+      final body = jsonDecode(response.body);
+      final data = (body is Map && body['data'] is Map)
+          ? Map<String, dynamic>.from(body['data'])
+          : Map<String, dynamic>.from(body as Map);
+      var compra = Compra.fromJson(data);
+      compra = (await _enriquecerProveedores([compra])).first;
+      final detalles = await _enriquecerNombresInsumo(compra.detalles);
+      return compra.copyWith(detalles: detalles);
     }
     throw Exception('Error al cargar compra $id (${response.statusCode})');
+  }
+
+  // ─── Helpers de enriquecimiento ────────────────────────────────────────────
+
+  Future<List<Compra>> _enriquecerProveedores(List<Compra> compras) async {
+    if (compras.every((c) => c.proveedorId.isEmpty)) return compras;
+    try {
+      final mapa = await _fetchProveedoresMap();
+      return compras
+          .map((c) => c.copyWith(proveedorNombre: mapa[c.proveedorId]))
+          .toList();
+    } catch (_) {
+      return compras;
+    }
+  }
+
+  Future<List<CompraDetalle>> _enriquecerNombresInsumo(
+    List<CompraDetalle> detalles,
+  ) async {
+    final faltantes = detalles.where(
+      (d) => (d.nombre == null || d.nombre!.isEmpty) && d.insumoId != null,
+    );
+    if (faltantes.isEmpty) return detalles;
+    try {
+      final mapa = await _fetchInsumosMap();
+      return detalles
+          .map((d) => d.copyWith(nombreResuelto: mapa[d.insumoId]))
+          .toList();
+    } catch (_) {
+      return detalles;
+    }
+  }
+
+  Future<Map<String, String>> _fetchProveedoresMap() async {
+    final uri = Uri.parse('$baseUrl/proveedores');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) return {};
+
+    final body = jsonDecode(response.body);
+    final List<dynamic> data =
+        body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+
+    final mapa = <String, String>{};
+    for (final p in data) {
+      if (p is Map) {
+        final id = (p['id'] ?? p['_id'])?.toString();
+        final nombre = p['nombre_de_empresa']?.toString();
+        if (id != null && nombre != null) mapa[id] = nombre;
+      }
+    }
+    return mapa;
+  }
+
+  Future<Map<String, String>> _fetchInsumosMap() async {
+    final uri = Uri.parse('$baseUrl/insumos');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) return {};
+
+    final body = jsonDecode(response.body);
+    final List<dynamic> data =
+        body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+
+    final mapa = <String, String>{};
+    for (final i in data) {
+      if (i is Map) {
+        final id = (i['id'] ?? i['_id'])?.toString();
+        final nombre = i['nombre']?.toString();
+        if (id != null && nombre != null) mapa[id] = nombre;
+      }
+    }
+    return mapa;
+  }
+
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

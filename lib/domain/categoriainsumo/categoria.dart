@@ -1,5 +1,5 @@
 class Categoria {
-  final int id;
+  final String id;
   final String nombre;
   final bool estado;
 
@@ -12,11 +12,19 @@ class Categoria {
   String get estadoLabel => estado ? 'Activo' : 'Inactivo';
   bool get isActivo => estado;
 
-  factory Categoria.fromJson(Map<String, dynamic> json) => Categoria(
-    id: json['id'] as int,
-    nombre: json['nombre']?.toString() ?? '',
-    estado: json['estado'] as bool? ?? false,
-  );
+  /// Tolerante a `id`/`_id` y a `estado`/`activo`.
+  factory Categoria.fromJson(Map<String, dynamic> json) {
+    final rawEstado = json['estado'] ?? json['activo'];
+    final estado = rawEstado is bool
+        ? rawEstado
+        : (rawEstado?.toString().toLowerCase() == 'true' || rawEstado == null);
+
+    return Categoria(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      nombre: json['nombre']?.toString() ?? '',
+      estado: estado,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

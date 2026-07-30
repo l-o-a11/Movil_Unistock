@@ -13,8 +13,8 @@ abstract class OrdenRepository {
   ///
   /// Retorna lista de [OrdenEntity] que coinciden con los filtros.
   Future<List<OrdenEntity>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   });
 
@@ -26,4 +26,15 @@ abstract class OrdenRepository {
   /// Incluye información extendida no presente en [OrdenEntity].
   /// Retorna null si la orden no existe.
   Future<OrdenDetailEntity?> getOrdenDetail(String id);
+
+  /// Avanza la orden [id] al estado [nuevoEstado] (rol Gerente).
+  /// Espejo de `ProductionAPIClient.changeOrderStatus` en el frontend web.
+  /// Retorna el detalle actualizado.
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado);
+
+  /// Confirma que el empleado asignado terminó la etapa actual (rol
+  /// Empleado). NO cambia el estado — solo marca `etapaConfirmada: true`
+  /// para que el Gerente decida cuándo avanzar. Espejo de
+  /// `ProductionAPIClient.confirmarEtapa` en el frontend web.
+  Future<OrdenDetailEntity?> confirmarEtapa(String id);
 }

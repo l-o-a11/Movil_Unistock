@@ -1,29 +1,38 @@
+/// Propiedad dinámica de un insumo.
+///
+/// Forma real del backend (`SupplyModel.propiedadSchema`):
+/// `{ clave: "color", label: "Color", valor: "Rojo" }` — el nombre a
+/// mostrar ya viene en `label`, no requiere ningún catálogo/lookup aparte.
 class PropiedadInsumo {
-  final int id;
-  final int propiedadId;
+  final String clave;
+  final String label;
   final String valor;
 
   const PropiedadInsumo({
-    required this.id,
-    required this.propiedadId,
+    required this.clave,
+    required this.label,
     required this.valor,
   });
 
-  factory PropiedadInsumo.fromJson(Map<String, dynamic> json) =>
-      PropiedadInsumo(
-        id: json['id'] as int,
-        propiedadId: json['propiedadId'] as int,
-        valor: json['valor']?.toString() ?? '',
-      );
+  factory PropiedadInsumo.fromJson(Map<String, dynamic> json) => PropiedadInsumo(
+    clave: json['clave']?.toString() ?? '',
+    label: json['label']?.toString() ?? '',
+    valor: json['valor']?.toString() ?? '',
+  );
 }
 
 class Insumo {
-  final int id;
+  final String id;
   final String nombre;
-  final int categoriaId;
+  final String categoriaId;
+  // Nombre de la categoría: el backend NO popula `categoria` (llega como
+  // ObjectId plano), así que esto se resuelve aparte en [InsumoService]
+  // consultando `/insumos/catalogos/categorias` y se inyecta con [copyWith].
+  final String? categoriaNombre;
   final int stock;
   final double valorMedida;
-  final int medidaId;
+  // Abreviatura tal cual la manda el backend (ej. "kg", "und", "m").
+  final String medidaAbrev;
   final bool estado;
   final String? image;
   final List<PropiedadInsumo> propiedades;
@@ -32,63 +41,110 @@ class Insumo {
     required this.id,
     required this.nombre,
     required this.categoriaId,
+    this.categoriaNombre,
     required this.stock,
     required this.valorMedida,
-    required this.medidaId,
+    required this.medidaAbrev,
     required this.estado,
     this.image,
     this.propiedades = const [],
   });
 
-  // ─── Lookup helpers ────────────────────────────────────────────────────────
-
-  static const _categorias = {
-    1: 'Telas',
-    2: 'Hilos',
-    3: 'Cierres',
-    4: 'Elásticos',
-    5: 'Encajes y pasamanería',
-    6: 'Entretelas',
-    7: 'Botones',
-    8: 'Velcros',
+  // Catálogo de medidas predeterminadas del backend
+  // (supplyController.js → MEDIDAS_PREDETERMINADAS). Traduce la abreviatura
+  // a un nombre legible; si no está en el catálogo, se muestra la
+  // abreviatura tal cual.
+  static const _medidasLabel = {
+    'kg': 'Kilogramo',
+    'g': 'Gramo',
+    'mg': 'Miligramo',
+    'l': 'Litro',
+    'ml': 'Mililitro',
+    'm': 'Metro',
+    'cm': 'Centímetro',
+    'mm': 'Milímetro',
+    'm2': 'Metro cuadrado',
+    'm3': 'Metro cúbico',
+    'und': 'Unidad',
+    'par': 'Par',
+    'cja': 'Caja',
+    'rl': 'Rollo',
+    'blt': 'Bulto',
   };
 
-  static const _medidas = {
-    1: 'Unidad',
-    2: 'Metro',
-    3: 'Rollo',
-    4: 'Paquete',
-    5: 'Caja',
-    6: 'Litro',
-  };
+  String get categoria => categoriaNombre ?? 'Sin categoría';
 
-  static const _propiedadesNombres = {
-    1: 'Color',
-    2: 'Tamaño',
-    3: 'Elasticidad',
-    4: 'Diseño',
-    5: 'Material',
-  };
+  String get medida => _medidasLabel[medidaAbrev] ?? medidaAbrev;
 
-  String get categoria => _categorias[categoriaId] ?? 'Categoría $categoriaId';
-  String get medida => _medidas[medidaId] ?? 'Medida $medidaId';
   bool get isActivo => estado;
   String get estadoLabel => estado ? 'Activo' : 'Inactivo';
 
-  String propiedadNombre(int propiedadId) =>
-      _propiedadesNombres[propiedadId] ?? 'Propiedad $propiedadId';
+  /// Nombre a mostrar para una propiedad dinámica del insumo.
+  String propiedadNombre(PropiedadInsumo p) =>
+      p.label.isNotEmpty ? p.label : p.clave;
 
-  factory Insumo.fromJson(Map<String, dynamic> json) => Insumo(
-        id: json['id'] as int,
-        nombre: json['nombre']?.toString() ?? '',
-        categoriaId: json['categoriaId'] as int,
-        stock: json['stock'] as int,
-        valorMedida: (json['valorMedida'] as num).toDouble(),
-        medidaId: json['medidaId'] as int,
-        estado: json['estado'] as bool,
-        image: json['image']?.toString(),
-        propiedades: (json['propiedades'] as List<dynamic>? ?? [])
-            .map((e) => PropiedadInsumo.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  Insumo copyWith({String? categoriaNombre}) => Insumo(
+    id: id,
+    nombre: nombre,
+    categoriaId: categoriaId,
+    categoriaNombre: categoriaNombre ?? this.categoriaNombre,
+    stock: stock,
+    valorMedida: valorMedida,
+    medidaAbrev: medidaAbrev,
+    estado: estado,
+    image: image,
+    propiedades: propiedades,
+  );
+
+  /// Construye un [Insumo] a partir del JSON devuelto por el backend real
+  /// (`GET /api/insumos`).
+  ///
+  /// `categoria` llega como un ObjectId plano (no viene poblado por el
+  /// backend), así que aquí solo se guarda el id — el nombre se resuelve
+  /// después en [InsumoService] con el catálogo de categorías.
+  factory Insumo.fromJson(Map<String, dynamic> json) {
+    final rawCategoria = json['categoria'];
+    String categoriaId = '';
+    String? categoriaNombre;
+    if (rawCategoria is Map) {
+      // Por si en el futuro el backend empieza a popularla.
+      categoriaId = (rawCategoria['_id'] ?? rawCategoria['id'] ?? '').toString();
+      categoriaNombre = rawCategoria['nombre']?.toString();
+    } else if (rawCategoria != null) {
+      categoriaId = rawCategoria.toString();
+    }
+
+    // ── Estado: puede venir como 'estado' (bool) o 'activo' ───────────────
+    final rawEstado = json['estado'] ?? json['activo'];
+    final estado = rawEstado is bool
+        ? rawEstado
+        : (rawEstado?.toString().toLowerCase() == 'true' ||
+            rawEstado?.toString().toLowerCase() == 'activo' ||
+            rawEstado == null); // si no viene el campo, se asume activo
+
+    // ── Imagen: campo real es `imagen` (URL de Cloudinary) ─────────────────
+    final rawImage = json['imagen'] ?? json['image'] ?? json['imageUrl'];
+    final image = rawImage is Map
+        ? (rawImage['url'] ?? rawImage['secure_url'])?.toString()
+        : rawImage?.toString();
+
+    return Insumo(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      nombre: json['nombre']?.toString() ?? '',
+      categoriaId: categoriaId,
+      categoriaNombre: categoriaNombre,
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      // Campo real del backend es `valor_medida` (snake_case).
+      valorMedida:
+          (json['valor_medida'] ?? json['valorMedida']) is num
+              ? ((json['valor_medida'] ?? json['valorMedida']) as num).toDouble()
+              : 0,
+      medidaAbrev: json['medida']?.toString() ?? '',
+      estado: estado,
+      image: (image != null && image.isNotEmpty) ? image : null,
+      propiedades: (json['propiedades'] as List<dynamic>? ?? [])
+          .map((e) => PropiedadInsumo.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 }

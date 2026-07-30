@@ -1,191 +1,224 @@
-import '../../domain/entities/orden_entity.dart';
-import '../../domain/entities/orden_detail_entity.dart';
 import '../models/orden_model.dart';
 import '../models/orden_detail_model.dart';
+import '../../domain/entities/orden_detail_entity.dart';
 
-/// Contrato para acceso local a datos de órdenes (mock/caché).
-/// Implementado por [OrdenLocalDataSourceImpl].
+/// Contrato para acceso local a datos de órdenes.
 abstract class OrdenLocalDataSource {
-  /// Obtiene lista de órdenes con filtros opcionales.
-  /// Filtra por estado, tipo y/o búsqueda de texto.
   Future<List<OrdenModel>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   });
 
-  /// Obtiene el detalle completo de una orden por ID.
-  /// Incluye progreso, etapas, referencias, historial y ficha de costos.
   Future<OrdenDetailEntity?> getOrdenDetail(String id);
+
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado);
+
+  Future<OrdenDetailEntity?> confirmarEtapa(String id);
 }
 
-/// Implementación local (mock) de [OrdenLocalDataSource].
-///
-/// Contiene datos de ejemplo con 10 órdenes entre terceros y producción.
-/// En desarrollo, proporciona datos inmediatos sin latencia de red.
+/// Implementación local de [OrdenLocalDataSource].
+/// En producción, los datos provienen de la API. Este fallback sirve
+/// como mock para desarrollo cuando no hay conexión.
 class OrdenLocalDataSourceImpl implements OrdenLocalDataSource {
-  static final List<OrdenModel> _mockData = [
-    // ── Terceros ──────────────────────────────────────────────────────────
-    OrdenModel(
-      id: '1',
-      numero: 21,
-      unidades: 300,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Sorelly santana rojo',
-      fechaEntrega: DateTime(2025, 4, 11),
-      refCorte: '513_3005',
-      ref: '513',
-      fechaEstado: DateTime(2025, 4, 11),
-    ),
-    OrdenModel(
-      id: '2',
-      numero: 23,
-      unidades: 50,
-      estado: OrdenEstado.pendiente,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Maria García López',
-      fechaEntrega: DateTime(2025, 4, 15),
-      refCorte: '520_1002',
-      ref: '520',
-      fechaEstado: DateTime(2025, 4, 12),
-    ),
-    OrdenModel(
-      id: '5',
-      numero: 27,
-      unidades: 180,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Distribuidora Ropa S.A.',
-      fechaEntrega: DateTime(2025, 4, 22),
-      refCorte: '560_4010',
-      ref: '560',
-      fechaEstado: DateTime(2025, 4, 15),
-    ),
-    OrdenModel(
-      id: '6',
-      numero: 29,
-      unidades: 90,
-      estado: OrdenEstado.pendiente,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Boutique Luna Nueva',
-      fechaEntrega: DateTime(2025, 4, 28),
-      refCorte: '575_4020',
-      ref: '575',
-      fechaEstado: DateTime(2025, 4, 16),
-    ),
-    // ── Producción propia ─────────────────────────────────────────────────
-    OrdenModel(
-      id: '3',
-      numero: 24,
-      unidades: 120,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.produccion,
-      cliente: 'Carlos Restrepo',
-      fechaEntrega: DateTime(2026, 4, 20),
-      refCorte: '530_2010',
-      ref: '530',
-      fechaEstado: DateTime(2026, 4, 13),
-    ),
-    OrdenModel(
-      id: '4',
-      numero: 25,
-      unidades: 75,
-      estado: OrdenEstado.pendiente,
-      tipo: OrdenTipo.produccion,
-      cliente: 'Ana Rodríguez',
-      fechaEntrega: DateTime(2026, 4, 18),
-      refCorte: '540_3005',
-      ref: '540',
-      fechaEstado: DateTime(2026, 4, 14),
-    ),
-    OrdenModel(
-      id: '5',
-      numero: 26,
-      unidades: 75,
-      estado: OrdenEstado.pendiente,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Ana Rodríguez',
-      fechaEntrega: DateTime(2026, 4, 18),
-      refCorte: '540_3005',
-      ref: '540',
-      fechaEstado: DateTime(2026, 4, 14),
-    ),
-    OrdenModel(
-      id: '7',
-      numero: 28,
-      unidades: 200,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.produccion,
-      cliente: 'Moda Express Ltda.',
-      fechaEntrega: DateTime(2026, 4, 25),
-      refCorte: '550_1500',
-      ref: '550',
-      fechaEstado: DateTime(2026, 4, 17),
-    ),
-    OrdenModel(
-      id: '8',
-      numero: 30,
-      unidades: 60,
-      estado: OrdenEstado.pendiente,
-      tipo: OrdenTipo.produccion,
-      cliente: 'Estilo y Color S.A.S.',
-      fechaEntrega: DateTime(2026, 5, 2),
-      refCorte: '580_2200',
-      ref: '580',
-      fechaEstado: DateTime(2026, 4, 18),
-    ),
-    // ── Órdenes en etapa avanzada ────────────────────────────────────────────
-    OrdenModel(
-      id: '9',
-      numero: 33,
-      unidades: 250,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.terceros,
-      cliente: 'Almacenes Éxito Moda',
-      fechaEntrega: DateTime(2025, 4, 30),
-      refCorte: '590_3300',
-      ref: '590',
-      fechaEstado: DateTime(2025, 4, 19),
-    ),
-    OrdenModel(
-      id: '10',
-      numero: 35,
-      unidades: 400,
-      estado: OrdenEstado.enProduccion,
-      tipo: OrdenTipo.produccion,
-      cliente: 'Falabella Colombia S.A.',
-      fechaEntrega: DateTime(2025, 5, 5),
-      refCorte: '610_4400',
-      ref: '610',
-      fechaEstado: DateTime(2025, 4, 20),
-    ),
-  ];
-
   @override
   Future<List<OrdenModel>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _mockData.where((orden) {
-      if (estado != null && orden.estado != estado) return false;
-      if (tipo != null && orden.tipo != tipo) return false;
-      if (query != null && query.isNotEmpty) {
-        final q = query.toLowerCase();
-        if (!orden.numero.toString().contains(q) &&
-            !(orden.cliente?.toLowerCase().contains(q) ?? false) &&
-            !(orden.ref?.toLowerCase().contains(q) ?? false))
-          return false;
-      }
-      return true;
-    }).toList();
+    await Future.delayed(const Duration(milliseconds: 260));
+    // Mock data útil para desarrollo y para que los filtros funcionen
+    final mocks = [
+      {
+        '_id': '101',
+        'numero_orden': 101,
+        'estado': 'Producción',
+        'tipo': 'produccion',
+        'cliente': 'ACME S.A.',
+        'fecha_entrega': DateTime.now()
+            .add(const Duration(days: 3))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 50, 'color': 'Rojo', 'id_producto': 'P-01'},
+        ],
+      },
+      {
+        '_id': '102',
+        'numero_orden': 102,
+        'estado': 'Diseño',
+        'tipo': 'produccion',
+        'cliente': 'Textilería Andina',
+        'fecha_entrega': DateTime.now()
+            .add(const Duration(days: 10))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 30, 'color': 'Azul', 'id_producto': 'P-02'},
+        ],
+      },
+      {
+        '_id': '103',
+        'numero_orden': 103,
+        'estado': 'Enviado',
+        'tipo': 'produccion',
+        'cliente': 'Corte Express',
+        'fecha_entrega': DateTime.now()
+            .subtract(const Duration(days: 2))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 20, 'color': 'Negro', 'id_producto': 'P-03'},
+        ],
+      },
+      {
+        '_id': '104',
+        'numero_orden': 104,
+        'estado': 'Anulada',
+        'tipo': 'produccion',
+        'cliente': 'Cliente X',
+        'fecha_entrega': DateTime.now()
+            .add(const Duration(days: 5))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 10, 'color': 'Blanco', 'id_producto': 'P-04'},
+        ],
+      },
+      {
+        '_id': '201',
+        'numero_orden': 201,
+        'estado': 'Producción',
+        'tipo': 'terceros',
+        'cliente': 'Proveedor Tercero',
+        'fecha_entrega': DateTime.now()
+            .add(const Duration(days: 7))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 120, 'color': 'Verde', 'id_producto': 'P-10'},
+        ],
+      },
+      {
+        '_id': '202',
+        'numero_orden': 202,
+        'estado': 'Empaque',
+        'tipo': 'terceros',
+        'cliente': 'Proveedor Y',
+        'fecha_entrega': DateTime.now()
+            .add(const Duration(days: 1))
+            .toIso8601String(),
+        'detalles': [
+          {'cantidad': 5, 'color': 'Amarillo', 'id_producto': 'P-11'},
+        ],
+      },
+    ];
+
+    List<OrdenModel> list = mocks.map((m) => OrdenModel.fromJson(m)).toList();
+
+    // Aplicar filtros locales como hace la API opcionalmente
+    if (tipo != null && tipo.isNotEmpty) {
+      list = list.where((o) => o.tipo == tipo.toLowerCase()).toList();
+    }
+    if (estado != null && estado.isNotEmpty) {
+      list = list.where((o) => o.estado == estado).toList();
+    }
+    if (query != null && query.isNotEmpty) {
+      final q = query.toLowerCase();
+      list = list.where((o) {
+        return (o.cliente ?? '').toLowerCase().contains(q) ||
+            (o.producto ?? '').toLowerCase().contains(q) ||
+            (o.ref ?? '').toLowerCase().contains(q) ||
+            ('${o.numero}').contains(q);
+      }).toList();
+    }
+
+    return list;
   }
 
   @override
   Future<OrdenDetailEntity?> getOrdenDetail(String id) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return OrdenDetailModel.findById(id);
+    await Future.delayed(const Duration(milliseconds: 180));
+    // Proveer un detalle simple de mock para desarrollo
+    try {
+      final mock = {
+        '_id': id,
+        'numero_orden': int.tryParse(id) ?? 0,
+        'unidades': 50,
+        'estado': 'Producción',
+        'tipo': 'produccion',
+        'cliente': 'ACME S.A.',
+        'fechaEntrega': DateTime.now()
+            .add(const Duration(days: 3))
+            .toIso8601String(),
+        'detalles': [
+          {
+            'cantidad': 50,
+            'color': 'Rojo',
+            'id_producto': 'P-01',
+            'producto': 'Camiseta',
+          },
+        ],
+        'historial': [
+          {
+            'etapa': 'Producción',
+            'fecha': DateTime.now().toIso8601String(),
+            'responsable': 'Operario',
+          },
+        ],
+        // Progreso puede venir en 0..1 o 0..100. Probamos con 45 (normalizable).
+        'progreso': 45,
+        'etapaActual': 3,
+        'referencias': [
+          {
+            'codigo': 'REF-01',
+            'cantidad': 50,
+            'colorHex': '#FF0000',
+            'colorName': 'Rojo',
+          },
+        ],
+        // Ficha técnica de ejemplo para que la UI muestre nombre/version y costos
+        'fichaCosto': {
+          'nombre': 'Ficha Camiseta Básica',
+          'version': '1.2',
+          'costoPorUnidad': 1200,
+          'costoTotal': 60000,
+          'completado': false,
+        },
+      };
+      // Usar el modelo de detalle que extiende OrdenDetailEntity
+      return OrdenDetailModel.fromJson(Map<String, dynamic>.from(mock));
+    } catch (_) {
+      return null;
+    }
   }
+
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final current = await getOrdenDetail(id);
+    if (current == null) return null;
+    return OrdenDetailModel.fromJson({
+      ..._toMockJson(current),
+      'estado': nuevoEstado,
+      'etapaConfirmada': false,
+    });
+  }
+
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final current = await getOrdenDetail(id);
+    if (current == null) return null;
+    return OrdenDetailModel.fromJson({
+      ..._toMockJson(current),
+      'etapaConfirmada': true,
+    });
+  }
+
+  Map<String, dynamic> _toMockJson(OrdenDetailEntity d) => {
+    '_id': d.id,
+    'numero_orden': d.numero,
+    'unidades': d.unidades,
+    'estado': d.estado,
+    'tipo': d.tipo,
+    'cliente': d.cliente,
+    'fechaEntrega': d.fechaEntrega?.toIso8601String(),
+  };
 }

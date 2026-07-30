@@ -1,96 +1,76 @@
 import 'package:flutter/material.dart';
-import '../../shared/widgets/profile_menu_button.dart';
+import 'product.dart';
+import 'product_service.dart';
 
-class ProductsPage extends StatelessWidget {
-  final String? category;
+class ProductsPage extends StatefulWidget {
+  final String? categoryId;
+  final String? categoryName;
 
-  const ProductsPage({super.key, this.category});
+  const ProductsPage({super.key, this.categoryId, this.categoryName});
+
+  @override
+  State<ProductsPage> createState() => _ProductsPageState();
+}
+
+class _ProductsPageState extends State<ProductsPage> {
+  final ProductService _service = ProductService();
+  final TextEditingController _searchController = TextEditingController();
+  List<Product> _products = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+      final products = await _service.getProducts();
+      setState(() {
+        _products = products;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  List<Product> get _filteredProducts {
+    final query = _searchController.text.toLowerCase().trim();
+    final filtered = _products.where((p) {
+      final matchesCategory =
+          widget.categoryId == null || p.categoryId == widget.categoryId;
+      final matchesQuery =
+          query.isEmpty ||
+          p.nombre.toLowerCase().contains(query) ||
+          p.referencia.toLowerCase().contains(query) ||
+          (query == 'activo'
+              ? p.estadoLabel.toLowerCase() == 'activo'
+              : query == 'inactivo'
+              ? p.estadoLabel.toLowerCase() == 'inactivo'
+              : p.estadoLabel.toLowerCase().contains(query));
+      return matchesCategory && matchesQuery;
+    }).toList();
+    return filtered;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // 🔥 PRODUCTOS ORIGINALES con su propia ficha técnica
-    final allProducts = [
-      {
-        "ref": "REF 772",
-        "name": "Crop Top Negro",
-        "price": "\$ 33.000",
-        "stock": "STOCK: 0",
-        "category": "Crop Top",
-        "technicalSheet": {
-          "Detalles del producto": {
-            "Cliente": "María López",
-            "Fecha": "2026-03-15",
-            "Observaciones": "Ajuste de consumos y mejora en acabados.",
-            "Elaboró": "Paula Andrea Builes"
-          }
-        }
-      },
-      {
-        "ref": "REF 578",
-        "name": "Crop Top Rojo",
-        "price": "\$ 33.000",
-        "stock": "STOCK: 0",
-        "category": "Crop Top",
-        "technicalSheet": {
-          "Detalles del producto": {
-            "Cliente": "Ana Rodríguez",
-            "Fecha": "2026-03-20",
-            "Observaciones": "Revisar tallas y acabados.",
-            "Elaboró": "Carlos Méndez"
-          }
-        }
-      },
-      {
-        "ref": "REF 678",
-        "name": "Crop Top Rosa",
-        "price": "\$ 33.000",
-        "stock": "STOCK: 0",
-        "category": "Crop Top",
-        "technicalSheet": {
-          "Detalles del producto": {
-            "Cliente": "Sofía Martínez",
-            "Fecha": "2026-03-25",
-            "Observaciones": "Mejora en costuras laterales.",
-            "Elaboró": "Paula Andrea Builes"
-          }
-        }
-      },
-      {
-        "ref": "REF 111",
-        "name": "Buzo Negro",
-        "price": "\$ 50.000",
-        "stock": "STOCK: 3",
-        "category": "Buzos",
-        "technicalSheet": {
-          "Detalles del producto": {
-            "Cliente": "Carlos Ruiz",
-            "Fecha": "2026-02-20",
-            "Observaciones": "Ajustar capucha y bolsillos.",
-            "Elaboró": "Ana Martínez"
-          }
-        }
-      },
-      {
-        "ref": "REF 222",
-        "name": "Body Blanco",
-        "price": "\$ 28.000",
-        "stock": "STOCK: 5",
-        "category": "Bodys",
-        "technicalSheet": {
-          "Detalles del producto": {
-            "Cliente": "Diego Perez",
-            "Fecha": "2026-02-10",
-            "Observaciones": "Ajuste de consumos y mejora en acabados.",
-            "Elaboró": "Paula Andrea Builes"
-          }
-        }
-      },
-    ];
-
-    final products = category == null
-        ? allProducts
-        : allProducts.where((p) => p["category"] == category).toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       body: SafeArea(
@@ -115,7 +95,10 @@ class ProductsPage extends StatelessWidget {
                             color: const Color(0xFFF2F2F7),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 16,
+                          ),
                         ),
                       ),
                       Container(
@@ -124,10 +107,15 @@ class ProductsPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white,
-                          border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                          border: Border.all(
+                            color: const Color(0xFFFF8ACD),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                              color: const Color(
+                                0xFFFF4DA6,
+                              ).withValues(alpha: 0.35),
                               blurRadius: 14,
                               offset: const Offset(0, 4),
                             ),
@@ -142,9 +130,12 @@ class ProductsPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Text(
-                    "Productos",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  Text(
+                    widget.categoryName ?? 'Productos',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -153,9 +144,11 @@ class ProductsPage extends StatelessWidget {
                       color: const Color(0xFFF6F6F6),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: "Buscar productos...",
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar productos...',
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
                         border: InputBorder.none,
                       ),
@@ -165,16 +158,27 @@ class ProductsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            // LISTA DE PRODUCTOS
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final item = products[index];
-                  return _productCard(context, item);
-                },
-              ),
+              child: _loading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFE91E8C),
+                      ),
+                    )
+                  : _error != null
+                  ? Center(child: Text(_error!))
+                  : RefreshIndicator(
+                      color: const Color(0xFFE91E8C),
+                      onRefresh: _load,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredProducts[index];
+                          return _productCard(context, item);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -182,7 +186,11 @@ class ProductsPage extends StatelessWidget {
     );
   }
 
-  Widget _productCard(BuildContext context, Map item) {
+  Widget _productCard(BuildContext context, Product item) {
+    final imageUrl = item.imagenesUrl.isNotEmpty
+        ? item.imagenesUrl.first
+        : null;
+
     return _AnimatedCard(
       onTap: () => _showTechnicalSheet(context, item),
       child: Container(
@@ -194,7 +202,7 @@ class ProductsPage extends StatelessWidget {
           border: Border.all(color: const Color(0xFFFFD6E7)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF4DA6).withOpacity(0.10),
+              color: const Color(0xFFFF4DA6).withValues(alpha: 0.10),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -208,29 +216,62 @@ class ProductsPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
+                image: imageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
+              child: imageUrl == null
+                  ? const Icon(Icons.image, color: Colors.white70)
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item["ref"], style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  Text(
+                    item.referencia,
+                    style: const TextStyle(color: Colors.grey, fontSize: 11),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item["name"], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    item.nombre,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item["price"]),
-                  Text(item["stock"], style: const TextStyle(color: Colors.grey)),
+                  Text('COP \$${item.precio.toStringAsFixed(0)}'),
+                  Text(
+                    'STOCK: ${item.stock}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
             Row(
               children: [
-                Row(children: const [
-                  Icon(Icons.circle, size: 8, color: Colors.green),
-                  SizedBox(width: 5),
-                  Text("ACTIVO", style: TextStyle(color: Colors.green, fontSize: 11)),
-                ]),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      size: 8,
+                      color: item.isActivo ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      item.estadoLabel,
+                      style: TextStyle(
+                        color: item.isActivo ? Colors.green : Colors.red,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(width: 10),
                 Container(
                   width: 32,
@@ -239,7 +280,11 @@ class ProductsPage extends StatelessWidget {
                     color: Color(0xFFFFE4F1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_forward_ios, size: 13, color: Color(0xFFE91E8C)),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 13,
+                    color: Color(0xFFE91E8C),
+                  ),
                 ),
               ],
             ),
@@ -250,14 +295,15 @@ class ProductsPage extends StatelessWidget {
   }
 
   // 🔥 FICHA TÉCNICA SIN SCROLL - Tamaño fijo
-  void _showTechnicalSheet(BuildContext context, Map product) {
-    final technicalSheet = product["technicalSheet"] as Map<String, dynamic>? ?? {
-      "Detalles del producto": {
-        "Cliente": "Sin información",
-        "Fecha": "Sin fecha",
-        "Observaciones": "Sin observaciones",
-        "Elaboró": "Sin elaborador"
-      }
+  void _showTechnicalSheet(BuildContext context, Product product) {
+    final technicalSheet = {
+      'Detalles del producto': {
+        'Referencia': product.referencia,
+        'Nombre': product.nombre,
+        'Precio': 'COP ${product.precio.toStringAsFixed(0)}',
+        'Stock': product.stock.toString(),
+        'Estado': product.estadoLabel,
+      },
     };
 
     showModalBottomSheet(
@@ -273,7 +319,8 @@ class ProductsPage extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // 🔥 IMPORTANTE: Para que no haya scroll
+                mainAxisSize:
+                    MainAxisSize.min, // 🔥 IMPORTANTE: Para que no haya scroll
                 children: [
                   // Handle
                   Container(
@@ -293,7 +340,7 @@ class ProductsPage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            "Ficha Técnica - ${product["name"]}",
+                            'Ficha Técnica - ${product.nombre}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -308,7 +355,11 @@ class ProductsPage extends StatelessWidget {
                               color: const Color(0xFFFFE4F1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.close, size: 18, color: Color(0xFFE91E8C)),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Color(0xFFE91E8C),
+                            ),
                           ),
                         ),
                       ],
@@ -357,9 +408,7 @@ class ProductsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[200]!),
                 ),
-                child: Column(
-                  children: _buildDetailRows(sectionContent),
-                ),
+                child: Column(children: _buildDetailRows(sectionContent)),
               ),
             ],
           ),
@@ -386,7 +435,10 @@ class ProductsPage extends StatelessWidget {
               // Recuadro gris para el título
               Container(
                 width: 110,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
@@ -404,7 +456,10 @@ class ProductsPage extends StatelessWidget {
               // Recuadro blanco para la información
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -412,10 +467,7 @@ class ProductsPage extends StatelessWidget {
                   ),
                   child: Text(
                     entry.value.toString(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
                 ),
               ),

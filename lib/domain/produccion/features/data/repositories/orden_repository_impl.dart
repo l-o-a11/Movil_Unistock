@@ -15,8 +15,8 @@ class OrdenRepositoryImpl implements OrdenRepository {
 
   @override
   Future<List<OrdenEntity>> getOrdenes({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   }) async {
     return localDataSource.getOrdenes(estado: estado, tipo: tipo, query: query);
@@ -35,5 +35,15 @@ class OrdenRepositoryImpl implements OrdenRepository {
   @override
   Future<OrdenDetailEntity?> getOrdenDetail(String id) {
     return localDataSource.getOrdenDetail(id);
+  }
+
+  @override
+  Future<OrdenDetailEntity?> avanzarEstado(String id, String nuevoEstado) {
+    return localDataSource.avanzarEstado(id, nuevoEstado);
+  }
+
+  @override
+  Future<OrdenDetailEntity?> confirmarEtapa(String id) {
+    return localDataSource.confirmarEtapa(id);
   }
 }

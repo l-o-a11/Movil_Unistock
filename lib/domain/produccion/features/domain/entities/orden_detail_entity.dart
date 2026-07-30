@@ -2,24 +2,27 @@ import 'orden_entity.dart';
 import 'orden_referencia_entity.dart';
 import 'historial_entry_entity.dart';
 import 'ficha_costo_entity.dart';
+import 'tercero_asignacion_entity.dart';
 
-/// Detalle completo de una orden: extiende [OrdenEntity] con datos de progreso,
-/// etapas, referencias, historial y ficha técnica.
+const kProductionStates = [
+  'En espera',
+  'Diseño',
+  'Ficha Técnica',
+  'Corte',
+  'Compras',
+  'Producción',
+  'Empaque',
+  'Enviado',
+];
+
 class OrdenDetailEntity extends OrdenEntity {
-  /// Valor entre 0.0 y 1.0 que representa el avance general.
-  final double progreso;
-
-  /// Índice (0-based) de la etapa actualmente activa en el flujo de producción.
-  final int etapaActual;
-
-  /// Referencias de talla/color incluidas en la orden.
   final List<OrdenReferenciaEntity> referencias;
-
-  /// Historial cronológico de cambios de estado.
   final List<HistorialEntryEntity> historial;
-
-  /// Ficha técnica y costos asociada, puede ser nula.
   final FichaCostoEntity? fichaCosto;
+  final List<TerceroAsignacion> terceros;
+  // Nombre del empleado asignado — solo disponible en el detalle (el id y
+  // etapaConfirmada ya viven en OrdenEntity, ver comentario allá).
+  final String? empleadoAsignadoNombre;
 
   const OrdenDetailEntity({
     required super.id,
@@ -31,21 +34,51 @@ class OrdenDetailEntity extends OrdenEntity {
     super.fechaEntrega,
     super.refCorte,
     super.ref,
+    super.producto,
+    super.color,
     super.fechaEstado,
-    required this.progreso,
-    required this.etapaActual,
+    super.sede,
+    super.terceroNombre,
+    super.empleadoAsignadoId,
+    super.etapaConfirmada,
     required this.referencias,
     required this.historial,
     this.fichaCosto,
+    this.terceros = const [],
+    this.empleadoAsignadoNombre,
   });
 
-  /// Porcentaje entero para mostrar en UI.
+  /// Progreso real calculado desde la posición del estado en el flujo
+  /// (igual que el web: completedSteps / totalSteps).
+  double get progreso {
+    final idx = estadoIndex;
+    if (idx < 0) return 0.0;
+    return idx / (kProductionStates.length - 1);
+  }
+
   int get progresoPercent => (progreso * 100).round();
 
-  /// Nombre de la etapa siguiente (para el label "Siguiente etapa").
+  /// Índice 0-based del estado actual en kProductionStates.
+  int get estadoIndex {
+    final lower = estado.toLowerCase();
+    return kProductionStates.indexWhere((s) => s.toLowerCase() == lower);
+  }
+
   String get siguienteEtapaLabel {
-    const etapas = ['Diseño', 'Fecha Técnica', 'Corte', 'Producción', 'Recepción'];
-    final next = etapaActual + 1;
-    return next < etapas.length ? etapas[next] : 'Finalizado';
+    final next = estadoIndex + 1;
+    return next < kProductionStates.length ? kProductionStates[next] : 'Finalizado';
+  }
+
+  bool get isAnulada => estado == 'Anulada';
+
+  /// Nombre del siguiente estado del flujo, o null si la orden ya está en
+  /// el último paso (o fue anulada). Se usa para habilitar el botón
+  /// "Siguiente" — igual que `nextStep` en ProductionDetailsPage.jsx.
+  String? get nextEstado {
+    if (isAnulada) return null;
+    final idx = estadoIndex;
+    if (idx < 0) return null;
+    final next = idx + 1;
+    return next < kProductionStates.length ? kProductionStates[next] : null;
   }
 }

@@ -11,7 +11,7 @@ class CompraCard extends StatelessWidget {
     required this.onDetailTap,
   });
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
@@ -63,7 +63,7 @@ class CompraCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    compra.proveedor,
+                    compra.proveedorNombre ?? 'Proveedor sin nombre',
                     style: const TextStyle(color: _grey, fontSize: 13),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -74,7 +74,7 @@ class CompraCard extends StatelessWidget {
                       _Chip(label: compra.fecha, color: _pink),
                       const SizedBox(width: 6),
                       _Chip(
-                        label: '\$${compra.costoTotal.toStringAsFixed(2)}',
+                        label: '\$${compra.total.toStringAsFixed(2)}',
                         color: _pink,
                       ),
                       const SizedBox(width: 6),

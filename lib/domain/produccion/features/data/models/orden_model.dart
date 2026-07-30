@@ -1,9 +1,5 @@
 import '../../domain/entities/orden_entity.dart';
 
-/// Modelo de datos para órdenes: mapeo entre JSON y [OrdenEntity].
-///
-/// Extiende [OrdenEntity] con métodos para serialización/deserialización JSON.
-/// Utilizado por [ProduccionApiService] y [OrdenLocalDataSourceImpl].
 class OrdenModel extends OrdenEntity {
   const OrdenModel({
     required super.id,
@@ -15,65 +11,117 @@ class OrdenModel extends OrdenEntity {
     super.fechaEntrega,
     super.refCorte,
     super.ref,
+    super.producto,
+    super.color,
     super.fechaEstado,
+    super.sede,
+    super.terceroNombre,
+    super.empleadoAsignadoId,
+    super.etapaConfirmada,
   });
 
-  /// Crea un [OrdenModel] desde JSON.
+  /// Mapea la respuesta real del backend exactamente como lo hace
+  /// mapOrder() + mergeDetails() + summarizeDetails() del useProduction.js
   ///
-  /// Parsea automáticamente:
-  /// - Enums de estado y tipo
-  /// - Fechas en formato ISO 8601
-  ///
-  /// Lanza excepción si faltan campos requeridos.
+  /// Campos del backend:
+  ///   _id/id, numero_orden, estado (string libre), tipo,
+  ///   cliente, fecha_entrega, historial[].estado/fecha,
+  ///   detalles[].cantidad/color/id_producto,
+  ///   producto (string), referencia (objeto o string)
   factory OrdenModel.fromJson(Map<String, dynamic> json) {
+    // id
+    final id = (json['_id'] ?? json['id'] ?? '').toString();
+
+    // numero_orden
+    final rawNum = json['numero_orden'] ?? json['orderNumber'] ?? json['numero'] ?? 0;
+    final numero = rawNum is num ? rawNum.toInt()
+        : int.tryParse(rawNum.toString()) ?? 0;
+
+    // estado: string exacto — NUNCA traducir a enum
+    final estado = (json['estado'] ?? json['status'] ?? '').toString();
+
+    // tipo: "produccion" | "terceros"
+    final tipo = (json['tipo'] ?? json['type'] ?? 'produccion').toString().toLowerCase();
+
+    // cliente
+    final cliente = (json['cliente'] ?? json['client'])?.toString();
+
+    // fechaEntrega
+    final fechaEntrega = _parseDate(json['fecha_entrega'] ?? json['deliveryDate']);
+
+    // detalles[]: suma de cantidad → unidades, primer color, primer id_producto
+    final detalles = (json['detalles'] as List<dynamic>?) ?? [];
+    final unidades = detalles.fold<int>(
+        0, (s, d) => s + ((d['cantidad'] ?? 0) as num).toInt());
+
+    // color: todos los colores únicos del primer detalle
+    final firstColor = detalles.isNotEmpty
+        ? (detalles[0]['color'] ?? '').toString()
+        : '';
+    final color = firstColor.isNotEmpty ? firstColor : null;
+
+    // refCorte: id_producto del primer detalle
+    final refCorte = detalles.isNotEmpty
+        ? (detalles[0]['id_producto'] ?? '').toString()
+        : null;
+
+    // ref y producto: campo producto de la orden (string directo del backend)
+    // En la tabla web: prod.producto || prod.referencia || '—'
+    final productoRaw = json['producto']?.toString();
+    // referencia puede ser objeto {nombre, codigo} o string
+    final refObj = json['referencia'];
+    String? ref;
+    if (refObj is Map) {
+      ref = (refObj['nombre'] ?? refObj['ref'] ?? refObj['codigo'])?.toString();
+    } else if (refObj is String && refObj.isNotEmpty) {
+      ref = refObj;
+    }
+
+    // fechaEstado: updatedAt del backend (igual que statusDate del web)
+    final historial = (json['historial'] as List<dynamic>?) ?? [];
+    final lastFecha = historial.isNotEmpty ? historial.last['fecha'] : null;
+    final fechaEstado =
+        _parseDate(lastFecha ?? json['updatedAt'] ?? json['createdAt']);
+
+    // Asignación/confirmación de etapa por parte del empleado — mismo
+    // mapeo que toFrontendFormat() en ProductionAPIClient.js del web.
+    // Necesario aquí (y no solo en el detalle) porque el listado filtra
+    // por estos campos para que el Empleado solo vea su orden asignada.
+    final empleadoAsignaciones = json['empleadoAsignaciones'];
+    final empleadoAsignadoId = json['empleadoAsignadoId']?.toString() ??
+        _resolveEmpleadoAsignadoId(empleadoAsignaciones, estado);
+    final etapaConfirmada = json['etapaConfirmada'] == true;
+
     return OrdenModel(
-      id: json['id'] as String,
-      numero: json['numero'] as int,
-      unidades: json['unidades'] as int,
-      estado: _parseEstado(json['estado'] as String),
-      tipo: _parseTipo(json['tipo'] as String),
-      cliente: json['cliente'] as String?,
-      fechaEntrega: json['fechaEntrega'] != null
-          ? DateTime.parse(json['fechaEntrega'] as String)
+      id:            id,
+      numero:        numero,
+      unidades:      unidades,
+      estado:        estado,
+      tipo:          tipo,
+      cliente:       cliente,
+      fechaEntrega:  fechaEntrega,
+      refCorte:      refCorte,
+      ref:           ref,
+      producto:      productoRaw,
+      color:         color,
+      fechaEstado:   fechaEstado,
+      sede:          (json['sede'] ?? json['sede_nombre'])?.toString(),
+      terceroNombre: (json['terceros'] as List<dynamic>?)?.isNotEmpty == true
+          ? ((json['terceros'] as List)[0]['nombre'] ?? (json['terceros'] as List)[0]['nombreEmpresa'])?.toString()
           : null,
-      refCorte: json['refCorte'] as String?,
-      ref: json['ref'] as String?,
-      fechaEstado: json['fechaEstado'] != null
-          ? DateTime.parse(json['fechaEstado'] as String)
-          : null,
+      empleadoAsignadoId: empleadoAsignadoId,
+      etapaConfirmada:    etapaConfirmada,
     );
   }
 
-  /// Convierte el modelo a JSON.
-  ///
-  /// Serializa enums a sus nombres (strings) y fechas a ISO 8601.
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'numero': numero,
-    'unidades': unidades,
-    'estado': estado.name,
-    'tipo': tipo.name,
-    'cliente': cliente,
-    'fechaEntrega': fechaEntrega?.toIso8601String(),
-    'refCorte': refCorte,
-    'ref': ref,
-    'fechaEstado': fechaEstado?.toIso8601String(),
-  };
+static DateTime? _parseDate(dynamic v) =>
+       v == null ? null : DateTime.tryParse(v.toString());
 
-  static OrdenEstado _parseEstado(String value) {
-    switch (value) {
-      case 'enProduccion':
-        return OrdenEstado.enProduccion;
-      case 'completado':
-        return OrdenEstado.completado;
-      case 'cancelado':
-        return OrdenEstado.cancelado;
-      default:
-        return OrdenEstado.pendiente;
+  static String? _resolveEmpleadoAsignadoId(dynamic asignaciones, String estado) {
+    if (asignaciones is Map) {
+      final asig = asignaciones[estado] as Map?;
+      return asig?['id_empleado']?.toString();
     }
-  }
-
-  static OrdenTipo _parseTipo(String value) {
-    return value == 'terceros' ? OrdenTipo.terceros : OrdenTipo.produccion;
+    return null;
   }
 }

@@ -1,122 +1,156 @@
-// Modelos para Compras (órdenes)
+// Modelos para Compras — reflejan la forma real del backend
+// (domain/entities/Purchase.js y PurchaseDetail.js).
 
 // ─── Modelos de Compras ───────────────────────────────────────────────────
 
 class CompraDetalle {
-  final int id;
-  final String nombre;
+  final String id;
+  final String compraId;
+  final String? productoId;
+  final String? insumoId;
+  // Nombre libre guardado en el detalle. Puede venir null cuando el detalle
+  // solo referencia un insumo/producto existente por id (el backend no
+  // resuelve el nombre del catálogo automáticamente aquí).
+  final String? nombre;
+  // Nombre resuelto aparte por [CompraService] consultando el catálogo de
+  // insumos, para cuando `nombre` viene null pero sí hay `insumoId`.
+  final String? nombreResuelto;
   final int cantidad;
-  final double costoUnitario;
-  final double costo;
+  final double precioUnitario;
+  final double subtotal;
 
   const CompraDetalle({
     required this.id,
-    required this.nombre,
+    required this.compraId,
+    this.productoId,
+    this.insumoId,
+    this.nombre,
+    this.nombreResuelto,
     required this.cantidad,
-    required this.costoUnitario,
-    required this.costo,
+    required this.precioUnitario,
+    required this.subtotal,
   });
 
-  factory CompraDetalle.fromJson(Map<String, dynamic> json) => CompraDetalle(
-    id: json['id'] as int,
-    nombre: json['nombre']?.toString() ?? '',
-    cantidad: json['cantidad'] as int,
-    costoUnitario: (json['costoUnitario'] as num).toDouble(),
-    costo: (json['costo'] as num).toDouble(),
+  /// Nombre a mostrar: prioriza el nombre libre guardado en el detalle,
+  /// luego el resuelto vía catálogo, y por último un texto de respaldo.
+  String get nombreMostrar =>
+      (nombre != null && nombre!.isNotEmpty)
+          ? nombre!
+          : (nombreResuelto ?? 'Insumo sin nombre');
+
+  CompraDetalle copyWith({String? nombreResuelto}) => CompraDetalle(
+    id: id,
+    compraId: compraId,
+    productoId: productoId,
+    insumoId: insumoId,
+    nombre: nombre,
+    nombreResuelto: nombreResuelto ?? this.nombreResuelto,
+    cantidad: cantidad,
+    precioUnitario: precioUnitario,
+    subtotal: subtotal,
   );
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'nombre': nombre,
-    'cantidad': cantidad,
-    'costoUnitario': costoUnitario,
-    'costo': costo,
-  };
+  factory CompraDetalle.fromJson(Map<String, dynamic> json) {
+    final rawInsumo = json['insumoId'];
+    final insumoId = rawInsumo is Map
+        ? (rawInsumo['_id'] ?? rawInsumo['id'])?.toString()
+        : rawInsumo?.toString();
+
+    final rawProducto = json['productoId'];
+    final productoId = rawProducto is Map
+        ? (rawProducto['_id'] ?? rawProducto['id'])?.toString()
+        : rawProducto?.toString();
+
+    return CompraDetalle(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      compraId: (json['compraId'] ?? '').toString(),
+      productoId: productoId,
+      insumoId: insumoId,
+      nombre: json['nombre']?.toString(),
+      cantidad: (json['cantidad'] as num?)?.toInt() ?? 0,
+      precioUnitario: (json['precioUnitario'] as num?)?.toDouble() ?? 0,
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
+    );
+  }
 }
 
 class Compra {
-  final int id;
-  final String numeroFactura;
-  final int proveedorId;
-  final String proveedor;
-  final String fecha; // formato YYYY-MM-DD
-  final String observaciones;
-  final double costoTotal;
+  final String id;
+  final int? consecutivo;
+  final String fecha; // ISO 8601
+  final String proveedorId;
+  // Nombre del proveedor: el backend NO lo incluye en la respuesta de
+  // compras (solo el id), así que [CompraService] lo resuelve aparte
+  // consultando `/api/proveedores/:id` y lo inyecta con [copyWith].
+  final String? proveedorNombre;
+  final double total;
   final bool anulada;
+  final String observaciones;
+  final String numeroFactura;
+  final String? motivoAnulacion;
   final List<CompraDetalle> detalles;
 
   const Compra({
     required this.id,
-    required this.numeroFactura,
-    required this.proveedorId,
-    required this.proveedor,
+    this.consecutivo,
     required this.fecha,
-    required this.observaciones,
-    required this.costoTotal,
+    required this.proveedorId,
+    this.proveedorNombre,
+    required this.total,
     required this.anulada,
+    required this.observaciones,
+    required this.numeroFactura,
+    this.motivoAnulacion,
     this.detalles = const [],
   });
 
-  factory Compra.fromJson(Map<String, dynamic> json) => Compra(
-    id: json['id'] as int,
-    numeroFactura: json['numeroFactura']?.toString() ?? '',
-    proveedorId: json['proveedorId'] as int,
-    proveedor: json['proveedor']?.toString() ?? '',
-    fecha: json['fecha']?.toString() ?? '',
-    observaciones: json['observaciones']?.toString() ?? '',
-    costoTotal: (json['costoTotal'] as num).toDouble(),
-    anulada: json['anulada'] as bool,
-    detalles: (json['detalles'] as List<dynamic>? ?? [])
-        .map((e) => CompraDetalle.fromJson(e as Map<String, dynamic>))
-        .toList(),
+  String get estadoLabel => anulada ? 'Anulada' : 'Activa';
+
+  Compra copyWith({
+    String? proveedorNombre,
+    List<CompraDetalle>? detalles,
+  }) => Compra(
+    id: id,
+    consecutivo: consecutivo,
+    fecha: fecha,
+    proveedorId: proveedorId,
+    proveedorNombre: proveedorNombre ?? this.proveedorNombre,
+    total: total,
+    anulada: anulada,
+    observaciones: observaciones,
+    numeroFactura: numeroFactura,
+    motivoAnulacion: motivoAnulacion,
+    detalles: detalles ?? this.detalles,
   );
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'numeroFactura': numeroFactura,
-    'proveedorId': proveedorId,
-    'proveedor': proveedor,
-    'fecha': fecha,
-    'observaciones': observaciones,
-    'costoTotal': costoTotal,
-    'anulada': anulada,
-    'detalles': detalles.map((d) => d.toJson()).toList(),
-  };
-}
+  /// Tolerante a `id`/`_id` y a nombres alternativos de campos por si el
+  /// backend cambia, pero mapea principalmente a la forma real de
+  /// `Purchase.toPublic()`: id, consecutivo, fecha, proveedorId, total,
+  /// anulada, observaciones, numeroFactura, motivoAnulacion, fechaAnulacion.
+  factory Compra.fromJson(Map<String, dynamic> json) {
+    final rawProveedor = json['proveedorId'];
+    final proveedorId = rawProveedor is Map
+        ? (rawProveedor['_id'] ?? rawProveedor['id'] ?? '').toString()
+        : (rawProveedor ?? '').toString();
 
-// Datos iniciales de ejemplo
-const INITIAL_SHOPPINGS = [
-  Compra(
-    id: 1,
-    numeroFactura: '1873',
-    proveedorId: 1,
-    proveedor: 'Compras Corseteros',
-    fecha: '2025-12-10',
-    observaciones: 'Compra para la orden x para la ref x',
-    costoTotal: 13300.00,
-    anulada: false,
-    detalles: [
-      CompraDetalle(
-        id: 101,
-        nombre: 'Tela Rosada',
-        cantidad: 50,
-        costoUnitario: 200.00,
-        costo: 10000.00,
-      ),
-      CompraDetalle(
-        id: 102,
-        nombre: 'Hilos',
-        cantidad: 100,
-        costoUnitario: 3.00,
-        costo: 300.00,
-      ),
-      CompraDetalle(
-        id: 103,
-        nombre: 'Botones',
-        cantidad: 300,
-        costoUnitario: 10.00,
-        costo: 3000.00,
-      ),
-    ],
-  ),
-];
+    final rawAnulada = json['anulada'];
+    final anulada = rawAnulada is bool
+        ? rawAnulada
+        : (rawAnulada?.toString().toLowerCase() == 'true');
+
+    return Compra(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      consecutivo: (json['consecutivo'] as num?)?.toInt(),
+      fecha: json['fecha']?.toString() ?? '',
+      proveedorId: proveedorId,
+      total: (json['total'] as num?)?.toDouble() ?? 0,
+      anulada: anulada,
+      observaciones: json['observaciones']?.toString() ?? '',
+      numeroFactura: json['numeroFactura']?.toString() ?? '',
+      motivoAnulacion: json['motivoAnulacion']?.toString(),
+      detalles: (json['detalles'] as List<dynamic>? ?? [])
+          .map((e) => CompraDetalle.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}

@@ -19,8 +19,8 @@ class GetOrdenesUseCase {
   ///
   /// Retorna lista de [OrdenEntity] que coinciden con los criterios.
   Future<List<OrdenEntity>> call({
-    OrdenEstado? estado,
-    OrdenTipo? tipo,
+    String? estado,
+    String? tipo,
     String? query,
   }) {
     return repository.getOrdenes(estado: estado, tipo: tipo, query: query);

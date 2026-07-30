@@ -19,7 +19,7 @@ class _RolDetailSheet extends StatelessWidget {
 
   const _RolDetailSheet({required this.rol, required this.animation});
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _text = Color(0xFF1C1C1E);
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
@@ -27,10 +27,10 @@ class _RolDetailSheet extends StatelessWidget {
 
   // Colores por privilegio
   static const _privColors = {
-    1: Color(0xFF007AFF), // Leer   → azul
-    2: Color(0xFF34C759), // Crear  → verde
-    3: Color(0xFFFF9500), // Actualizar → naranja
-    4: Color(0xFFFF3B30), // Eliminar   → rojo
+    'leer': Color(0xFF007AFF), // azul
+    'crear': Color(0xFF34C759), // verde
+    'actualizar': Color(0xFFFF9500), // naranja
+    'eliminar': Color(0xFFFF3B30), // rojo
   };
 
   @override
@@ -200,9 +200,9 @@ class _RolDetailSheet extends StatelessWidget {
                             // Módulos y privilegios
                             const _SectionLabel('Módulos y permisos'),
                             const SizedBox(height: 12),
-                            ...rol.modulos.map((m) => _ModuloTile(
+                            ...rol.permisos.map((m) => _ModuloTile(
                                   modulo: m,
-                                  moduloNombre: rol.moduloNombre(m.moduloId),
+                                  moduloNombre: rol.moduloNombre(m),
                                   privilegioNombre: rol.privilegioNombre,
                                   privColors: _privColors,
                                 )),
@@ -252,8 +252,8 @@ class _RolDetailSheet extends StatelessWidget {
 class _ModuloTile extends StatelessWidget {
   final ModuloRol modulo;
   final String moduloNombre;
-  final String Function(int) privilegioNombre;
-  final Map<int, Color> privColors;
+  final String Function(String) privilegioNombre;
+  final Map<String, Color> privColors;
 
   const _ModuloTile({
     required this.modulo,
