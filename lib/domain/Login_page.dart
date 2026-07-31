@@ -60,6 +60,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final isKeyboardVisible = keyboardInset > 0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -82,11 +84,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
 
             // ── Formulario anclado abajo ───────────────────────────
-            Positioned(
-              bottom: 0,
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              bottom: keyboardInset,
               left: 0,
               right: 0,
-              top: size.height * 0.55,
+              top: isKeyboardVisible ? 80 : size.height * 0.55,
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/api_client.dart';
+import '../services/auth_service.dart';
 import '../../domain/auth/presentation/edit_profile_page.dart';
 import '../../domain/Login_page.dart';
 
@@ -28,12 +28,13 @@ class ProfileMenuButton extends StatefulWidget {
 }
 
 class _ProfileMenuButtonState extends State<ProfileMenuButton> {
+  final AuthService _authService = AuthService();
   late final Future<Map<String, dynamic>?> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    _userFuture = ApiClient.instance.getUser();
+    _userFuture = _authService.getUser();
   }
 
   Future<void> _showProfileMenu(BuildContext context) async {
@@ -71,7 +72,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
                         );
                       },
                       onLogout: () async {
-                        await ApiClient.instance.clearSession();
+                        await _authService.clearSession();
                         if (!context.mounted) return;
 
                         Navigator.of(context).pushAndRemoveUntil(
