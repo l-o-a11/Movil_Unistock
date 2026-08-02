@@ -16,47 +16,79 @@ class TercerosEmbeddedList extends StatelessWidget {
 
         if (state.isLoading) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5),
+            child: CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 2.5,
+            ),
           );
         }
 
         if (state.error != null) {
           return Center(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.error_outline, color: AppColors.primary, size: 48),
-              const SizedBox(height: 12),
-              Text(state.error!, style: const TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: provider.loadTerceros,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.primary,
+                  size: 48,
                 ),
-                child: const Text('Reintentar'),
-              ),
-            ]),
+                const SizedBox(height: 12),
+                Text(
+                  state.error!,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: provider.loadTerceros,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
           );
         }
 
-        if (state.terceros.isEmpty) {
+        final filtered = state.tercerosFiltrados;
+        if (filtered.isEmpty) {
           return Center(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(Icons.people_outline, size: 52, color: AppColors.textHint.withAlpha(120)),
-              const SizedBox(height: 12),
-              const Text('No hay terceros disponibles',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-            ]),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  state.searchActive
+                      ? Icons.search_off_rounded
+                      : Icons.people_outline,
+                  size: 52,
+                  color: AppColors.textHint.withAlpha(120),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  state.searchActive
+                      ? 'No se encontraron resultados para "${state.searchQuery}"'
+                      : 'No hay terceros disponibles',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          itemCount: state.terceros.length,
-          itemBuilder: (context, index) => TerceroCard(
-            tercero: state.terceros[index],
-            animIndex: index,
-          ),
+          itemCount: filtered.length,
+          itemBuilder: (context, index) =>
+              TerceroCard(tercero: filtered[index], animIndex: index),
         );
       },
     );
