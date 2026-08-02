@@ -20,7 +20,7 @@ class TerceroCard extends StatelessWidget {
     // acotados y provoca overflow infinito. showModalBottomSheet sí los da.
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,      // permite altura personalizada
+      isScrollControlled: true, // permite altura personalizada
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.38),
       useSafeArea: false,
@@ -39,52 +39,101 @@ class TerceroCard extends StatelessWidget {
       curve: Curves.easeOutCubic,
       builder: (_, v, child) => Opacity(
         opacity: v,
-        child: Transform.translate(offset: Offset(0, (1 - v) * 18), child: child),
+        child: Transform.translate(
+          offset: Offset(0, (1 - v) * 18),
+          child: child,
+        ),
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFFF8ACD), width: 1.2),
+          border: Border.all(
+            color: const Color(0xFFFF4FA3).withOpacity(0.22),
+            width: 1.1,
+          ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 10, offset: const Offset(0, 2)),
-            BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withAlpha(8),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('CÓDIGO: ${tercero.codigo}',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11,
-                    fontWeight: FontWeight.w500, letterSpacing: 0.4)),
-            const SizedBox(height: 4),
-            Text(tercero.nombre,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(tercero.contacto,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _openDetail(context),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.primary.withAlpha(60), width: 0.8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CÓDIGO: ${tercero.codigo}',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.4,
                 ),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.remove_red_eye_outlined, size: 15, color: AppColors.primary.withAlpha(180)),
-                  const SizedBox(width: 6),
-                  Text('Ver detalles',
-                      style: TextStyle(color: AppColors.primary.withAlpha(220),
-                          fontSize: 13, fontWeight: FontWeight.w600)),
-                ]),
               ),
-            ),
-          ]),
+              const SizedBox(height: 4),
+              Text(
+                tercero.nombre,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                tercero.contacto,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => _openDetail(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withAlpha(60),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.remove_red_eye_outlined,
+                        size: 15,
+                        color: AppColors.primary.withAlpha(180),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Ver detalles',
+                        style: TextStyle(
+                          color: AppColors.primary.withAlpha(220),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -140,7 +189,8 @@ class _TerceroSheetState extends State<_TerceroSheet>
               // ── Drag handle ────────────────────────────────────────────────
               Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.divider,
                   borderRadius: BorderRadius.circular(2),
@@ -149,37 +199,67 @@ class _TerceroSheetState extends State<_TerceroSheet>
               // ── Header ─────────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('CÓDIGO: ${widget.tercero.codigo}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11,
-                              fontWeight: FontWeight.w500, letterSpacing: 0.4)),
-                      Text(widget.tercero.nombre,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 17,
-                              fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-                      Text(widget.tercero.contacto,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    ]),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 30, height: 30,
-                      decoration: BoxDecoration(
-                        color: AppColors.chipBackground,
-                        borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CÓDIGO: ${widget.tercero.codigo}',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                          Text(
+                            widget.tercero.nombre,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          Text(
+                            widget.tercero.contacto,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
                     ),
-                  ),
-                ]),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: AppColors.chipBackground,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Divider(height: 1, color: AppColors.divider),
               // ── Tab bar ─────────────────────────────────────────────────────
               Container(
                 color: AppColors.background,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -196,8 +276,14 @@ class _TerceroSheetState extends State<_TerceroSheet>
                     dividerColor: Colors.transparent,
                     labelColor: Colors.white,
                     unselectedLabelColor: AppColors.textSecondary,
-                    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                    unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    labelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                     tabs: const [
                       Tab(text: 'Información general'),
                       Tab(text: 'Producciones'),
@@ -214,21 +300,31 @@ class _TerceroSheetState extends State<_TerceroSheet>
                     if (s.isLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.primary, strokeWidth: 2.5),
+                          color: AppColors.primary,
+                          strokeWidth: 2.5,
+                        ),
                       );
                     }
 
                     if (s.hasError) {
                       return Center(
-                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Text(s.error ?? 'Error',
-                              style: const TextStyle(color: AppColors.textSecondary)),
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: () => provider.loadDetail(widget.tercero.id),
-                            child: const Text('Reintentar'),
-                          ),
-                        ]),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              s.error ?? 'Error',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () =>
+                                  provider.loadDetail(widget.tercero.id),
+                              child: const Text('Reintentar'),
+                            ),
+                          ],
+                        ),
                       );
                     }
 
@@ -240,7 +336,9 @@ class _TerceroSheetState extends State<_TerceroSheet>
                       controller: _tc,
                       children: [
                         TerceroInfoTab(detail: s.detail!),
-                        TerceroProduccionesTab(producciones: s.detail!.producciones),
+                        TerceroProduccionesTab(
+                          producciones: s.detail!.producciones,
+                        ),
                       ],
                     );
                   },
