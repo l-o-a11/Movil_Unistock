@@ -13,18 +13,7 @@ import '../widgets/detail/etapas_card.dart';
 import '../widgets/detail/produccion_terceros_card.dart';
 import '../widgets/detail/referencias_card.dart';
 import '../widgets/detail/historial_card.dart';
-import '../widgets/detail/ficha_costos_card.dart';
 
-/// Página de detalle completo de una orden.
-/// 
-/// Muestra:
-/// - AppBar personalizado con número de orden
-/// - Tarjeta de progreso general
-/// - Flujo visual de 3 etapas
-/// - Información de asignación a terceros
-/// - Referencias (tallas/colores)
-/// - Historial de cambios de estado
-/// - Ficha técnica y costos
 class OrdenDetailPage extends StatefulWidget {
   final OrdenEntity orden;
   const OrdenDetailPage({super.key, required this.orden});
@@ -46,7 +35,6 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // Bolsita (producción) activa = index 3
       bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
       appBar: DetailAppBar(ordenNumero: widget.orden.numero),
       body: Consumer<OrdenDetailProvider>(
@@ -59,7 +47,8 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
               onRetry: () => provider.loadDetail(widget.orden.id),
             );
           }
-          if (!state.isLoaded || state.detail == null) return const SizedBox.shrink();
+          if (!state.isLoaded || state.detail == null)
+            return const SizedBox.shrink();
           return _DetailBody(detail: state.detail!);
         },
       ),
@@ -70,53 +59,74 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
 class _DetailBody extends StatefulWidget {
   final OrdenDetailEntity detail;
   const _DetailBody({required this.detail});
-  @override State<_DetailBody> createState() => _DetailBodyState();
+  @override
+  State<_DetailBody> createState() => _DetailBodyState();
 }
 
 class _DetailBodyState extends State<_DetailBody>
     with SingleTickerProviderStateMixin {
   late final AnimationController _fadeAc = AnimationController(
-    vsync: this, duration: const Duration(milliseconds: 480));
+    vsync: this,
+    duration: const Duration(milliseconds: 480),
+  );
   late final Animation<double> _fadeAnim = CurvedAnimation(
-    parent: _fadeAc, curve: Curves.easeOutCubic);
+    parent: _fadeAc,
+    curve: Curves.easeOutCubic,
+  );
 
-  @override void initState() { super.initState(); _fadeAc.forward(); }
-  @override void dispose() { _fadeAc.dispose(); super.dispose(); }
+  bool _showFullHistorial = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeAc.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeAc.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final d = widget.detail;
     return FadeTransition(
       opacity: _fadeAnim,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          // 1. Progreso general
-          ProgresoCard(detail: widget.detail),
+          // 1. Resumen: número, cliente, progreso real, sede/tercero, fechas
+          ProgresoCard(detail: d),
           const SizedBox(height: 12),
 
-          // 2. Etapas (Diseño → FechaTécnica → Corte)
-          EtapasCard(detail: widget.detail),
+          // 2. Stepper horizontal del flujo completo
+          EtapasCard(detail: d),
           const SizedBox(height: 12),
 
-          // 3. Producción con terceros
-          ProduccionTercerosCard(onTap: () {}),
-          const SizedBox(height: 12),
-
-          // 4. Referencias
-          if (widget.detail.referencias.isNotEmpty) ...[
-            ReferenciasCard(referencias: widget.detail.referencias),
+          // 3. Terceros asignados solo en producción de terceros
+          if (d.isTerceros && d.isEnProduccion && d.terceros.isNotEmpty) ...[
+            ProduccionTercerosCard(
+              esTerceros: d.isTerceros,
+              terceros: d.terceros,
+            ),
             const SizedBox(height: 12),
           ],
 
-          // 5. Historial
-          HistorialCard(
-            historial: widget.detail.historial,
-            onVerTodo: () {},
-          ),
-          const SizedBox(height: 12),
+          // 4. Referencias (colores / tallas)
+          if (d.referencias.isNotEmpty) ...[
+            ReferenciasCard(referencias: d.referencias),
+            const SizedBox(height: 12),
+          ],
 
-          // 6. Ficha técnica y costos — siempre visible
-          FichaCostosCard(ficha: widget.detail.fichaCosto),
+          // 5. Historial con opción de ver todo
+          HistorialCard(
+            historial: _showFullHistorial
+                ? d.historial
+                : d.historial.take(4).toList(),
+            onVerTodo: () =>
+                setState(() => _showFullHistorial = !_showFullHistorial),
+          ),
         ],
       ),
     );

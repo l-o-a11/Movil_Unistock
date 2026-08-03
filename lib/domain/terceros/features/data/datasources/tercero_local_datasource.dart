@@ -1,84 +1,83 @@
-import '../../domain/entities/tercero_entity.dart';
-import '../../domain/entities/tercero_detail_entity.dart';
-import '../models/tercero_model.dart';
-import '../models/tercero_detail_model.dart';
+import 'package:movil_unistock/domain/terceros/features/domain/entities/tercero_entity.dart';
+import 'package:movil_unistock/domain/terceros/features/domain/entities/tercero_produccion_entity.dart';
+import 'package:movil_unistock/domain/terceros/features/domain/entities/tercero_detail_entity.dart';
 
-/// Contrato para acceso local a datos de terceros (mock/caché).
-/// Implementado por [TerceroLocalDataSourceImpl].
-abstract class TerceroLocalDataSource {
-  /// Obtiene lista de terceros con búsqueda opcional.
-  Future<List<TerceroModel>> getTerceros({String? query});
-
-  /// Obtiene el detalle completo de un tercero por ID.
-  Future<TerceroDetailEntity?> getTerceroDetail(String id);
-}
-
-/// Implementación local (mock) de [TerceroLocalDataSource].
-///
-/// Contiene datos de ejemplo con 4 terceros activos e inactivos.
-/// En desarrollo, proporciona datos inmediatos sin latencia de red.
-class TerceroLocalDataSourceImpl implements TerceroLocalDataSource {
-  static final List<TerceroModel> _mockData = [
-    const TerceroModel(
+/// DataSource local (mock) con datos de terceros.
+/// En producción, los datos provienen de la API. Este fallback solo se usa
+/// cuando no hay conexión.
+class TerceroLocalDataSourceImpl {
+  static final List<TerceroEntity> _mockData = [
+    const TerceroEntity(
       id: '1',
-      codigo: '542',
-      nombre: 'Textil Aurora',
-      contacto: 'Rosalba de los milagros',
-      nit: '520021626',
-      direccion: 'Calle 60 #54-4B',
-      telefono: '3147162451',
+      codigo: '001',
+      nombre: 'Corte Express',
+      contacto: 'Carlos Ruiz',
+      nit: '900123456',
+      direccion: 'Carrera 45 #12-30, Medellín',
+      telefono: '3123456789',
       estado: TerceroEstado.activo,
     ),
-    const TerceroModel(
+    const TerceroEntity(
       id: '2',
-      codigo: '318',
-      nombre: 'Confecciones Medina',
-      contacto: 'Luis Alberto Medina',
-      nit: '860071234',
-      direccion: 'Cra 45 #20-15, Medellín',
-      telefono: '3005541289',
+      codigo: '002',
+      nombre: 'Textilería Andina',
+      contacto: 'María López',
+      nit: '900987654',
+      direccion: 'Calle 23 #45-60, Bogotá',
+      telefono: '3159876543',
       estado: TerceroEstado.activo,
     ),
-    const TerceroModel(
+    const TerceroEntity(
       id: '3',
-      codigo: '201',
-      nombre: 'Modas del Norte',
-      contacto: 'Patricia Sánchez',
-      nit: '700345678',
-      direccion: 'Av. 33 #76B-40, Medellín',
-      telefono: '3118899001',
+      codigo: '003',
+      nombre: 'Subcontratación Delta',
+      contacto: 'Jorge Martínez',
+      nit: '900456789',
+      direccion: 'Av. Bolivariana #100, Cali',
+      telefono: '3145678901',
       estado: TerceroEstado.inactivo,
-    ),
-    const TerceroModel(
-      id: '4',
-      codigo: '475',
-      nombre: 'Industrias Rosario',
-      contacto: 'Carmen Rosario López',
-      nit: '890123456',
-      direccion: 'Calle 50 #80-10, Medellín',
-      telefono: '3209876543',
-      estado: TerceroEstado.activo,
     ),
   ];
 
-  @override
-  Future<List<TerceroModel>> getTerceros({String? query}) async {
-    await Future.delayed(const Duration(milliseconds: 280));
+  Future<List<TerceroEntity>> getTerceros({String? query}) async {
+    await Future.delayed(const Duration(milliseconds: 260));
     if (query == null || query.isEmpty) return _mockData;
     final q = query.toLowerCase();
-    return _mockData
-        .where(
-          (t) =>
-              t.nombre.toLowerCase().contains(q) ||
-              t.codigo.toLowerCase().contains(q) ||
-              t.contacto.toLowerCase().contains(q),
-        )
-        .toList();
+    return _mockData.where((t) =>
+        t.nombre.toLowerCase().contains(q) ||
+        t.codigo.toLowerCase().contains(q) ||
+        t.nit.contains(q) ||
+        t.contacto.toLowerCase().contains(q)).toList();
   }
 
-  @override
   Future<TerceroDetailEntity?> getTerceroDetail(String id) async {
-    await Future.delayed(const Duration(milliseconds: 220));
-    return TerceroDetailModel.findById(id);
+    await Future.delayed(const Duration(milliseconds: 180));
+    TerceroEntity? tercero;
+    try {
+      tercero = _mockData.firstWhere((t) => t.id == id);
+    } catch (_) {
+      return null;
+    }
+
+    // Mock producciones asociadas - filtrar según estados no finalizados
+    // Estados finalizados: "Anulada", "Enviado", "Empaque" → no mostrar
+    final mockProducciones = [
+      if (tercero.estado == TerceroEstado.activo && tercero.id == '1')
+        TerceroProduccionEntity(corte: 'OP-001', fecha: DateTime.now(), ordenId: '101'),
+      if (tercero.estado == TerceroEstado.activo && tercero.id == '2')
+        TerceroProduccionEntity(corte: 'OP-002', fecha: DateTime.now(), ordenId: '102'),
+    ];
+
+    return TerceroDetailEntity(
+      id: tercero.id,
+      codigo: tercero.codigo,
+      nombre: tercero.nombre,
+      contacto: tercero.contacto,
+      nit: tercero.nit,
+      direccion: tercero.direccion,
+      telefono: tercero.telefono,
+      estado: tercero.estado,
+      producciones: mockProducciones,
+    );
   }
 }

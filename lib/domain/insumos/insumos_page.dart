@@ -45,7 +45,7 @@ class _InsumosPageState extends State<InsumosPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'No se pudo cargar la información de insumos.';
         _loading = false;
       });
     }

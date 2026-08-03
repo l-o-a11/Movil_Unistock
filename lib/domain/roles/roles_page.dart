@@ -45,7 +45,7 @@ class _RolesPageState extends State<RolesPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = 'No se pudo cargar la información de roles.';
         _loading = false;
       });
     }

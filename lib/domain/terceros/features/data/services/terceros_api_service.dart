@@ -1,96 +1,95 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:movil_unistock/shared/services/auth_service.dart';
 
 import '../../domain/entities/tercero_entity.dart';
 import '../../domain/entities/tercero_detail_entity.dart';
-import '../../domain/entities/tercero_produccion_entity.dart';
 import '../datasources/tercero_local_datasource.dart';
 import '../models/tercero_model.dart';
+import '../models/tercero_detail_model.dart';
 
-/// Servicio de API para terceros.
-/// Intenta consumir el backend REST; si no está disponible, cae en el
-/// datasource local (mock) para mantener la app funcional en desarrollo.
+const String kTercerosBaseUrl = 'http://10.0.2.2:3000/api';
+
 class TercerosApiService {
   final String baseUrl;
-  final TerceroLocalDataSource _local;
+  final TerceroLocalDataSourceImpl _local;
+  final AuthService _auth;
 
   TercerosApiService({
-    this.baseUrl = 'https://api.example.com',
-    TerceroLocalDataSource? local,
-  }) : _local = local ?? TerceroLocalDataSourceImpl();
-
-  // ── Obtener lista de terceros ─────────────────────────────────────────────
+    this.baseUrl = kTercerosBaseUrl,
+    TerceroLocalDataSourceImpl? local,
+    AuthService? auth,
+  })  : _local = local ?? TerceroLocalDataSourceImpl(),
+        _auth = auth ?? AuthService();
 
   Future<List<TerceroEntity>> getTerceros({String? query}) async {
     try {
-      final params = <String, String>{};
-      if (query != null && query.isNotEmpty) params['q'] = query;
+      final params = <String, String>{'limit': '100'};
+      if (query != null && query.isNotEmpty) params['search'] = query;
 
-      final uri =
-          Uri.parse('$baseUrl/terceros').replace(queryParameters: params);
-      final response = await http.get(uri, headers: _headers).timeout(
-            const Duration(seconds: 10),
-          );
+      final uri = Uri.parse('$baseUrl/terceros')
+          .replace(queryParameters: params);
+
+      final response = await http
+          .get(uri, headers: await _authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => TerceroModel.fromJson(e)).toList();
+        final raw = jsonDecode(response.body);
+        final List<dynamic> data = _extractList(raw);
+        return data
+            .map((e) => TerceroModel.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
-    } catch (_) {
-      // Fallback silencioso al datasource local
-    }
-
+    } catch (_) {}
     return _local.getTerceros(query: query);
   }
-
-  // ── Obtener detalle de un tercero ─────────────────────────────────────────
 
   Future<TerceroDetailEntity?> getTerceroDetail(String id) async {
     try {
       final uri = Uri.parse('$baseUrl/terceros/$id');
-      final response = await http.get(uri, headers: _headers).timeout(
-            const Duration(seconds: 10),
-          );
+      final response = await http
+          .get(uri, headers: await _authHeaders)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return _mapDetailFromJson(data);
+        final raw = jsonDecode(response.body);
+        final Map<String, dynamic> data = _extractOne(raw);
+        return TerceroDetailModel.fromJson(data);
       }
-    } catch (_) {
-      // Fallback silencioso al datasource local
-    }
-
+    } catch (_) {}
     return _local.getTerceroDetail(id);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  List<dynamic> _extractList(dynamic raw) {
+    if (raw is List) return raw;
+    if (raw is Map) {
+      if (raw['data'] is List) return raw['data'] as List;
+      if (raw['data'] is Map) {
+        final inner = raw['data'] as Map;
+        if (inner['data'] is List) return inner['data'] as List;
+      }
+    }
+    return [];
+  }
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+  Map<String, dynamic> _extractOne(dynamic raw) {
+    if (raw is Map<String, dynamic>) {
+      if (raw['data'] is Map<String, dynamic>) return raw['data'] as Map<String, dynamic>;
+      return raw;
+    }
+    return {};
+  }
 
-  TerceroDetailEntity _mapDetailFromJson(Map<String, dynamic> json) {
-    return TerceroDetailEntity(
-      id: json['id'] as String,
-      codigo: json['codigo'] as String,
-      nombre: json['nombre'] as String,
-      contacto: json['contacto'] as String,
-      nit: json['nit'] as String,
-      direccion: json['direccion'] as String,
-      telefono: json['telefono'] as String,
-      estado: TerceroEstado.values.firstWhere(
-        (e) => e.name == json['estado'],
-        orElse: () => TerceroEstado.activo,
-      ),
-      producciones: (json['producciones'] as List<dynamic>?)
-              ?.map((p) => TerceroProduccionEntity(
-                    corte: p['corte'] as String,
-                    fecha: DateTime.parse(p['fecha'] as String),
-                    ordenId: p['ordenId'] as String,
-                  ))
-              .toList() ??
-          [],
-    );
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

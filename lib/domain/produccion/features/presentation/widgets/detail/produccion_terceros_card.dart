@@ -1,67 +1,16 @@
 import 'package:flutter/material.dart';
-
 import '../../../../core/constants/app_colors.dart';
-import '../../../../features/domain/entities/orden_entity.dart';
+import '../../../domain/entities/tercero_asignacion_entity.dart';
 
-// ── Modelo interno de tercero ────────────────────────────────────────────────
-class _TerceroData {
-  final String nombre;
-  final String contacto;
-  final String telefono;
-  final String proceso;
-  final int unidadesAsignadas;
-  final DateTime fechaEntregaTercero;
-  final double costoUnitario;
-  final String estado; // 'en_proceso', 'entregado', 'pendiente'
-
-  const _TerceroData({
-    required this.nombre,
-    required this.contacto,
-    required this.telefono,
-    required this.proceso,
-    required this.unidadesAsignadas,
-    required this.fechaEntregaTercero,
-    required this.costoUnitario,
-    required this.estado,
-  });
-}
-
-// Mock de terceros por orden
-final _mockTerceros = <String, _TerceroData>{
-  '1': _TerceroData(
-    nombre: 'Confecciones Moda Nova',
-    contacto: 'Luisa Fernanda Pérez',
-    telefono: '+57 314 820 4411',
-    proceso: 'Confección y ensamble',
-    unidadesAsignadas: 300,
-    fechaEntregaTercero: DateTime(2025, 4, 10),
-    costoUnitario: 12500,
-    estado: 'en_proceso',
-  ),
-  '2': _TerceroData(
-    nombre: 'Bordados El Hilo de Oro',
-    contacto: 'Ricardo Molina',
-    telefono: '+57 300 551 9922',
-    proceso: 'Bordado y decoración',
-    unidadesAsignadas: 50,
-    fechaEntregaTercero: DateTime(2025, 4, 14),
-    costoUnitario: 8800,
-    estado: 'pendiente',
-  ),
-};
-
-/// Tarjeta de producción con terceros.
-/// Si la orden tiene tipo [OrdenTipo.terceros] muestra datos reales del tercero.
+/// Tarjeta de terceros asignados a la orden — usa datos REALES del API.
+/// Muestra lista expandible de cada tercero con nombre, proceso y cantidad.
 class ProduccionTercerosCard extends StatefulWidget {
-  final VoidCallback? onTap;
-  final String? ordenId;
-  final OrdenTipo? tipo;
-
+  final bool esTerceros;
+  final List<TerceroAsignacion> terceros;
   const ProduccionTercerosCard({
     super.key,
-    this.onTap,
-    this.ordenId,
-    this.tipo,
+    required this.esTerceros,
+    this.terceros = const [],
   });
 
   @override
@@ -73,8 +22,7 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
 
   @override
   Widget build(BuildContext context) {
-    final tercero = widget.ordenId != null ? _mockTerceros[widget.ordenId] : null;
-    final esTerceros = widget.tipo == OrdenTipo.terceros;
+    final hasTerceros = widget.esTerceros && widget.terceros.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -84,55 +32,66 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
         border: Border.all(color: AppColors.cardBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 12,
-              offset: const Offset(0, 3)),
+            color: Colors.black.withAlpha(10),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
         children: [
-          GestureDetector(
-            onTap: esTerceros && tercero != null
+          // Header tap
+          InkWell(
+            onTap: hasTerceros
                 ? () => setState(() => _expanded = !_expanded)
-                : widget.onTap,
-            behavior: HitTestBehavior.opaque,
+                : null,
+            borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Container(
-                    width: 54,
-                    height: 54,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(14),
+                      color: widget.esTerceros
+                          ? AppColors.primaryLight
+                          : AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.precision_manufacturing_rounded,
-                      color: AppColors.primary,
-                      size: 26,
+                    child: Icon(
+                      widget.esTerceros
+                          ? Icons.people_alt_rounded
+                          : Icons.factory_rounded,
+                      color: widget.esTerceros
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Producción con terceros',
-                          style: TextStyle(
+                        Text(
+                          widget.esTerceros
+                              ? 'Producción con Tercero'
+                              : 'Producción interna',
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
                         Text(
-                          esTerceros && tercero != null
-                              ? tercero.nombre
-                              : esTerceros
-                                  ? 'Sin tercero asignado'
-                                  : 'Producción interna',
+                          hasTerceros
+                              ? widget.terceros.length == 1
+                                    ? 'En tercero: ${widget.terceros.first.nombre}'
+                                    : 'En terceros: ${widget.terceros.map((t) => t.nombre).join(', ')}'
+                              : widget.esTerceros
+                              ? 'Sin tercero asignado'
+                              : '',
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -141,37 +100,32 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
                       ],
                     ),
                   ),
-                  if (esTerceros && tercero != null) ...[
-                    _EstadoBadge(estado: tercero.estado),
-                    const SizedBox(width: 8),
+                  if (hasTerceros)
                     AnimatedRotation(
                       turns: _expanded ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 250),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                            color: AppColors.chipBackground,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.keyboard_arrow_down_rounded,
-                            size: 20, color: AppColors.textSecondary),
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
                       ),
-                    ),
-                  ] else
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: AppColors.iconInactive,
-                      size: 14,
                     ),
                 ],
               ),
             ),
           ),
-          if (esTerceros && tercero != null)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              child: _expanded ? _TerceroDetalle(tercero: tercero) : const SizedBox.shrink(),
+
+          // Lista de terceros expandible
+          if (hasTerceros && _expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  ...widget.terceros.map((t) => _TerceroItem(tercero: t)),
+                ],
+              ),
             ),
         ],
       ),
@@ -179,108 +133,63 @@ class _ProduccionTercerosCardState extends State<ProduccionTercerosCard> {
   }
 }
 
-class _TerceroDetalle extends StatelessWidget {
-  final _TerceroData tercero;
-  const _TerceroDetalle({required this.tercero});
-
-  String _fmtNum(double v) {
-    final s = v.toStringAsFixed(0);
-    final buf = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');
-      buf.write(s[i]);
-    }
-    return buf.toString();
-  }
-
-  String _fmtDate(DateTime d) {
-    const meses = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return '${d.day} ${meses[d.month]} ${d.year}';
-  }
+class _TerceroItem extends StatelessWidget {
+  final TerceroAsignacion tercero;
+  const _TerceroItem({required this.tercero});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.divider))),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.chipBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12)),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Costo por unidad',
-                          style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 11)),
-                      const SizedBox(height: 4),
-                      Text('\$${_fmtNum(tercero.costoUnitario)}',
-                          style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800)),
-                    ],
+          // Nombre + estado badge
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  tercero.nombre,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                Container(
-                    width: 1,
-                    height: 40,
-                    color: AppColors.primary.withAlpha(40),
-                    margin: const EdgeInsets.symmetric(horizontal: 12)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text('Total a pagar',
-                          style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 11),
-                          textAlign: TextAlign.end),
-                      const SizedBox(height: 4),
-                      Text(
-                          '\$${_fmtNum(tercero.costoUnitario * tercero.unidadesAsignadas)}',
-                          style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+              _EstadoBadge(estado: tercero.estado),
+            ],
           ),
-          const SizedBox(height: 14),
-          _InfoRow(label: 'Empresa', value: tercero.nombre),
-          _InfoRow(label: 'Contacto', value: tercero.contacto),
-          _InfoRow(label: 'Teléfono', value: tercero.telefono),
-          _InfoRow(label: 'Proceso', value: tercero.proceso),
-          _InfoRow(label: 'Unidades', value: '${tercero.unidadesAsignadas} uds'),
-          _InfoRow(label: 'Entrega tercero', value: _fmtDate(tercero.fechaEntregaTercero)),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.call_rounded, size: 16),
-              label: const Text('Contactar tercero'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                textStyle: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
+          if (tercero.contacto != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              tercero.contacto!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
               ),
             ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              if (tercero.proceso != null)
+                _Chip(icon: Icons.build_rounded, label: tercero.proceso!),
+              _Chip(
+                icon: Icons.inventory_2_rounded,
+                label: '${tercero.cantidad} uds',
+              ),
+              if (tercero.telefono != null)
+                _Chip(icon: Icons.phone_rounded, label: tercero.telefono!),
+            ],
           ),
         ],
       ),
@@ -288,65 +197,46 @@ class _TerceroDetalle extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _Chip extends StatelessWidget {
+  final IconData icon;
   final String label;
-  final String value;
-  const _InfoRow({required this.label, required this.value});
+  const _Chip({required this.icon, required this.label});
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 12)),
-          Flexible(
-            child: Text(value,
-                textAlign: TextAlign.end,
-                style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-          ),
-        ],
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 12, color: AppColors.textSecondary),
+      const SizedBox(width: 4),
+      Text(
+        label,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
       ),
-    );
-  }
+    ],
+  );
 }
 
 class _EstadoBadge extends StatelessWidget {
   final String estado;
   const _EstadoBadge({required this.estado});
-
   @override
   Widget build(BuildContext context) {
-    Color bg, fg;
-    String label;
-    switch (estado) {
-      case 'en_proceso':
-        bg = const Color(0xFFE3F2FD);
-        fg = const Color(0xFF1E88E5);
-        label = 'En proceso';
-        break;
-      case 'entregado':
-        bg = const Color(0xFFE8F9EE);
-        fg = const Color(0xFF34C759);
-        label = 'Entregado';
-        break;
-      default:
-        bg = const Color(0xFFFFF3E0);
-        fg = const Color(0xFFFF9500);
-        label = 'Pendiente';
-    }
+    final isPending =
+        estado.toLowerCase().contains('pendiente') ||
+        estado.toLowerCase().contains('pending');
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(label,
-          style: TextStyle(
-              color: fg, fontSize: 10, fontWeight: FontWeight.w700)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isPending ? const Color(0xFFFFF3E0) : AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        estado,
+        style: TextStyle(
+          color: isPending ? const Color(0xFFFF9500) : AppColors.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
