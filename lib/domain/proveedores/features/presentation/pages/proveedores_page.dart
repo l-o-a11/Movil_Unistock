@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../shared/widgets/global_bottom_nav.dart';
 import '../../../../../shared/widgets/app_back_button.dart';
+import '../../../../../shared/widgets/profile_menu_button.dart';
 import '../../domain/entities/proveedor_entity.dart';
 import '../providers/proveedores_provider.dart';
 
@@ -54,14 +55,10 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
             const SizedBox(width:14),
             const Text('Proveedores', style:TextStyle(color:_text, fontSize:20, fontWeight:FontWeight.w800, letterSpacing:-0.4)),
             const Spacer(),
-            Container(width:42, height:42,
-              decoration:BoxDecoration(
-                shape:BoxShape.circle,
-                color: Colors.white,
-                border:Border.all(color:const Color(0xFFFF8ACD), width:2),
-                boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
-              ),
-              child:const Icon(Icons.person_2_sharp, size:20, color:Color(0xFFFF4DA6))),
+             ProfileMenuButton(
+               size: 42,
+               iconSize: 20,
+             ),
           ])),
         // Search
         Padding(padding:const EdgeInsets.symmetric(horizontal:16),

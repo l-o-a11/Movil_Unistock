@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../shared/widgets/app_back_button.dart';
+import '../../../../../../shared/widgets/profile_menu_button.dart';
 import '../../../../core/constants/app_colors.dart';
 
 /// AppBar personalizada para la pantalla de detalle de orden.
@@ -34,18 +35,13 @@ class DetailAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16),
-          child: Container(
-            width: 42, height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-              boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
-            ),
-            child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6)),
+          child: ProfileMenuButton(
+            size: 42,
+            iconSize: 20,
           ),
         ),
       ],
     );
   }
 }
+ 

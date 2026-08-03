@@ -8,7 +8,7 @@ class ProduccionProvider extends ChangeNotifier {
   final AuthService _auth;
 
   ProduccionProvider({required this.getOrdenesUseCase, AuthService? auth})
-      : _auth = auth ?? AuthService() {
+    : _auth = auth ?? AuthService() {
     loadOrdenes();
   }
 
@@ -32,12 +32,14 @@ class ProduccionProvider extends ChangeNotifier {
       final ordenes = await getOrdenesUseCase(
         query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
       );
-      _emit(_state.copyWith(
-        isLoading: false,
-        ordenes: ordenes,
-        rolNombre: rolNombre,
-        userId: userId,
-      ));
+      _emit(
+        _state.copyWith(
+          isLoading: false,
+          ordenes: ordenes,
+          rolNombre: rolNombre,
+          userId: userId,
+        ),
+      );
     } catch (e) {
       _emit(_state.copyWith(isLoading: false, error: e.toString()));
     }
@@ -45,10 +47,9 @@ class ProduccionProvider extends ChangeNotifier {
 
   /// Filtrar por estado (String exacto del backend)
   void setFiltroEstado(String? estado) {
-    _emit(_state.copyWith(
-      filtroEstado: estado,
-      clearFiltroEstado: estado == null,
-    ));
+    _emit(
+      _state.copyWith(filtroEstado: estado, clearFiltroEstado: estado == null),
+    );
     // No rellamamos API — el filtro es local
     notifyListeners();
   }

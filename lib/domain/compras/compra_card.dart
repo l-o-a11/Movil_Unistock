@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'compra.dart';
 
 class CompraCard extends StatelessWidget {
@@ -16,6 +17,12 @@ class CompraCard extends StatelessWidget {
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
   static const _red = Color(0xFFFF3B30);
+
+  String get _fechaFormateada {
+    final fecha = DateTime.tryParse(compra.fecha);
+    if (fecha == null) return compra.fecha;
+    return DateFormat('dd/MM/yyyy').format(fecha);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,16 +76,18 @@ class CompraCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      _Chip(label: compra.fecha, color: _pink),
-                      const SizedBox(width: 6),
+                      _Chip(label: _fechaFormateada, color: _pink),
                       _Chip(
                         label: '\$${compra.total.toStringAsFixed(2)}',
                         color: _pink,
                       ),
-                      const SizedBox(width: 6),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 8,

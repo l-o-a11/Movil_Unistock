@@ -1,13 +1,21 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'compra.dart';
+
+String _fechaFormateada(String fechaIso) {
+  final fecha = DateTime.tryParse(fechaIso);
+  if (fecha == null) return fechaIso;
+  return DateFormat('dd/MM/yyyy').format(fecha);
+}
 
 Future<void> showCompraDetail(BuildContext context, Compra compra) {
   return Navigator.of(context).push(
     PageRouteBuilder(
       opaque: false,
       barrierDismissible: true,
-      pageBuilder: (ctx, animation, _) => _CompraDetailSheet(compra: compra, animation: animation),
+      pageBuilder: (ctx, animation, _) =>
+          _CompraDetailSheet(compra: compra, animation: animation),
     ),
   );
 }
@@ -41,68 +49,226 @@ class _CompraDetailSheet extends StatelessWidget {
         Align(
           alignment: Alignment.bottomCenter,
           child: SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
             child: Material(
               type: MaterialType.transparency,
               child: Container(
                 constraints: BoxConstraints(maxHeight: sh * 0.8),
-                decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(margin: const EdgeInsets.only(top: 12), width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE0E0E0), borderRadius: BorderRadius.circular(2))),
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                      child: Row(children: [
-                        Container(width: 40, height: 40, decoration: BoxDecoration(color: _pink.withOpacity(0.12), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.receipt_long, color: _pink, size: 22)),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text('Factura: ${compra.numeroFactura}', style: const TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w800))),
-                        GestureDetector(onTap: () => Navigator.of(context).pop(), child: Container(width: 30, height: 30, decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF555555)))),
-                      ]),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _pink.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.receipt_long,
+                              color: _pink,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Factura: ${compra.numeroFactura}',
+                              style: const TextStyle(
+                                color: _text,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F0F0),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: Color(0xFF555555),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const Divider(height: 1, color: Color(0xFFF0F0F0)),
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('ID: ${compra.id}', style: const TextStyle(color: _grey, fontSize: 13)),
-                          const SizedBox(height: 8),
-                          Text('Proveedor: ${compra.proveedorNombre ?? "Sin resolver"}', style: const TextStyle(color: _grey, fontSize: 13)),
-                          const SizedBox(height: 8),
-                          Text('Fecha: ${compra.fecha}', style: const TextStyle(color: _grey, fontSize: 13)),
-                          const SizedBox(height: 12),
-                          const Text('Detalles', style: TextStyle(color: Color(0xFF8E8E93), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                          const SizedBox(height: 8),
-                          ...compra.detalles.map((d) => Padding(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ID: ${compra.id}',
+                              style: const TextStyle(
+                                color: _grey,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Proveedor: ${compra.proveedorNombre ?? "Sin resolver"}',
+                              style: const TextStyle(
+                                color: _grey,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Fecha: ${_fechaFormateada(compra.fecha)}',
+                              style: const TextStyle(
+                                color: _grey,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Detalles',
+                              style: TextStyle(
+                                color: Color(0xFF8E8E93),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...compra.detalles.map(
+                              (d) => Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(children: [
-                                  Expanded(child: Text(d.nombreMostrar, style: const TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w600))),
-                                  const SizedBox(width: 8),
-                                  Text('${d.cantidad} x \$${d.precioUnitario.toStringAsFixed(2)}', style: const TextStyle(color: _grey)),
-                                  const SizedBox(width: 8),
-                                  Text('\$${d.subtotal.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontWeight: FontWeight.w700)),
-                                ]),
-                              )),
-                          const SizedBox(height: 12),
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            const Text('Total', style: TextStyle(color: _grey, fontSize: 14, fontWeight: FontWeight.w600)),
-                            Text('\$${compra.total.toStringAsFixed(2)}', style: const TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w800)),
-                          ]),
-                          const SizedBox(height: 12),
-                          Row(children: [
-                            Container(width: 8, height: 8, decoration: BoxDecoration(color: compra.anulada ? _red : _green, shape: BoxShape.circle)),
-                            const SizedBox(width: 8),
-                            Text(compra.anulada ? 'Anulada' : 'Activa', style: TextStyle(color: compra.anulada ? _red : _green, fontWeight: FontWeight.w700)),
-                          ])
-                        ]),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        d.nombreMostrar,
+                                        style: const TextStyle(
+                                          color: _text,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${d.cantidad} x \$${d.precioUnitario.toStringAsFixed(2)}',
+                                      style: const TextStyle(color: _grey),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '\$${d.subtotal.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        color: _text,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Total',
+                                  style: TextStyle(
+                                    color: _grey,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${compra.total.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    color: _text,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: compra.anulada ? _red : _green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  compra.anulada ? 'Anulada' : 'Activa',
+                                  style: TextStyle(
+                                    color: compra.anulada ? _red : _green,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                       child: GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
-                        child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14), decoration: BoxDecoration(gradient: const LinearGradient(colors: [_pink, Color(0xFFFF6EC7)], begin: Alignment.centerLeft, end: Alignment.centerRight), borderRadius: BorderRadius.circular(12)), child: const Text('Cerrar', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700))),
-                    ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_pink, Color(0xFFFF6EC7)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Cerrar',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

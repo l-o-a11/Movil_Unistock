@@ -47,15 +47,17 @@ class _ProductsPageState extends State<ProductsPage> {
   List<Product> get _filteredProducts {
     final query = _searchController.text.toLowerCase().trim();
     final filtered = _products.where((p) {
-      final matchesCategory = widget.categoryId == null || p.categoryId == widget.categoryId;
-      final matchesQuery = query.isEmpty ||
+      final matchesCategory =
+          widget.categoryId == null || p.categoryId == widget.categoryId;
+      final matchesQuery =
+          query.isEmpty ||
           p.nombre.toLowerCase().contains(query) ||
           p.referencia.toLowerCase().contains(query) ||
           (query == 'activo'
               ? p.estadoLabel.toLowerCase() == 'activo'
               : query == 'inactivo'
-                  ? p.estadoLabel.toLowerCase() == 'inactivo'
-                  : p.estadoLabel.toLowerCase().contains(query));
+              ? p.estadoLabel.toLowerCase() == 'inactivo'
+              : p.estadoLabel.toLowerCase().contains(query));
       return matchesCategory && matchesQuery;
     }).toList();
     return filtered;
@@ -93,7 +95,10 @@ class _ProductsPageState extends State<ProductsPage> {
                             color: const Color(0xFFF2F2F7),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 16,
+                          ),
                         ),
                       ),
                       Container(
@@ -102,10 +107,15 @@ class _ProductsPageState extends State<ProductsPage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white,
-                          border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+                          border: Border.all(
+                            color: const Color(0xFFFF8ACD),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF4DA6).withValues(alpha: 0.35),
+                              color: const Color(
+                                0xFFFF4DA6,
+                              ).withValues(alpha: 0.35),
                               blurRadius: 14,
                               offset: const Offset(0, 4),
                             ),
@@ -122,7 +132,10 @@ class _ProductsPageState extends State<ProductsPage> {
                   const SizedBox(height: 14),
                   Text(
                     widget.categoryName ?? 'Productos',
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -147,21 +160,25 @@ class _ProductsPageState extends State<ProductsPage> {
             const SizedBox(height: 10),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFFE91E8C)))
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFE91E8C),
+                      ),
+                    )
                   : _error != null
-                      ? Center(child: Text(_error!))
-                      : RefreshIndicator(
-                          color: const Color(0xFFE91E8C),
-                          onRefresh: _load,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _filteredProducts.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredProducts[index];
-                              return _productCard(context, item);
-                            },
-                          ),
-                        ),
+                  ? Center(child: Text(_error!))
+                  : RefreshIndicator(
+                      color: const Color(0xFFE91E8C),
+                      onRefresh: _load,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredProducts[index];
+                          return _productCard(context, item);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -170,7 +187,9 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Widget _productCard(BuildContext context, Product item) {
-    final imageUrl = item.imagenesUrl.isNotEmpty ? item.imagenesUrl.first : null;
+    final imageUrl = item.imagenesUrl.isNotEmpty
+        ? item.imagenesUrl.first
+        : null;
 
     return _AnimatedCard(
       onTap: () => _showTechnicalSheet(context, item),
@@ -213,22 +232,46 @@ class _ProductsPageState extends State<ProductsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.referencia, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  Text(
+                    item.referencia,
+                    style: const TextStyle(color: Colors.grey, fontSize: 11),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item.nombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    item.nombre,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text('COP \$${item.precio.toStringAsFixed(0)}'),
-                  Text('STOCK: ${item.stock}', style: const TextStyle(color: Colors.grey)),
+                  Text(
+                    'STOCK: ${item.stock}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
             Row(
               children: [
-                Row(children: [
-                  Icon(Icons.circle, size: 8, color: item.isActivo ? Colors.green : Colors.red),
-                  const SizedBox(width: 5),
-                  Text(item.estadoLabel, style: TextStyle(color: item.isActivo ? Colors.green : Colors.red, fontSize: 11)),
-                ]),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      size: 8,
+                      color: item.isActivo ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      item.estadoLabel,
+                      style: TextStyle(
+                        color: item.isActivo ? Colors.green : Colors.red,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(width: 10),
                 Container(
                   width: 32,
@@ -237,7 +280,11 @@ class _ProductsPageState extends State<ProductsPage> {
                     color: Color(0xFFFFE4F1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_forward_ios, size: 13, color: Color(0xFFE91E8C)),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 13,
+                    color: Color(0xFFE91E8C),
+                  ),
                 ),
               ],
             ),
@@ -256,7 +303,7 @@ class _ProductsPageState extends State<ProductsPage> {
         'Precio': 'COP ${product.precio.toStringAsFixed(0)}',
         'Stock': product.stock.toString(),
         'Estado': product.estadoLabel,
-      }
+      },
     };
 
     showModalBottomSheet(
@@ -272,7 +319,8 @@ class _ProductsPageState extends State<ProductsPage> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // 🔥 IMPORTANTE: Para que no haya scroll
+                mainAxisSize:
+                    MainAxisSize.min, // 🔥 IMPORTANTE: Para que no haya scroll
                 children: [
                   // Handle
                   Container(
@@ -307,7 +355,11 @@ class _ProductsPageState extends State<ProductsPage> {
                               color: const Color(0xFFFFE4F1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.close, size: 18, color: Color(0xFFE91E8C)),
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Color(0xFFE91E8C),
+                            ),
                           ),
                         ),
                       ],
@@ -356,9 +408,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey[200]!),
                 ),
-                child: Column(
-                  children: _buildDetailRows(sectionContent),
-                ),
+                child: Column(children: _buildDetailRows(sectionContent)),
               ),
             ],
           ),
@@ -385,7 +435,10 @@ class _ProductsPageState extends State<ProductsPage> {
               // Recuadro gris para el título
               Container(
                 width: 110,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
@@ -403,7 +456,10 @@ class _ProductsPageState extends State<ProductsPage> {
               // Recuadro blanco para la información
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -411,10 +467,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   ),
                   child: Text(
                     entry.value.toString(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
                 ),
               ),

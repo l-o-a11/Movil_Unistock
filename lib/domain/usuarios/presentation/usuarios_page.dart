@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
 import '../../../shared/widgets/app_back_button.dart';
+import '../../../shared/widgets/profile_menu_button.dart';
 import 'providers/usuarios_provider.dart';
-import '../domain/usuarios_entity.dart';
+import '../domain/usuario_model.dart'; // FIX: antes era usuarios_entity.dart (UsuarioEntity)
 
 const Color _pink = Color(0xFFFF4FA3);
 const Color _bg = Color(0xFFF5F5F7);
@@ -12,6 +13,7 @@ const Color _text = Color(0xFF1C1C1E);
 const Color _grey = Color(0xFF8E8E93);
 const Color _border = Color(0xFFE8E8E8);
 const Color _green = Color(0xFF00C853);
+const Color _red = Color(0xFFE53935);
 
 class UsuariosPage extends StatelessWidget {
   const UsuariosPage({super.key});
@@ -41,6 +43,92 @@ class _UsuariosViewState extends State<_UsuariosView> {
     super.dispose();
   }
 
+  // ── Toggle activo/inactivo con confirmación ────────────────────────────
+  Future<void> _handleToggle(
+    BuildContext context,
+    UsuariosProvider provider,
+    UsuarioModel usuario,
+  ) async {
+    final isActive = usuario.estado;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isActive ? 'Inactivar usuario' : 'Activar usuario'),
+        content: Text(
+          isActive
+              ? '¿Deseas inactivar a "${usuario.nombreCompleto}"? No podrá iniciar sesión.'
+              : '¿Deseas activar a "${usuario.nombreCompleto}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isActive ? 'Inactivar' : 'Activar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final error = await provider.toggleStatus(usuario.id);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error ??
+              (isActive
+                  ? 'Usuario inactivado correctamente'
+                  : 'Usuario activado correctamente'),
+        ),
+        backgroundColor: error != null ? _red : _green,
+      ),
+    );
+  }
+
+  // ── Eliminar con confirmación ───────────────────────────────────────────
+  Future<void> _handleDelete(
+    BuildContext context,
+    UsuariosProvider provider,
+    UsuarioModel usuario,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar usuario'),
+        content: Text(
+          '¿Deseas eliminar a "${usuario.nombreCompleto}"? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar', style: TextStyle(color: _red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final error = await provider.deleteUsuario(usuario.id);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Usuario eliminado correctamente'),
+        backgroundColor: error != null ? _red : _green,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,30 +155,7 @@ class _UsuariosViewState extends State<_UsuariosView> {
                         ),
                       ),
                       const Spacer(),
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(
-                            color: const Color(0xFFFF8ACD),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_2_sharp,
-                          color: Color(0xFFFF4DA6),
-                          size: 20,
-                        ),
-                      ),
+                      ProfileMenuButton(size: 42, iconSize: 20),
                     ],
                   ),
                 ),
@@ -149,9 +214,23 @@ class _UsuariosViewState extends State<_UsuariosView> {
                         )
                       : provider.error != null
                       ? Center(
-                          child: Text(
-                            provider.error!,
-                            style: const TextStyle(color: _grey),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  provider.error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: _grey),
+                                ),
+                                const SizedBox(height: 12),
+                                TextButton(
+                                  onPressed: () => provider.load(),
+                                  child: const Text('Reintentar'),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       : provider.items.isEmpty
@@ -161,13 +240,21 @@ class _UsuariosViewState extends State<_UsuariosView> {
                             style: TextStyle(color: _grey, fontSize: 14),
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                          itemCount: provider.items.length,
-                          itemBuilder: (context, index) {
-                            final usuario = provider.items[index];
-                            return _buildUsuarioCard(context, usuario);
-                          },
+                      : RefreshIndicator(
+                          color: _pink,
+                          onRefresh: () => provider.load(),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                            itemCount: provider.items.length,
+                            itemBuilder: (context, index) {
+                              final usuario = provider.items[index];
+                              return _buildUsuarioCard(
+                                context,
+                                provider,
+                                usuario,
+                              );
+                            },
+                          ),
                         ),
                 ),
               ],
@@ -178,113 +265,90 @@ class _UsuariosViewState extends State<_UsuariosView> {
     );
   }
 
-  Widget _buildUsuarioCard(BuildContext context, UsuarioEntity usuario) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
-        boxShadow: [
-          BoxShadow(
-            color: _pink.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    usuario.doc,
-                    style: const TextStyle(
-                      color: _grey,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    usuario.nombre,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: _green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        usuario.estado,
-                        style: const TextStyle(
-                          color: _green,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: const [
-                      Icon(Icons.email_outlined, size: 13, color: _grey),
-                      SizedBox(width: 6),
-                      Text(
-                        'CORREO',
-                        style: TextStyle(
-                          color: _grey,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    usuario.email,
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${usuario.rol} · ${usuario.sede}',
-                    style: const TextStyle(
-                      color: _grey,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+  Widget _buildUsuarioCard(
+    BuildContext context,
+    UsuariosProvider provider,
+    UsuarioModel usuario, // FIX: antes UsuarioEntity
+  ) {
+    final isActive = usuario.estado;
+    final statusColor = isActive ? _green : _red;
+
+    return GestureDetector(
+      onTap: () => _showUsuarioDetail(context, usuario),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
+          boxShadow: [
+            BoxShadow(
+              color: _pink.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => _showUsuarioDetail(context, usuario),
-              child: Container(
-                width: 34,
-                height: 34,
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // DOC
+                    Text(
+                      'DOC: ${usuario.numeroDocumento}',
+                      style: const TextStyle(
+                        color: _grey,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Nombre
+                    Text(
+                      usuario.nombreCompleto,
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Estado
+                    Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          usuario.estadoLabel,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Botón Ver Detalle
+              Container(
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: _pink.withOpacity(0.12),
                   shape: BoxShape.circle,
@@ -296,14 +360,14 @@ class _UsuariosViewState extends State<_UsuariosView> {
                   color: _pink,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showUsuarioDetail(BuildContext context, UsuarioEntity usuario) {
+  void _showUsuarioDetail(BuildContext context, UsuarioModel usuario) {
     showGeneralDialog(
       context: context,
       barrierColor: Colors.transparent,
@@ -321,7 +385,7 @@ class _UsuariosViewState extends State<_UsuariosView> {
 }
 
 class _UsuarioDetail extends StatelessWidget {
-  final UsuarioEntity usuario;
+  final UsuarioModel usuario; // FIX: antes UsuarioEntity
   final Animation<double> animation;
 
   const _UsuarioDetail({required this.usuario, required this.animation});
@@ -419,28 +483,18 @@ class _UsuarioDetail extends StatelessWidget {
                     const Divider(height: 1, color: Color(0xFFF0F0F0)),
                     Flexible(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: CircleAvatar(
-                                radius: 40,
-                                backgroundColor: const Color(0xFFFF4FA3),
-                                child: const Icon(
-                                  Icons.category_rounded,
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                usuario.nombre,
+                                usuario.nombreCompleto,
+                                textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: _text,
-                                  fontSize: 20,
+                                  fontSize: 19,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -448,24 +502,83 @@ class _UsuarioDetail extends StatelessWidget {
                             const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                usuario.doc,
+                                'DOC: ${usuario.numeroDocumento}',
                                 style: const TextStyle(
                                   color: _grey,
                                   fontSize: 13,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 18),
-                            _DetailRow(label: 'Estado', value: usuario.estado),
-                            _DetailRow(
-                              label: 'Correo Electrónico',
-                              value: usuario.email,
+                            const SizedBox(height: 10),
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (usuario.estado ? _green : _red)
+                                      .withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: BoxDecoration(
+                                        color: usuario.estado ? _green : _red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      usuario.estadoLabel,
+                                      style: TextStyle(
+                                        color: usuario.estado ? _green : _red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            _DetailRow(label: 'Rol', value: usuario.rol),
-                            _DetailRow(label: 'Sede', value: usuario.sede),
-                            _DetailRow(
-                              label: 'Documento',
-                              value: usuario.doc.replaceAll('DOC: ', ''),
+                            const SizedBox(height: 22),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F7F9),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  _DetailRow(
+                                    icon: Icons.mail_outline_rounded,
+                                    label: 'Correo electrónico',
+                                    value: usuario.correo,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.badge_outlined,
+                                    label: 'Rol',
+                                    value: usuario.rolNombre ?? 'Sin rol',
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.description_outlined,
+                                    label: 'Tipo de documento',
+                                    value: usuario.tipoDocumento,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.numbers_rounded,
+                                    label: 'Documento',
+                                    value: usuario.numeroDocumento,
+                                    isLast: true,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -510,34 +623,65 @@ class _UsuarioDetail extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
+  final bool isLast;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: _grey,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: isLast
+          ? null
+          : const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEDEDF0), width: 1),
+              ),
             ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: _pink),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: _text,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: _grey,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -22,10 +22,9 @@ class AppDependencies {
   static OrdenRepositoryImpl _buildOrdenRepository() =>
       OrdenRepositoryImpl(localDataSource: ProduccionApiService());
 
-  static ProduccionProvider createProduccionProvider() =>
-      ProduccionProvider(
-        getOrdenesUseCase: GetOrdenesUseCase(_buildOrdenRepository()),
-      );
+  static ProduccionProvider createProduccionProvider() => ProduccionProvider(
+    getOrdenesUseCase: GetOrdenesUseCase(_buildOrdenRepository()),
+  );
 
   static OrdenDetailProvider createOrdenDetailProvider() {
     final repository = _buildOrdenRepository();

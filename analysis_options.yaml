@@ -1,1 +1,4 @@
+analyzer:
+  errors:
+    unused_element_parameter: ignore
 include: package:flutter_lints/flutter.yaml

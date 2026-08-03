@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
+import '../../shared/widgets/profile_menu_button.dart';
 import '../product_categories/product_categories_page.dart';
 import '../compras/compra.dart';
 import '../compras/compras_page.dart';
@@ -42,19 +43,7 @@ class MenuPage extends StatelessWidget {
                       size: 22,
                     ),
                   ),
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _pink, width: 1.5),
-                    ),
-                    child: const Icon(
-                      Icons.person_outline_rounded,
-                      color: _pink,
-                      size: 22,
-                    ),
-                  ),
+                  const ProfileMenuButton(size: 42, iconSize: 22),
                 ],
               ),
             ),

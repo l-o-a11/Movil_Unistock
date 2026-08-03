@@ -1,37 +1,36 @@
 import 'package:flutter/material.dart';
-
-import '../../data/empleados_data_source.dart';
-import '../../domain/empleados_entity.dart';
+import '../../../usuarios/domain/usuario_model.dart';
+import '../../../usuarios/presentation/providers/usuarios_provider.dart';
 
 class EmpleadosProvider extends ChangeNotifier {
-  final EmpleadosDataSource _dataSource;
-
-  List<EmpleadoEntity> items = [];
-  bool isLoading = false;
-  String? error;
-  String query = '';
-
-  EmpleadosProvider({EmpleadosDataSource? dataSource})
-    : _dataSource = dataSource ?? EmpleadosDataSource() {
-    load();
+  EmpleadosProvider({UsuariosProvider? provider})
+    : _provider = provider ?? UsuariosProvider() {
+    _provider.addListener(_handleProviderChanged);
   }
+
+  final UsuariosProvider _provider;
+
+  List<UsuarioModel> get items => _provider.items;
+  bool get isLoading => _provider.isLoading;
+  String? get error => _provider.error;
 
   Future<void> load({String q = ''}) async {
-    query = q;
-    isLoading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      items = await _dataSource.getEmpleados(query: q);
-    } catch (_) {
-      error = 'No se pudo cargar empleados';
-      items = [];
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    await _provider.load(q: q);
   }
 
-  void search(String q) => load(q: q);
+  void search(String q) => _provider.search(q);
+
+  Future<String?> toggleStatus(String id) => _provider.toggleStatus(id);
+
+  Future<String?> deleteEmpleado(String id) => _provider.deleteUsuario(id);
+
+  void _handleProviderChanged() {
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_handleProviderChanged);
+    super.dispose();
+  }
 }
