@@ -29,15 +29,23 @@ class OrdenDetailModel extends OrdenDetailEntity {
     super.etapaConfirmada,
   });
 
+  /// Parseo DEFENSIVO: si `detalles`, `historial`, `referencias` o
+  /// `terceros` llegan como un tipo distinto a List (o con items no-Map),
+  /// se omiten en lugar de lanzar excepción. Esto evita que un payload
+  /// válido del backend dispare el fallback a datos mock.
   factory OrdenDetailModel.fromJson(Map<String, dynamic> json) {
     String? s(dynamic v) => v == null ? null : v.toString();
 
-    final detalles = (json['detalles'] as List<dynamic>?) ?? [];
+    // ── Detalles ────────────────────────────────────────────────────────
+    final detallesRaw = json['detalles'];
+    final detalles = detallesRaw is List
+        ? detallesRaw.whereType<Map>().toList()
+        : const <Map>[];
 
     // refCorte: primer id_producto de detalles
     final refCorte =
         s(json['refCorte']) ??
-        (detalles.isNotEmpty ? s(detalles[0]['id_producto']) : null);
+        (detalles.isNotEmpty ? s(detalles.first['id_producto']) : null);
 
     // ref: campo ref / referencia (objeto o string) / producto
     String? ref;
@@ -45,9 +53,7 @@ class OrdenDetailModel extends OrdenDetailEntity {
       ref = s(json['ref']);
     } else if (json['referencia'] != null) {
       final r = json['referencia'];
-      ref = r is Map
-          ? (s(r['nombre']) ?? s(r['ref']) ?? s(r['codigo']))
-          : s(r);
+      ref = r is Map ? (s(r['nombre']) ?? s(r['ref']) ?? s(r['codigo'])) : s(r);
     }
     ref ??= s(json['producto']);
 
@@ -56,60 +62,100 @@ class OrdenDetailModel extends OrdenDetailEntity {
     if (json['fechaEstado'] != null) {
       fechaEstado = DateTime.tryParse(json['fechaEstado'].toString());
     } else {
-      final hist = (json['historial'] as List<dynamic>?) ?? [];
-      if (hist.isNotEmpty) fechaEstado = DateTime.tryParse(s(hist.last['fecha']) ?? '');
-      fechaEstado ??= DateTime.tryParse(s(json['updatedAt']) ?? s(json['updated_at']) ?? '');
+      final histRaw = json['historial'];
+      final hist = histRaw is List ? histRaw : const <dynamic>[];
+      if (hist.isNotEmpty && hist.last is Map) {
+        fechaEstado = DateTime.tryParse(s(hist.last['fecha']) ?? '');
+      }
+      fechaEstado ??= DateTime.tryParse(
+        s(json['updatedAt']) ?? s(json['updated_at']) ?? '',
+      );
     }
 
     // sede — puede venir en varios campos
-    final sede = s(json['sede']) ?? s(json['sede_nombre']) ?? s(json['sedeNombre']);
+    final sede =
+        s(json['sede']) ?? s(json['sede_nombre']) ?? s(json['sedeNombre']);
 
     // referencias de color/talla
-    final refsRaw = (json['referencias'] as List<dynamic>?);
-    final referencias = refsRaw != null && refsRaw.isNotEmpty
-        ? refsRaw.map((r) => OrdenReferenciaEntity(
-              codigo: (r['codigo'] ?? r['ref'] ?? r['referencia'] ?? '').toString(),
-              cantidad: ((r['cantidad'] ?? r['qty'] ?? 0) as num).toInt(),
-              color: _parseColor((r['colorHex'] ?? r['colorHexCode'] ?? '#FF4FD6').toString()),
-              colorName: (r['colorName'] ?? r['color'] ?? '').toString(),
-            )).toList()
-        : detalles.map((d) => OrdenReferenciaEntity(
-              codigo: (d['id_producto'] ?? d['referencia'] ?? '').toString(),
-              cantidad: ((d['cantidad'] ?? 0) as num).toInt(),
-              color: _parseColor((d['colorHex'] ?? '#FF4FD6').toString()),
-              colorName: (d['color'] ?? '').toString(),
-            )).toList();
+    final refsRaw = json['referencias'];
+    final refsList = refsRaw is List
+        ? refsRaw.whereType<Map>().toList()
+        : <Map>[];
+
+    final referencias = refsList.isNotEmpty
+        ? refsList
+              .map(
+                (r) => OrdenReferenciaEntity(
+                  codigo: (r['codigo'] ?? r['ref'] ?? r['referencia'] ?? '')
+                      .toString(),
+                  cantidad: ((r['cantidad'] ?? r['qty'] ?? 0) as num).toInt(),
+                  color: _parseColor(
+                    (r['colorHex'] ?? r['colorHexCode'] ?? '#FF4FD6')
+                        .toString(),
+                  ),
+                  colorName: (r['colorName'] ?? r['color'] ?? '').toString(),
+                ),
+              )
+              .toList()
+        : detalles
+              .map(
+                (d) => OrdenReferenciaEntity(
+                  codigo: (d['id_producto'] ?? d['referencia'] ?? '')
+                      .toString(),
+                  cantidad: ((d['cantidad'] ?? 0) as num).toInt(),
+                  color: _parseColor((d['colorHex'] ?? '#FF4FD6').toString()),
+                  colorName: (d['color'] ?? '').toString(),
+                ),
+              )
+              .toList();
 
     // historial
-    final historial = ((json['historial'] as List<dynamic>?) ?? [])
-        .map((h) => HistorialEntryEntity(
-              etapa: (h['etapa'] ?? h['estado'] ?? '').toString(),
-              fecha: DateTime.tryParse((h['fecha'] ?? h['date'] ?? '').toString()) ?? DateTime.now(),
-              responsable: (h['responsable'] ?? h['user'] ?? '').toString(),
-            ))
+    final historialRaw = json['historial'];
+    final historialList = historialRaw is List
+        ? historialRaw.whereType<Map>().toList()
+        : <Map>[];
+    final historial = historialList
+        .map(
+          (h) => HistorialEntryEntity(
+            etapa: (h['etapa'] ?? h['estado'] ?? '').toString(),
+            fecha:
+                DateTime.tryParse((h['fecha'] ?? h['date'] ?? '').toString()) ??
+                DateTime.now(),
+            responsable: (h['responsable'] ?? h['user'] ?? '').toString(),
+          ),
+        )
         .toList();
 
     // ficha técnica
-    final fichaRaw = json['fichaCosto'] ?? json['ficha_tecnica'] ?? json['fichaTecnica'] ?? json['ficha'];
+    final fichaRaw =
+        json['fichaCosto'] ??
+        json['ficha_tecnica'] ??
+        json['fichaTecnica'] ??
+        json['ficha'];
     FichaCostoEntity? ficha;
     if (fichaRaw is Map) {
       final cpu = fichaRaw['costoPorUnidad'] ?? fichaRaw['costPerUnit'] ?? 0;
-      final ct  = fichaRaw['costoTotal']     ?? fichaRaw['totalCost']   ?? 0;
+      final ct = fichaRaw['costoTotal'] ?? fichaRaw['totalCost'] ?? 0;
       ficha = FichaCostoEntity(
         nombre: s(fichaRaw['nombre']) ?? 'Ficha técnica',
         version: s(fichaRaw['version']) ?? '',
-        costoPorUnidad: cpu is num ? cpu.toDouble() : double.tryParse(cpu.toString()) ?? 0,
-        costoTotal:     ct  is num ? ct.toDouble()  : double.tryParse(ct.toString())  ?? 0,
-        completado: (fichaRaw['completado'] ?? fichaRaw['completed'] ?? false) as bool,
+        costoPorUnidad: cpu is num
+            ? cpu.toDouble()
+            : double.tryParse(cpu.toString()) ?? 0,
+        costoTotal: ct is num
+            ? ct.toDouble()
+            : double.tryParse(ct.toString()) ?? 0,
+        completado:
+            (fichaRaw['completado'] ?? fichaRaw['completed'] ?? false) as bool,
       );
     }
 
     // terceros asignados
-    final tercerosRaw =
-        (json['terceros'] as List<dynamic>?) ??
-        (json['asignaciones'] as List<dynamic>?) ?? [];
-    final terceros = tercerosRaw
-        .whereType<Map>()
+    final tercerosRaw = json['terceros'] ?? json['asignaciones'];
+    final tercerosList = tercerosRaw is List
+        ? tercerosRaw.whereType<Map>().toList()
+        : <Map>[];
+    final terceros = tercerosList
         .map((t) => TerceroAsignacion.fromJson(Map<String, dynamic>.from(t)))
         .toList();
 
@@ -117,9 +163,17 @@ class OrdenDetailModel extends OrdenDetailEntity {
     final terceroNombre = terceros.isNotEmpty ? terceros.first.nombre : null;
 
     // campos numéricos
-    final numero    = json['numero_orden'] ?? json['numero'] ?? 0;
-    final uRaw      = json['unidades'] ?? detalles.fold<int>(0, (a, d) => a + ((d['cantidad'] ?? 0) as num).toInt());
-    final unidades  = uRaw is num ? uRaw.toInt() : int.tryParse(uRaw.toString()) ?? 0;
+    final numero = json['numero_orden'] ?? json['numero'] ?? 0;
+    final uRaw =
+        json['unidades'] ??
+        detalles.fold<int>(0, (a, d) {
+          final cant = d['cantidad'] ?? 0;
+          return a +
+              (cant is num ? cant.toInt() : int.tryParse(cant.toString()) ?? 0);
+        });
+    final unidades = uRaw is num
+        ? uRaw.toInt()
+        : int.tryParse(uRaw.toString()) ?? 0;
 
     // fechaEntrega
     final fe = json['fechaEntrega'] ?? json['fecha_entrega'];
@@ -128,41 +182,52 @@ class OrdenDetailModel extends OrdenDetailEntity {
     // Asignación/confirmación de etapa por parte del empleado — igual
     // mapeo que toFrontendFormat() en ProductionAPIClient.js del web.
     final empleadoAsignaciones = json['empleadoAsignaciones'];
-    final empleadoAsignadoId = s(json['empleadoAsignadoId']) ??
+    final empleadoAsignadoId =
+        s(json['empleadoAsignadoId']) ??
         (empleadoAsignaciones is Map
             ? s((empleadoAsignaciones[json['estado']] as Map?)?['id_empleado'])
             : null);
-    final empleadoAsignadoNombre = s(json['empleadoAsignadoNombre']) ??
+    final empleadoAsignadoNombre =
+        s(json['empleadoAsignadoNombre']) ??
         (empleadoAsignaciones is Map
-            ? s((empleadoAsignaciones[json['estado']] as Map?)?['nombre_empleado'])
+            ? s(
+                (empleadoAsignaciones[json['estado']]
+                    as Map?)?['nombre_empleado'],
+              )
             : null);
     final etapaConfirmada = json['etapaConfirmada'] == true;
 
     return OrdenDetailModel(
-      id:            (json['_id'] ?? json['id'] ?? '').toString(),
-      numero:        numero is num ? numero.toInt() : int.tryParse(numero.toString()) ?? 0,
-      unidades:      unidades,
-      estado:        (json['estado'] ?? '').toString(),
-      tipo:          (json['tipo'] ?? 'produccion').toString().toLowerCase(),
-      cliente:       s(json['cliente'] ?? json['client']),
-      fechaEntrega:  fechaEntrega,
-      refCorte:      refCorte,
-      ref:           ref,
-      fechaEstado:   fechaEstado,
-      sede:          sede,
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      numero: numero is num
+          ? numero.toInt()
+          : int.tryParse(numero.toString()) ?? 0,
+      unidades: unidades,
+      estado: (json['estado'] ?? '').toString(),
+      tipo: (json['tipo'] ?? 'produccion').toString().toLowerCase(),
+      cliente: s(json['cliente'] ?? json['client']),
+      fechaEntrega: fechaEntrega,
+      refCorte: refCorte,
+      ref: ref,
+      fechaEstado: fechaEstado,
+      sede: sede,
       terceroNombre: terceroNombre,
-      referencias:   referencias,
-      historial:     historial,
-      fichaCosto:    ficha,
-      terceros:      terceros,
-      empleadoAsignadoId:     empleadoAsignadoId,
+      referencias: referencias,
+      historial: historial,
+      fichaCosto: ficha,
+      terceros: terceros,
+      empleadoAsignadoId: empleadoAsignadoId,
       empleadoAsignadoNombre: empleadoAsignadoNombre,
-      etapaConfirmada:        etapaConfirmada,
+      etapaConfirmada: etapaConfirmada,
     );
   }
 
   static Color _parseColor(String hex) {
     final h = hex.replaceFirst('#', '').padLeft(6, '0');
-    try { return Color(int.parse('FF$h', radix: 16)); } catch (_) { return const Color(0xFFFF4FD6); }
+    try {
+      return Color(int.parse('FF$h', radix: 16));
+    } catch (_) {
+      return const Color(0xFFFF4FD6);
+    }
   }
 }

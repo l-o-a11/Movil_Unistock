@@ -155,10 +155,7 @@ class _UsuariosViewState extends State<_UsuariosView> {
                         ),
                       ),
                       const Spacer(),
-                      ProfileMenuButton(
-                        size: 42,
-                        iconSize: 20,
-                      ),
+                      ProfileMenuButton(size: 42, iconSize: 20),
                     ],
                   ),
                 ),
@@ -486,28 +483,18 @@ class _UsuarioDetail extends StatelessWidget {
                     const Divider(height: 1, color: Color(0xFFF0F0F0)),
                     Flexible(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: CircleAvatar(
-                                radius: 40,
-                                backgroundColor: const Color(0xFFFF4FA3),
-                                child: const Icon(
-                                  Icons.category_rounded,
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                usuario.nombreCompleto, // FIX
+                                usuario.nombreCompleto,
+                                textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: _text,
-                                  fontSize: 20,
+                                  fontSize: 19,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -515,34 +502,83 @@ class _UsuarioDetail extends StatelessWidget {
                             const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                'DOC: ${usuario.numeroDocumento}', // FIX
+                                'DOC: ${usuario.numeroDocumento}',
                                 style: const TextStyle(
                                   color: _grey,
                                   fontSize: 13,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 18),
-                            _DetailRow(
-                              label: 'Estado',
-                              value: usuario.estadoLabel, // FIX
+                            const SizedBox(height: 10),
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (usuario.estado ? _green : _red)
+                                      .withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: BoxDecoration(
+                                        color: usuario.estado ? _green : _red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      usuario.estadoLabel,
+                                      style: TextStyle(
+                                        color: usuario.estado ? _green : _red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            _DetailRow(
-                              label: 'Correo Electrónico',
-                              value: usuario.correo, // FIX
-                            ),
-                            _DetailRow(
-                              label: 'Rol',
-                              value: usuario.rolNombre ?? 'Sin rol', // FIX
-                            ),
-                            _DetailRow(
-                              label: 'Tipo de documento',
-                              value: usuario
-                                  .tipoDocumento, // FIX: ya no hay "sede" legible
-                            ),
-                            _DetailRow(
-                              label: 'Documento',
-                              value: usuario.numeroDocumento, // FIX
+                            const SizedBox(height: 22),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F7F9),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  _DetailRow(
+                                    icon: Icons.mail_outline_rounded,
+                                    label: 'Correo electrónico',
+                                    value: usuario.correo,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.badge_outlined,
+                                    label: 'Rol',
+                                    value: usuario.rolNombre ?? 'Sin rol',
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.description_outlined,
+                                    label: 'Tipo de documento',
+                                    value: usuario.tipoDocumento,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.numbers_rounded,
+                                    label: 'Documento',
+                                    value: usuario.numeroDocumento,
+                                    isLast: true,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -587,34 +623,65 @@ class _UsuarioDetail extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
+  final bool isLast;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: _grey,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: isLast
+          ? null
+          : const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEDEDF0), width: 1),
+              ),
             ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: _pink),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: _text,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: _grey,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

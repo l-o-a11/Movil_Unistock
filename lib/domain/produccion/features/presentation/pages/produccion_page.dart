@@ -14,6 +14,7 @@ import '../widgets/filter_chips_row.dart';
 import '../widgets/orden_card.dart';
 import '../widgets/toggle_tab_bar.dart';
 import '../../../../../domain/terceros/features/presentation/widgets/terceros_embedded_list.dart';
+import '../../../../../domain/terceros/features/presentation/providers/terceros_provider.dart';
 import 'orden_detail_page.dart';
 import 'calendario_page.dart';
 
@@ -165,7 +166,17 @@ class _ProduccionPageState extends State<ProduccionPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: AppSearchBar(
                     controller: _searchCtrl,
-                    onChanged: provider.setSearch,
+                    onChanged: (v) {
+                      // Refresca el botón de limpiar del buscador.
+                      setState(() {});
+                      if (!isProduccion) {
+                        // Pestaña Terceros → filtrar la lista de terceros.
+                        context.read<TercerosProvider>().updateSearch(v);
+                      } else {
+                        // Pestaña Producciones → filtrar las órdenes.
+                        provider.setSearch(v);
+                      }
+                    },
                     hintText: 'Buscar...',
                   ),
                 ),
@@ -177,11 +188,25 @@ class _ProduccionPageState extends State<ProduccionPage> {
                   child: ToggleTabBar(
                     labels: const ['Producciones', 'Terceros'],
                     activeIndex: isProduccion ? 0 : 1,
-                    onChanged: (i) => provider.changeTab(
-                      i == 0
-                          ? ProduccionTab.produccion
-                          : ProduccionTab.terceros,
-                    ),
+                    onChanged: (i) {
+                      final targetProduccion = i == 0;
+                      provider.changeTab(
+                        targetProduccion
+                            ? ProduccionTab.produccion
+                            : ProduccionTab.terceros,
+                      );
+                      // Al cambiar de pestaña, la barra de búsqueda refleja el
+                      // término del proveedor correspondiente y limpia el del
+                      // otro para evitar filtrar listas que no se ven.
+                      final tercerosProvider = context.read<TercerosProvider>();
+                      if (targetProduccion) {
+                        tercerosProvider.updateSearch('');
+                      } else {
+                        provider.setSearch('');
+                        _searchCtrl.text = tercerosProvider.state.searchQuery;
+                      }
+                      setState(() {});
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -154,7 +154,9 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
@@ -168,15 +170,17 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
           ),
           SafeArea(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + viewInsets),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: 360,
-                    maxHeight: MediaQuery.of(context).size.height * 0.88,
+                    maxHeight:
+                        MediaQuery.of(context).size.height -
+                        viewInsets -
+                        MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.bottom -
+                        48,
                   ),
                   child: Container(
                     width: double.infinity,

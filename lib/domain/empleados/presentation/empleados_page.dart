@@ -155,10 +155,7 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                         ),
                       ),
                       const Spacer(),
-                      ProfileMenuButton(
-                        size: 42,
-                        iconSize: 20,
-                      ),
+                      ProfileMenuButton(size: 42, iconSize: 20),
                     ],
                   ),
                 ),
@@ -276,172 +273,91 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
     final isActive = usuario.estado;
     final statusColor = isActive ? _green : _red;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
-        boxShadow: [
-          BoxShadow(
-            color: _pink.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // FIX: usuario.doc → "DOC: " + numeroDocumento
-                  Text(
-                    'DOC: ${usuario.numeroDocumento}',
-                    style: const TextStyle(
-                      color: _grey,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    usuario.nombreCompleto, // FIX: usuario.nombre
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: statusColor, // FIX: ya no siempre verde
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        usuario
-                            .estadoLabel, // FIX: usuario.estado (era String fijo)
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: const [
-                      Icon(Icons.email_outlined, size: 13, color: _grey),
-                      SizedBox(width: 6),
-                      Text(
-                        'CORREO',
-                        style: TextStyle(
-                          color: _grey,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    usuario.correo, // FIX: usuario.email
-                    style: const TextStyle(
-                      color: _text,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // FIX: usuario.rol/usuario.sede ya no existen como texto legible.
-                  // La API solo da rolNombre y sedeId (ObjectId, sin nombre).
-                  Text(
-                    usuario.rolNombre ?? 'Sin rol',
-                    style: const TextStyle(
-                      color: _grey,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            // ── Acciones: toggle, eliminar, ver detalle ──────────────────
-            Column(
-              children: [
-                GestureDetector(
-                  onTap: () => _handleToggle(context, provider, usuario),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: statusColor.withOpacity(0.4)),
-                    ),
-                    child: Icon(
-                      isActive
-                          ? Icons.toggle_on_outlined
-                          : Icons.toggle_off_outlined,
-                      size: 18,
-                      color: statusColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => _handleDelete(context, provider, usuario),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: _red.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _red.withOpacity(0.4)),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      size: 16,
-                      color: _red,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => _showEmpleadoDetail(context, usuario),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: _pink.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _pink.withOpacity(0.4)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: _pink,
-                    ),
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => _showEmpleadoDetail(context, usuario),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _pink.withOpacity(0.22), width: 1.1),
+          boxShadow: [
+            BoxShadow(
+              color: _pink.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'DOC: ${usuario.numeroDocumento}',
+                      style: const TextStyle(
+                        color: _grey,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      usuario.nombreCompleto,
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          usuario.estadoLabel,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: _pink.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _pink.withOpacity(0.4)),
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: _pink,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -563,28 +479,18 @@ class _EmpleadoDetail extends StatelessWidget {
                     const Divider(height: 1, color: Color(0xFFF0F0F0)),
                     Flexible(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: CircleAvatar(
-                                radius: 40,
-                                backgroundColor: const Color(0xFFFF4FA3),
-                                child: const Icon(
-                                  Icons.category_rounded,
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                usuario.nombreCompleto, // FIX
+                                usuario.nombreCompleto,
+                                textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: _text,
-                                  fontSize: 20,
+                                  fontSize: 19,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -592,34 +498,83 @@ class _EmpleadoDetail extends StatelessWidget {
                             const SizedBox(height: 4),
                             Center(
                               child: Text(
-                                'DOC: ${usuario.numeroDocumento}', // FIX
+                                'DOC: ${usuario.numeroDocumento}',
                                 style: const TextStyle(
                                   color: _grey,
                                   fontSize: 13,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 18),
-                            _DetailRow(
-                              label: 'Estado',
-                              value: usuario.estadoLabel, // FIX
+                            const SizedBox(height: 10),
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (usuario.estado ? _green : _red)
+                                      .withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: BoxDecoration(
+                                        color: usuario.estado ? _green : _red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      usuario.estadoLabel,
+                                      style: TextStyle(
+                                        color: usuario.estado ? _green : _red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            _DetailRow(
-                              label: 'Correo Electrónico',
-                              value: usuario.correo, // FIX
-                            ),
-                            _DetailRow(
-                              label: 'Rol',
-                              value: usuario.rolNombre ?? 'Sin rol', // FIX
-                            ),
-                            _DetailRow(
-                              label: 'Tipo de documento',
-                              value: usuario
-                                  .tipoDocumento, // FIX: ya no hay "sede" legible
-                            ),
-                            _DetailRow(
-                              label: 'Documento',
-                              value: usuario.numeroDocumento, // FIX
+                            const SizedBox(height: 22),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7F7F9),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  _DetailRow(
+                                    icon: Icons.mail_outline_rounded,
+                                    label: 'Correo electrónico',
+                                    value: usuario.correo,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.badge_outlined,
+                                    label: 'Rol',
+                                    value: usuario.rolNombre ?? 'Sin rol',
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.description_outlined,
+                                    label: 'Tipo de documento',
+                                    value: usuario.tipoDocumento,
+                                  ),
+                                  _DetailRow(
+                                    icon: Icons.numbers_rounded,
+                                    label: 'Documento',
+                                    value: usuario.numeroDocumento,
+                                    isLast: true,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -664,34 +619,65 @@ class _EmpleadoDetail extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
+  final bool isLast;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: _grey,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: isLast
+          ? null
+          : const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEDEDF0), width: 1),
+              ),
             ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: _pink),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: _text,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: _grey,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
