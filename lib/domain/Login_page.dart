@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:movil_unistock/shared/services/auth_service.dart';
-import 'package:movil_unistock/domain/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:movil_unistock/domain/auth/presentation/access_controller.dart';
+import 'package:movil_unistock/domain/auth/presentation/forgot_password_flow.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _accessController = AccessController();
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _error;
@@ -36,23 +37,29 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    setState(() { _isLoading = true; _error = null; });
-    final auth = AuthService();
-    final success = await auth.login(
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    final success = await _accessController.login(
       username: _emailController.text,
       password: _passwordController.text,
     );
-    setState(() { _isLoading = false; });
+    if (!mounted) return;
+    setState(() {
+      _isLoading = _accessController.isLoading;
+      _error = _accessController.error;
+    });
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      setState(() { _error = 'Credenciales incorrectas'; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final isKeyboardVisible = keyboardInset > 0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -75,11 +82,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
 
             // ── Formulario anclado abajo ───────────────────────────
-            Positioned(
-              bottom: 0,
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              bottom: keyboardInset,
               left: 0,
               right: 0,
-              top: size.height * 0.55,
+              top: isKeyboardVisible ? 80 : size.height * 0.55,
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -148,21 +157,34 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 20),
 
-// Login button
-                     _GradientButton(
-                       onPressed: _isLoading ? null : _handleLogin,
-                       label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
-                     ),
-                     if (_error != null) ...[
-                       const SizedBox(height: 12),
-                       Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
-                     ],
-                     const SizedBox(height: 14),
+                    // Login button
+                    _GradientButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        style: const TextStyle(
+                          color: Color(0xFFEF4444),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
 
                     // Forgot password
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (dialogContext) =>
+                                const ForgotPasswordFlow(),
+                          );
+                        },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,

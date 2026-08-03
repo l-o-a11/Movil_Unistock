@@ -24,6 +24,9 @@ class OrdenDetailModel extends OrdenDetailEntity {
     required super.historial,
     super.fichaCosto,
     super.terceros,
+    super.empleadoAsignadoId,
+    super.empleadoAsignadoNombre,
+    super.etapaConfirmada,
   });
 
   factory OrdenDetailModel.fromJson(Map<String, dynamic> json) {
@@ -122,6 +125,19 @@ class OrdenDetailModel extends OrdenDetailEntity {
     final fe = json['fechaEntrega'] ?? json['fecha_entrega'];
     final fechaEntrega = fe != null ? DateTime.tryParse(fe.toString()) : null;
 
+    // Asignación/confirmación de etapa por parte del empleado — igual
+    // mapeo que toFrontendFormat() en ProductionAPIClient.js del web.
+    final empleadoAsignaciones = json['empleadoAsignaciones'];
+    final empleadoAsignadoId = s(json['empleadoAsignadoId']) ??
+        (empleadoAsignaciones is Map
+            ? s((empleadoAsignaciones[json['estado']] as Map?)?['id_empleado'])
+            : null);
+    final empleadoAsignadoNombre = s(json['empleadoAsignadoNombre']) ??
+        (empleadoAsignaciones is Map
+            ? s((empleadoAsignaciones[json['estado']] as Map?)?['nombre_empleado'])
+            : null);
+    final etapaConfirmada = json['etapaConfirmada'] == true;
+
     return OrdenDetailModel(
       id:            (json['_id'] ?? json['id'] ?? '').toString(),
       numero:        numero is num ? numero.toInt() : int.tryParse(numero.toString()) ?? 0,
@@ -139,6 +155,9 @@ class OrdenDetailModel extends OrdenDetailEntity {
       historial:     historial,
       fichaCosto:    ficha,
       terceros:      terceros,
+      empleadoAsignadoId:     empleadoAsignadoId,
+      empleadoAsignadoNombre: empleadoAsignadoNombre,
+      etapaConfirmada:        etapaConfirmada,
     );
   }
 

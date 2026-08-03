@@ -9,6 +9,14 @@ import 'sede.dart';
 /// Consume el backend real (`GET /api/sites`). Si la petición falla, la
 /// excepción se propaga hacia la UI (que muestra el mensaje de error o el
 /// estado vacío correspondiente) — no hay datos mock de respaldo.
+///
+/// IMPORTANTE: `GET /api/sites` SIEMPRE pagina en el backend
+/// (`SiteRepository.findAll`, límite por defecto = 10), a diferencia de
+/// roles/insumos/categorías que devuelven un arreglo plano. La respuesta
+/// real es `{ success, data: { data: [...], total, page, limit,
+/// totalPages } }` — un objeto paginado ANIDADO dentro de `data`, no una
+/// lista directa. Por eso se pide `limit=100` (el máximo que permite el
+/// backend) y se desanida `data.data`.
 class SedeService {
   final String baseUrl;
   final String _resource = 'sites';
@@ -21,15 +29,16 @@ class SedeService {
   // ─── Métodos públicos ─────────────────────────────────────────────────────
 
   Future<List<Sede>> getSedes() async {
-    final uri = Uri.parse('$baseUrl/$_resource');
+    final uri = Uri.parse('$baseUrl/$_resource').replace(
+      queryParameters: const {'limit': '100'},
+    );
     final response = await http
         .get(uri, headers: await _authHeaders)
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      final List<dynamic> data =
-          body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+      final data = _extraerLista(body);
       return data.map((e) => Sede.fromJson(e as Map<String, dynamic>)).toList();
     }
     throw Exception('Error al cargar sedes (${response.statusCode})');
@@ -52,6 +61,22 @@ class SedeService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  /// Extrae la lista de sedes tolerando 3 formas posibles de respuesta:
+  /// - Arreglo plano: `[...]`
+  /// - `{ data: [...] }`
+  /// - `{ data: { data: [...], total, page, ... } }` (paginado — el caso
+  ///   real de `/api/sites`)
+  List<dynamic> _extraerLista(dynamic body) {
+    if (body is List) return body;
+    if (body is! Map) return [];
+    final inner = body['data'];
+    if (inner is List) return inner;
+    if (inner is Map && inner['data'] is List) {
+      return inner['data'] as List;
+    }
+    return [];
+  }
 
   Future<Map<String, String>> get _authHeaders async {
     final token = await _auth.getToken();

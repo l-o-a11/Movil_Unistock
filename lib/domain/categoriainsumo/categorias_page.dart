@@ -21,7 +21,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
   bool _loading = true;
   String? _error;
 
-  static const _pink = Color(0xFFE91E8C);
+  static const _pink = Color(0xFFFF4FA3);
   static const _bg = Color(0xFFF5F5F7);
   static const _text = Color(0xFF1C1C1E);
 
@@ -69,7 +69,8 @@ class _CategoriasPageState extends State<CategoriasPage> {
     return Scaffold(
       bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: _bg,
-      body: Column(
+      body: SafeArea(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ──────────────────────────────────────────────────────
@@ -112,7 +113,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                   const SizedBox(width: 12),
                   const Icon(
                     Icons.search_rounded,
-                    color: Color(0xFFAAAAAA),
+                    color: Color(0xFFAEAEB2),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -123,7 +124,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                       decoration: const InputDecoration(
                         hintText: 'Buscar por nombre...',
                         hintStyle: TextStyle(
-                          color: Color(0xFFAAAAAA),
+                          color: Color(0xFFAEAEB2),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -158,11 +159,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
                           style: const TextStyle(color: Colors.red),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: _cargar,
-                          child: const Text('Reintentar'),
-                        ),
                       ],
                     ),
                   )
@@ -173,7 +169,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                         ? const Center(
                             child: Text(
                               'No se encontraron categorias.',
-                              style: TextStyle(color: Color(0xFFAAAAAA)),
+                              style: TextStyle(color: Color(0xFF8E8E93)),
                             ),
                           )
                         : ListView.separated(
@@ -189,6 +185,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                   ),
           ),
         ],
+      ),
       ),
     );
   }

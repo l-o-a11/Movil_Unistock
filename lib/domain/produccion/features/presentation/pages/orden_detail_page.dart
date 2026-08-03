@@ -10,9 +10,11 @@ import '../widgets/detail/detail_app_bar.dart';
 import '../widgets/detail/detail_status_views.dart';
 import '../widgets/detail/progreso_card.dart';
 import '../widgets/detail/etapas_card.dart';
+import '../widgets/detail/flujo_proceso_card.dart';
 import '../widgets/detail/produccion_terceros_card.dart';
 import '../widgets/detail/referencias_card.dart';
 import '../widgets/detail/historial_card.dart';
+import '../state/orden_detail_state.dart';
 
 class OrdenDetailPage extends StatefulWidget {
   final OrdenEntity orden;
@@ -49,7 +51,12 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
           }
           if (!state.isLoaded || state.detail == null)
             return const SizedBox.shrink();
-          return _DetailBody(detail: state.detail!);
+          return _DetailBody(
+            ordenId: widget.orden.id,
+            state: state,
+            onAvanzar: (nuevoEstado) => provider.avanzarEstado(widget.orden.id, nuevoEstado),
+            onConfirmarEtapa: () => provider.confirmarEtapa(widget.orden.id),
+          );
         },
       ),
     );
@@ -57,8 +64,19 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
 }
 
 class _DetailBody extends StatefulWidget {
-  final OrdenDetailEntity detail;
-  const _DetailBody({required this.detail});
+  final String ordenId;
+  final OrdenDetailState state;
+  final Future<bool> Function(String nuevoEstado) onAvanzar;
+  final Future<bool> Function() onConfirmarEtapa;
+  const _DetailBody({
+    required this.ordenId,
+    required this.state,
+    required this.onAvanzar,
+    required this.onConfirmarEtapa,
+  });
+
+  OrdenDetailEntity get detail => state.detail!;
+
   @override
   State<_DetailBody> createState() => _DetailBodyState();
 }
@@ -83,6 +101,20 @@ class _DetailBodyState extends State<_DetailBody>
   }
 
   @override
+  void didUpdateWidget(covariant _DetailBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final err = widget.state.actionError;
+    if (err != null && err != oldWidget.state.actionError) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(err), backgroundColor: const Color(0xFFDC2626)),
+        );
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _fadeAc.dispose();
     super.dispose();
@@ -102,6 +134,23 @@ class _DetailBodyState extends State<_DetailBody>
 
           // 2. Stepper horizontal del flujo completo
           EtapasCard(detail: d),
+          const SizedBox(height: 12),
+
+          // 2b. Botón de avance — Gerente avanza el estado, Empleado
+          // confirma que terminó su etapa (ver FlujoProcesoCard).
+          FlujoProcesoCard(
+            detail: d,
+            isGerente: widget.state.isGerente,
+            isEmpleado: widget.state.isEmpleado,
+            isActionLoading: widget.state.isActionLoading,
+            actionError: widget.state.actionError,
+            onAvanzar: (nuevoEstado) async {
+              await widget.onAvanzar(nuevoEstado);
+            },
+            onConfirmarEtapa: () async {
+              await widget.onConfirmarEtapa();
+            },
+          ),
           const SizedBox(height: 12),
 
           // 3. Terceros asignados solo en producción de terceros

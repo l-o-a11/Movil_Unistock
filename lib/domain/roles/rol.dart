@@ -1,42 +1,27 @@
+/// Permiso de un rol sobre un módulo del sistema.
+///
+/// Forma real del backend (`RoleModel.permisoSchema`):
+/// `{ modulo: "insumos", privilegios: ["crear", "leer"] }` — tanto el
+/// módulo como los privilegios ya son nombres planos del catálogo
+/// (`shared/constants/rolePermissions.js`), no ids que requieran lookup.
 class ModuloRol {
-  final String moduloId;
-  // Nombre del módulo si la API ya lo envía poblado (sub-documento
-  // `{ _id/id, nombre }`). Si es null se usa el mapa local
-  // [Rol._modulos] como respaldo (válido para los ids 1-8 de los datos
-  // de ejemplo).
-  final String? moduloNombre;
+  final String modulo;
   final List<String> privilegios;
 
-  const ModuloRol({
-    required this.moduloId,
-    this.moduloNombre,
-    required this.privilegios,
-  });
+  const ModuloRol({required this.modulo, required this.privilegios});
 
-  /// Tolerante a `moduloId` como id plano (int/string) o como objeto
-  /// poblado `{ _id/id, nombre }`, y a `privilegios` como lista de ids
-  /// planos o de objetos `{ _id/id }`.
   factory ModuloRol.fromJson(Map<String, dynamic> json) {
-    final rawModulo = json['moduloId'] ?? json['modulo'];
-    String moduloId = '';
-    String? moduloNombre;
-    if (rawModulo is Map) {
-      moduloId = (rawModulo['_id'] ?? rawModulo['id'] ?? '').toString();
-      moduloNombre = rawModulo['nombre']?.toString();
-    } else if (rawModulo != null) {
-      moduloId = rawModulo.toString();
-    }
+    final rawModulo = json['modulo'] ?? json['moduloId'];
+    final modulo = rawModulo is Map
+        ? (rawModulo['nombre'] ?? rawModulo['_id'] ?? rawModulo['id'] ?? '').toString()
+        : (rawModulo ?? '').toString();
 
     final rawPrivilegios = json['privilegios'] as List? ?? [];
     final privilegios = rawPrivilegios
-        .map((p) => p is Map ? (p['_id'] ?? p['id'] ?? '').toString() : p.toString())
+        .map((p) => p is Map ? (p['nombre'] ?? p['_id'] ?? p['id'] ?? '').toString() : p.toString())
         .toList();
 
-    return ModuloRol(
-      moduloId: moduloId,
-      moduloNombre: moduloNombre,
-      privilegios: privilegios,
-    );
+    return ModuloRol(modulo: modulo, privilegios: privilegios);
   }
 }
 
@@ -45,55 +30,65 @@ class Rol {
   final String nombre;
   final String descripcion;
   final bool estado;
-  final List<ModuloRol> modulos;
+  final List<ModuloRol> permisos;
 
   const Rol({
     required this.id,
     required this.nombre,
     required this.descripcion,
     required this.estado,
-    this.modulos = const [],
+    this.permisos = const [],
   });
 
-  // ─── Lookup helpers (respaldo para datos de ejemplo con ids 1-8) ──────────
+  // ─── Catálogo canónico del backend ─────────────────────────────────────────
+  // (shared/constants/rolePermissions.js) — se usa solo para la heurística
+  // de "isAdmin" (rol con acceso total). Los nombres a mostrar NO usan este
+  // catálogo: ya vienen como texto plano desde la API.
+  static const modulosCatalogo = [
+    'usuarios',
+    'dashboard',
+    'empleados',
+    'roles',
+    'compras',
+    'insumos',
+    'categorias de insumos',
+    'produccion',
+    'proveedores',
+    'terceros',
+    'sedes',
+    'productos',
+    'categorias de productos',
+  ];
 
-  static const _modulos = {
-    1: 'Usuarios',
-    2: 'Productos',
-    3: 'Insumos',
-    4: 'Compras',
-    5: 'Proveedores',
-    6: 'Categorías de insumos',
-    7: 'Dashboard',
-    8: 'Configuración',
-  };
-
-  static const _privilegios = {
-    1: 'Leer',
-    2: 'Crear',
-    3: 'Actualizar',
-    4: 'Eliminar',
-  };
+  static const privilegiosCatalogo = ['crear', 'leer', 'actualizar', 'eliminar'];
 
   String get estadoLabel => estado ? 'Activo' : 'Inactivo';
   bool get isActivo => estado;
 
-  /// Nombre a mostrar para un módulo: prioriza el nombre poblado que venga
-  /// de la API y cae al mapa local solo si no vino.
-  String moduloNombre(ModuloRol m) =>
-      m.moduloNombre ?? _modulos[int.tryParse(m.moduloId)] ?? 'Módulo ${m.moduloId}';
+  /// Nombre legible para un módulo (capitaliza cada palabra).
+  String moduloNombre(ModuloRol m) => _capitalizar(m.modulo);
 
-  String privilegioNombre(String privilegioId) =>
-      _privilegios[int.tryParse(privilegioId)] ?? 'Privilegio $privilegioId';
+  /// Nombre legible para un privilegio.
+  String privilegioNombre(String privilegio) => _capitalizar(privilegio);
 
-  /// Cantidad de módulos asignados
-  int get totalModulos => modulos.length;
+  static String _capitalizar(String s) {
+    if (s.isEmpty) return s;
+    return s
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
 
-  /// True si tiene acceso total a todos los módulos y privilegios (heurística
-  /// basada en la cantidad de módulos/privilegios de los datos de ejemplo).
+  /// Cantidad de módulos con al menos un privilegio asignado.
+  int get totalModulos => permisos.length;
+
+  /// True si el rol tiene todos los módulos del catálogo con todos los
+  /// privilegios (equivalente a "acceso total").
   bool get isAdmin =>
-      modulos.length == _modulos.length &&
-      modulos.every((m) => m.privilegios.length == _privilegios.length);
+      permisos.length >= modulosCatalogo.length &&
+      permisos.every(
+        (m) => privilegiosCatalogo.every((p) => m.privilegios.contains(p)),
+      );
 
   /// Tolerante a `id`/`_id` y a `estado`/`activo`.
   factory Rol.fromJson(Map<String, dynamic> json) {
@@ -102,12 +97,14 @@ class Rol {
         ? rawEstado
         : (rawEstado?.toString().toLowerCase() == 'true' || rawEstado == null);
 
+    final rawPermisos = json['permisos'] ?? json['modulos'];
+
     return Rol(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       nombre: json['nombre']?.toString() ?? '',
       descripcion: json['descripcion']?.toString() ?? '',
       estado: estado,
-      modulos: (json['modulos'] as List<dynamic>? ?? [])
+      permisos: (rawPermisos as List<dynamic>? ?? [])
           .map((e) => ModuloRol.fromJson(e as Map<String, dynamic>))
           .toList(),
     );

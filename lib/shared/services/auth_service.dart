@@ -1,83 +1,38 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:movil_unistock/config/api_config.dart';
+import '../../domain/auth/domain/auth_session_repository.dart';
+import '../../domain/auth/data/auth_session_repository_impl.dart';
 
-//const String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
-final String kAuthBaseUrl = '${ApiConfig.baseUrl}/api';
+class AuthService implements AuthSessionRepository {
+  AuthService({AuthSessionRepository? repository})
+    : _repository = repository ?? AuthSessionRepositoryImpl();
 
-class AuthService {
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'auth_user';
+  final AuthSessionRepository _repository;
 
-  String? _cachedToken;
+  @override
+  Future<String?> getToken() => _repository.getToken();
 
-  Future<String?> getToken() async {
-    if (_cachedToken != null) return _cachedToken;
-    final prefs = await SharedPreferences.getInstance();
-    _cachedToken = prefs.getString(_tokenKey);
-    return _cachedToken;
-  }
+  @override
+  Future<void> saveToken(String token) => _repository.saveToken(token);
 
-  Future<void> saveToken(String token) async {
-    _cachedToken = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
+  @override
+  Future<void> saveUser(Map<String, dynamic> user) =>
+      _repository.saveUser(user);
 
-  Future<void> saveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(user));
-  }
+  @override
+  Future<Map<String, dynamic>?> getUser() => _repository.getUser();
 
-  Future<Map<String, dynamic>?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
-    if (userJson == null) return null;
-    return jsonDecode(userJson) as Map<String, dynamic>;
-  }
+  @override
+  Future<void> clearSession() => _repository.clearSession();
 
-  Future<void> clearSession() async {
-    _cachedToken = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
-  }
+  @override
+  Future<bool> login({required String username, required String password}) =>
+      _repository.login(username: username, password: password);
 
-  Future<bool> login({
-    required String username,
-    required String password,
-  }) async {
-    try {
-      // Backend expects 'correo' field, not 'username'
-      final uri = Uri.parse('$kAuthBaseUrl/auth/login');
-      final response = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'correo': username, 'password': password}),
-          )
-          .timeout(const Duration(seconds: 10));
+  @override
+  Future<bool> isLoggedIn() => _repository.isLoggedIn();
 
-      if (response.statusCode == 200) {
-        final raw = jsonDecode(response.body);
-        final token = raw['data']?['token'] ?? raw['token'];
-        final user = raw['data']?['user'] ?? raw['user'];
+  @override
+  Future<String> getRolNombre() => _repository.getRolNombre();
 
-        if (token != null) {
-          await saveToken(token.toString());
-          if (user != null) {
-            await saveUser(user as Map<String, dynamic>);
-          }
-          return true;
-        }
-      }
-    } catch (_) {}
-    return false;
-  }
-
-  Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
-  }
+  @override
+  Future<String?> getUserId() => _repository.getUserId();
 }

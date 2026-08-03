@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../config/api_config.dart';
+
 /// Excepción específica de la API — incluye el código HTTP para que cada
 /// pantalla decida cómo reaccionar (401 → logout, 409 → mostrar mensaje, etc.)
 class ApiException implements Exception {
@@ -36,7 +38,10 @@ class ApiClient {
   // 10.0.2.2 es una IP especial que SOLO existe dentro del emulador de
   // Android — en un navegador normal no resuelve a nada, por eso daba
   // ERR_CONNECTION_TIMED_OUT al correr en Flutter Web.
-  static const String baseUrl = 'http://localhost:3000/api';
+  /// En Android el emulador llega a la máquina anfitriona mediante 10.0.2.2;
+  /// en web y escritorio se usa localhost. Todos los endpoints de la API
+  /// están bajo el prefijo /api.
+  static String get baseUrl => '${ApiConfig.baseUrl}/api';
 
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'auth_token';

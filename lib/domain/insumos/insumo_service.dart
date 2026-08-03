@@ -9,6 +9,11 @@ import 'insumo.dart';
 /// Consume el backend real (`GET /api/insumos`). Si la petición falla, la
 /// excepción se propaga hacia la UI (que muestra el mensaje de error o el
 /// estado vacío correspondiente) — no hay datos mock de respaldo.
+///
+/// El backend NO popula el campo `categoria` de cada insumo (llega como
+/// ObjectId plano), así que este servicio resuelve los nombres aparte
+/// consultando `GET /insumos/catalogos/categorias` y los inyecta en cada
+/// [Insumo] antes de devolverlos.
 class InsumoService {
   final String baseUrl;
   final String _resource = 'insumos';
@@ -36,9 +41,9 @@ class InsumoService {
       final body = jsonDecode(response.body);
       final List<dynamic> data =
           body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
-      return data
-          .map((e) => Insumo.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final insumos =
+          data.map((e) => Insumo.fromJson(e as Map<String, dynamic>)).toList();
+      return _enriquecerCategorias(insumos);
     }
 
     throw Exception('Error al cargar insumos (${response.statusCode})');
@@ -55,13 +60,53 @@ class InsumoService {
       final data = (body is Map && body['data'] is Map)
           ? Map<String, dynamic>.from(body['data'])
           : Map<String, dynamic>.from(body as Map);
-      return Insumo.fromJson(data);
+      final insumo = Insumo.fromJson(data);
+      final enriquecidos = await _enriquecerCategorias([insumo]);
+      return enriquecidos.first;
     }
 
     throw Exception('Error al cargar insumo $id (${response.statusCode})');
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  /// Completa `categoriaNombre` de cada insumo consultando el catálogo de
+  /// categorías. Si el catálogo falla, se devuelven los insumos tal cual
+  /// (solo con el id de categoría) para no romper la carga principal.
+  Future<List<Insumo>> _enriquecerCategorias(List<Insumo> insumos) async {
+    if (insumos.every((i) => i.categoriaId.isEmpty)) return insumos;
+    try {
+      final mapa = await _fetchCategoriasMap();
+      return insumos
+          .map((i) => i.copyWith(categoriaNombre: mapa[i.categoriaId]))
+          .toList();
+    } catch (_) {
+      return insumos;
+    }
+  }
+
+  Future<Map<String, String>> _fetchCategoriasMap() async {
+    final uri = Uri.parse('$baseUrl/$_resource/catalogos/categorias');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) return {};
+
+    final body = jsonDecode(response.body);
+    final List<dynamic> data =
+        body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+
+    final mapa = <String, String>{};
+    for (final c in data) {
+      if (c is Map) {
+        final id = (c['id'] ?? c['_id'])?.toString();
+        final nombre = c['nombre']?.toString();
+        if (id != null && nombre != null) mapa[id] = nombre;
+      }
+    }
+    return mapa;
+  }
 
   Future<Map<String, String>> get _authHeaders async {
     final token = await _auth.getToken();
