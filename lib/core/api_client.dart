@@ -126,7 +126,26 @@ class ApiClient {
       throw ApiException(response.statusCode, message);
     }
 
-    return body['data'];
+    if (body.containsKey('data') && body['data'] != null) {
+      final data = body['data'];
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return data;
+    }
+
+    if (body.containsKey('token') ||
+        body.containsKey('user') ||
+        body.containsKey('usuario') ||
+        body.containsKey('accessToken') ||
+        body.containsKey('userData')) {
+      return body;
+    }
+
+    return body;
   }
 
   // ── Métodos HTTP ───────────────────────────────────────────────────────
