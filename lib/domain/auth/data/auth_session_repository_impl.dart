@@ -24,21 +24,43 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
     required String username,
     required String password,
   }) async {
-    try {
-      final data =
-          await _api.post('/auth/login', {
-                'correo': username,
-                'password': password,
-              }, withAuth: false)
-              as Map<String, dynamic>;
-      final token = data['token']?.toString();
-      final user = data['user'];
-      if (token != null && token.isNotEmpty && user is Map<String, dynamic>) {
-        await saveToken(token);
-        await saveUser(user);
-        return true;
-      }
-    } catch (_) {}
+    final normalizedUsername = username.trim();
+    final attempts = <Map<String, dynamic>>[
+      {'correo': normalizedUsername, 'password': password},
+      {'email': normalizedUsername, 'password': password},
+      {'username': normalizedUsername, 'password': password},
+    ];
+
+    for (final body in attempts) {
+      try {
+        final payload = await _api.post('/auth/login', body, withAuth: false);
+        final responseMap = payload is Map<String, dynamic>
+            ? payload
+            : payload is Map
+                ? Map<String, dynamic>.from(payload)
+                : null;
+
+        if (responseMap == null) continue;
+
+        final token = responseMap['token']?.toString() ??
+            responseMap['accessToken']?.toString() ??
+            responseMap['data']?['token']?.toString() ??
+            responseMap['data']?['accessToken']?.toString();
+
+        final user = responseMap['user'] ??
+            responseMap['usuario'] ??
+            responseMap['userData'] ??
+            responseMap['data']?['user'] ??
+            responseMap['data']?['usuario'];
+
+        if (token != null && token.isNotEmpty && user is Map) {
+          await saveToken(token);
+          await saveUser(Map<String, dynamic>.from(user));
+          return true;
+        }
+      } catch (_) {}
+    }
+
     return false;
   }
 
