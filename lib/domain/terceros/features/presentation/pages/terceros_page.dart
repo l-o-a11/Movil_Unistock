@@ -11,7 +11,7 @@ import '../widgets/tercero_card.dart';
 /// Página standalone de terceros.
 /// Se navega desde el menú principal.
 /// Crea su propio [TercerosProvider] via [TercerosDependencies].
-/// 
+///
 /// Muestra:
 /// - Buscador de terceros
 /// - Lista de tarjetas de terceros
@@ -56,34 +56,59 @@ class _TercerosBodyState extends State<_TercerosBody> {
           padding: const EdgeInsets.all(8),
           child: AppBackButton(),
         ),
-        title: Row(children: [
-          Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, Color(0xFFFF6EC7)],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
+        title: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, Color(0xFFFF6EC7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
               ),
-              borderRadius: BorderRadius.circular(10),
+              child: const Icon(
+                Icons.people_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
-            child: const Icon(Icons.people_rounded, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 10),
-          const Text('Terceros',
-              style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-        ]),
+            const SizedBox(width: 10),
+            const Text(
+              'Terceros',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Container(
-              width: 42, height: 42,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
                 border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-                boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF4DA6).withOpacity(0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.person_2_sharp, size: 20, color: Color(0xFFFF4DA6)),
+              child: const Icon(
+                Icons.person_2_sharp,
+                size: 20,
+                color: Color(0xFFFF4DA6),
+              ),
             ),
           ),
         ],
@@ -106,9 +131,15 @@ class _TercerosBodyState extends State<_TercerosBody> {
           // Title
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('Terceros',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 22,
-                    fontWeight: FontWeight.w800, letterSpacing: -0.4)),
+            child: Text(
+              'Terceros',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
           ),
           // List
           Expanded(
@@ -117,39 +148,82 @@ class _TercerosBodyState extends State<_TercerosBody> {
                 final s = provider.state;
 
                 if (s.isLoading) {
-                  return const Center(child: CircularProgressIndicator(
-                      color: AppColors.primary, strokeWidth: 2.5));
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2.5,
+                    ),
+                  );
                 }
 
                 if (s.error != null) {
-                  return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.error_outline, color: AppColors.primary, size: 48),
-                    const SizedBox(height: 12),
-                    Text(s.error!, style: const TextStyle(color: AppColors.textSecondary)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: provider.loadTerceros,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                      child: const Text('Reintentar')),
-                  ]));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.primary,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          s.error!,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: provider.loadTerceros,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
-                if (s.terceros.isEmpty) {
-                  return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.people_outline, size: 52, color: AppColors.textHint.withAlpha(120)),
-                    const SizedBox(height: 12),
-                    const Text('No hay terceros disponibles',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-                  ]));
+                final filtered = s.tercerosFiltrados;
+                if (filtered.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          s.searchActive
+                              ? Icons.search_off_rounded
+                              : Icons.people_outline,
+                          size: 52,
+                          color: AppColors.textHint.withAlpha(120),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          s.searchActive
+                              ? 'No se encontraron resultados para "${s.searchQuery}"'
+                              : 'No hay terceros disponibles',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                  itemCount: s.terceros.length,
+                  itemCount: filtered.length,
                   itemBuilder: (ctx, i) =>
-                      TerceroCard(tercero: s.terceros[i], animIndex: i),
+                      TerceroCard(tercero: filtered[i], animIndex: i),
                 );
               },
             ),

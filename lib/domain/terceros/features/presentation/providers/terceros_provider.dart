@@ -5,12 +5,12 @@ import '../state/terceros_state.dart';
 import '../../data/services/terceros_api_service.dart';
 
 /// Proveedor de estado para la lista de terceros.
-/// 
+///
 /// Gestiona:
 /// - Carga de terceros desde [GetTercerosUseCase]
 /// - Búsqueda de texto
 /// - Consumo de [TercerosApiService]
-/// 
+///
 /// Emite estado a través de [TercerosState].
 class TercerosProvider extends ChangeNotifier {
   final GetTercerosUseCase getTercerosUseCase;
@@ -26,30 +26,34 @@ class TercerosProvider extends ChangeNotifier {
     loadTerceros();
   }
 
-  /// Carga la lista de terceros desde el servicio API.
-  /// 
-  /// Si hay una búsqueda activa, filtra los terceros automáticamente.
+  /// Carga la lista completa de terceros desde el servicio API.
+  ///
+  /// El filtrado por búsqueda se hace localmente en
+  /// [TercerosState.tercerosFiltrados], evitando una llamada HTTP por tecla.
   Future<void> loadTerceros() async {
     _state = _state.copyWith(isLoading: true);
     notifyListeners();
     try {
-      final terceros = await _apiService.getTerceros(
-        query: _state.searchQuery.isNotEmpty ? _state.searchQuery : null,
-      );
+      final terceros = await _apiService.getTerceros();
       _state = _state.copyWith(terceros: terceros, isLoading: false);
     } catch (e) {
-      _state = _state.copyWith(isLoading: false, error: 'Error al cargar terceros: $e');
+      _state = _state.copyWith(
+        isLoading: false,
+        error: 'Error al cargar terceros: $e',
+      );
     }
     notifyListeners();
   }
 
-  /// Actualiza la consulta de búsqueda y recarga los terceros.
-  /// 
+  /// Actualiza la consulta de búsqueda.
+  ///
+  /// Solo actualiza el estado y notifica — el filtrado se aplica localmente
+  /// y de forma instantánea en la UI.
+  ///
   /// Parámetro:
-  /// - [query]: Término de búsqueda (actualiza estado y recarga)
+  /// - [query]: Término de búsqueda
   void updateSearch(String query) {
     _state = _state.copyWith(searchQuery: query);
     notifyListeners();
-    loadTerceros();
   }
 }
