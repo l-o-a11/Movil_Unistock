@@ -54,7 +54,6 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
           return _DetailBody(
             ordenId: widget.orden.id,
             state: state,
-            onAvanzar: (nuevoEstado) => provider.avanzarEstado(widget.orden.id, nuevoEstado),
             onConfirmarEtapa: () => provider.confirmarEtapa(widget.orden.id),
           );
         },
@@ -66,12 +65,10 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
 class _DetailBody extends StatefulWidget {
   final String ordenId;
   final OrdenDetailState state;
-  final Future<bool> Function(String nuevoEstado) onAvanzar;
   final Future<bool> Function() onConfirmarEtapa;
   const _DetailBody({
     required this.ordenId,
     required this.state,
-    required this.onAvanzar,
     required this.onConfirmarEtapa,
   });
 
@@ -108,7 +105,10 @@ class _DetailBodyState extends State<_DetailBody>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(err), backgroundColor: const Color(0xFFDC2626)),
+          SnackBar(
+            content: Text(err),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
         );
       });
     }
@@ -136,17 +136,13 @@ class _DetailBodyState extends State<_DetailBody>
           EtapasCard(detail: d),
           const SizedBox(height: 12),
 
-          // 2b. Botón de avance — Gerente avanza el estado, Empleado
-          // confirma que terminó su etapa (ver FlujoProcesoCard).
+          // 2b. Confirmación de etapa — solo el Empleado confirma que
+          // terminó su etapa (ver FlujoProcesoCard). El avance de estado
+          // se gestiona desde el web.
           FlujoProcesoCard(
             detail: d,
-            isGerente: widget.state.isGerente,
             isEmpleado: widget.state.isEmpleado,
             isActionLoading: widget.state.isActionLoading,
-            actionError: widget.state.actionError,
-            onAvanzar: (nuevoEstado) async {
-              await widget.onAvanzar(nuevoEstado);
-            },
             onConfirmarEtapa: () async {
               await widget.onConfirmarEtapa();
             },

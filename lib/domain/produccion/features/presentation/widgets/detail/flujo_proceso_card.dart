@@ -2,43 +2,32 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../domain/entities/orden_detail_entity.dart';
 
-/// Tarjeta de acción de avance de la orden.
+/// Tarjeta de acción de confirmación de etapa.
 ///
-/// Espejo del bloque "Flujo de Proceso" en ProductionDetailsPage.jsx:
-/// - Gerente: control total — botón "Siguiente →" activo que avanza la
-///   orden al siguiente estado (previa confirmación).
-/// - Empleado: vista de solo lectura + único botón habilitado, que aquí
-///   funciona como su "avanzar" — confirma que terminó su etapa
-///   ("Confirmar finalización ✓" / "✓ Confirmado" una vez confirmada).
-///   El Gerente es quien decide después cuándo avanzar la orden.
-/// - Administrador / cualquier otro rol: observador — botón deshabilitado.
+/// Solo el empleado puede interactuar: confirma que terminó su etapa actual
+/// ("Confirmar finalización ✓" / "✓ Confirmado" una vez confirmada).
+/// Gerente/Administrador/otros roles: la tarjeta no se muestra (el avance
+/// de estado se gestiona desde el web).
 class FlujoProcesoCard extends StatelessWidget {
   final OrdenDetailEntity detail;
-  final bool isGerente;
   final bool isEmpleado;
   final bool isActionLoading;
-  final String? actionError;
-  final Future<void> Function(String nuevoEstado) onAvanzar;
   final Future<void> Function() onConfirmarEtapa;
 
   const FlujoProcesoCard({
     super.key,
     required this.detail,
-    required this.isGerente,
-    required this.isEmpleado,
-    required this.isActionLoading,
-    required this.onAvanzar,
+    this.isEmpleado = false,
+    this.isActionLoading = false,
     required this.onConfirmarEtapa,
-    this.actionError,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Igual que en el web: nada que mostrar si la orden fue anulada o si
-    // ya llegó al último estado del flujo.
+    // Solo mostrar para empleados con orden en estado activo
+    if (!isEmpleado) return const SizedBox.shrink();
     if (detail.isAnulada) return const SizedBox.shrink();
-    final nextEstado = detail.nextEstado;
-    if (nextEstado == null) return const SizedBox.shrink();
+    if (detail.nextEstado == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -65,72 +54,37 @@ class FlujoProcesoCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          _buildAction(context, nextEstado),
+          _buildAction(),
         ],
       ),
     );
   }
 
-  Widget _buildAction(BuildContext context, String nextEstado) {
+  Widget _buildAction() {
     if (isActionLoading) {
       return const SizedBox(
         width: 20,
         height: 20,
-        child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.primary),
+        child: CircularProgressIndicator(
+          strokeWidth: 2.4,
+          color: AppColors.primary,
+        ),
       );
     }
 
-    if (isGerente) {
-      return _PrimaryButton(
-        label: 'Siguiente →',
-        onPressed: () => _confirmarYAvanzar(context, nextEstado),
+    if (detail.etapaConfirmada) {
+      return const _StaticPill(
+        label: '✓ Confirmado',
+        background: Color(0xFFDCFCE7),
+        foreground: Color(0xFF16A34A),
       );
     }
 
-    if (isEmpleado) {
-      if (detail.etapaConfirmada) {
-        return const _StaticPill(
-          label: '✓ Confirmado',
-          background: Color(0xFFDCFCE7),
-          foreground: Color(0xFF16A34A),
-        );
-      }
-      return _PrimaryButton(
-        label: 'Confirmar finalización ✓',
-        color: const Color(0xFF16A34A),
-        onPressed: () => onConfirmarEtapa(),
-      );
-    }
-
-    // Administrador u otro rol: observador.
-    return const _StaticPill(
-      label: 'Siguiente →',
-      background: AppColors.chipBackground,
-      foreground: AppColors.textHint,
+    return _PrimaryButton(
+      label: 'Confirmar finalización ✓',
+      color: const Color(0xFF16A34A),
+      onPressed: () => onConfirmarEtapa(),
     );
-  }
-
-  Future<void> _confirmarYAvanzar(BuildContext context, String nextEstado) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Avanzar orden'),
-        content: Text('¿Confirmas el avance al estado "$nextEstado"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmar == true) {
-      await onAvanzar(nextEstado);
-    }
   }
 }
 
@@ -181,7 +135,11 @@ class _StaticPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: foreground, fontSize: 12, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          color: foreground,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
