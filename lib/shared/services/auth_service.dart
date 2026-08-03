@@ -1,96 +1,38 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-const String kAuthBaseUrl = 'http://10.0.2.2:3000/api';
+import '../../domain/auth/domain/auth_session_repository.dart';
+import '../../domain/auth/data/auth_session_repository_impl.dart';
 
-class AuthService {
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'auth_user';
+class AuthService implements AuthSessionRepository {
+  AuthService({AuthSessionRepository? repository})
+    : _repository = repository ?? AuthSessionRepositoryImpl();
 
-  String? _cachedToken;
+  final AuthSessionRepository _repository;
 
-  Future<String?> getToken() async {
-    if (_cachedToken != null) return _cachedToken;
-    final prefs = await SharedPreferences.getInstance();
-    _cachedToken = prefs.getString(_tokenKey);
-    return _cachedToken;
-  }
+  @override
+  Future<String?> getToken() => _repository.getToken();
 
-  Future<void> saveToken(String token) async {
-    _cachedToken = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
+  @override
+  Future<void> saveToken(String token) => _repository.saveToken(token);
 
-  Future<void> saveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(user));
-  }
+  @override
+  Future<void> saveUser(Map<String, dynamic> user) =>
+      _repository.saveUser(user);
 
-  Future<Map<String, dynamic>?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
-    if (userJson == null) return null;
-    return jsonDecode(userJson) as Map<String, dynamic>;
-  }
+  @override
+  Future<Map<String, dynamic>?> getUser() => _repository.getUser();
 
-  Future<void> clearSession() async {
-    _cachedToken = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
-  }
+  @override
+  Future<void> clearSession() => _repository.clearSession();
 
-  Future<bool> login({
-    required String username,
-    required String password,
-  }) async {
-    try {
-      // Backend expects 'correo' field, not 'username'
-      final uri = Uri.parse('$kAuthBaseUrl/auth/login');
-      final response = await http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'correo': username, 'password': password}),
-          )
-          .timeout(const Duration(seconds: 10));
+  @override
+  Future<bool> login({required String username, required String password}) =>
+      _repository.login(username: username, password: password);
 
-      if (response.statusCode == 200) {
-        final raw = jsonDecode(response.body);
-        final token = raw['data']?['token'] ?? raw['token'];
-        final user = raw['data']?['user'] ?? raw['user'];
+  @override
+  Future<bool> isLoggedIn() => _repository.isLoggedIn();
 
-        if (token != null) {
-          await saveToken(token.toString());
-          if (user != null) {
-            await saveUser(user as Map<String, dynamic>);
-          }
-          return true;
-        }
-      }
-    } catch (_) {}
-    return false;
-  }
+  @override
+  Future<String> getRolNombre() => _repository.getRolNombre();
 
-  Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  /// Nombre del rol del usuario logueado, en minúsculas (ej. 'gerente',
-  /// 'administrador', 'empleado'). Espejo de `rolNombre` en useSedeScope.js
-  /// del frontend web.
-  Future<String> getRolNombre() async {
-    final user = await getUser();
-    return (user?['rolNombre'] ?? user?['rol'] ?? '').toString().toLowerCase();
-  }
-
-  /// ObjectId de Mongo del usuario logueado — necesario para acciones como
-  /// confirmar-etapa, donde el backend valida contra el empleado asignado.
-  Future<String?> getUserId() async {
-    final user = await getUser();
-    final id = user?['id'] ?? user?['_id'];
-    return id?.toString();
-  }
+  @override
+  Future<String?> getUserId() => _repository.getUserId();
 }

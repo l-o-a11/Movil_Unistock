@@ -66,7 +66,7 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
       if (!mounted) return;
       _goTo(1);
     } on ApiException catch (e) {
-      setState(() => _errorMessage = e.message);
+      setState(() => _errorMessage = _friendlyErrorMessage(e.message));
     } catch (_) {
       setState(() => _errorMessage = 'No se pudo conectar con el servidor');
     } finally {
@@ -111,7 +111,7 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
         const SnackBar(content: Text('Te enviamos un nuevo código')),
       );
     } on ApiException catch (e) {
-      setState(() => _errorMessage = e.message);
+      setState(() => _errorMessage = _friendlyErrorMessage(e.message));
     } catch (_) {
       setState(() => _errorMessage = 'No se pudo conectar con el servidor');
     } finally {
@@ -144,7 +144,7 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } on ApiException catch (e) {
-      setState(() => _errorMessage = e.message);
+      setState(() => _errorMessage = _friendlyErrorMessage(e.message));
     } catch (_) {
       setState(() => _errorMessage = 'No se pudo conectar con el servidor');
     } finally {
@@ -404,8 +404,12 @@ class _CodeStepState extends State<_CodeStep> {
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -501,7 +505,11 @@ class _CodeStepState extends State<_CodeStep> {
           Text(
             'Hemos enviado un código de 6 dígitos a\n${widget.correo}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: Color.fromARGB(255, 0, 0, 0), height: 1.4),
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color.fromARGB(255, 0, 0, 0),
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 24),
           // 6 casillas individuales
@@ -545,7 +553,7 @@ class _CodeStepState extends State<_CodeStep> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
                           color: isFilled
-                              ? _pink.withOpacity(0.4)
+                              ? const Color.fromRGBO(255, 79, 163, 0.4)
                               : Colors.transparent,
                           width: 1.5,
                         ),
@@ -892,6 +900,17 @@ class _RuleRow extends StatelessWidget {
 }
 
 // ── Diálogo de éxito ──────────────────────────────────────────────────────
+String _friendlyErrorMessage(String message) {
+  final lower = message.toLowerCase();
+  if (lower.contains('invalid login') ||
+      lower.contains('username and password not accepted') ||
+      lower.contains('badcredentials') ||
+      lower.contains('smtp')) {
+    return 'No se pudo enviar el correo de recuperación. Por favor revisa la configuración del servidor o contacta soporte.';
+  }
+  return message;
+}
+
 class _SuccessDialog extends StatelessWidget {
   final String message;
   const _SuccessDialog({required this.message});

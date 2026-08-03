@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:movil_unistock/shared/services/auth_service.dart';
-import 'package:movil_unistock/domain/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:movil_unistock/domain/auth/presentation/access_controller.dart';
+import 'package:movil_unistock/domain/auth/presentation/forgot_password_flow.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _accessController = AccessController();
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _error;
@@ -40,20 +41,17 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
       _error = null;
     });
-    final auth = AuthService();
-    final success = await auth.login(
+    final success = await _accessController.login(
       username: _emailController.text,
       password: _passwordController.text,
     );
+    if (!mounted) return;
     setState(() {
-      _isLoading = false;
+      _isLoading = _accessController.isLoading;
+      _error = _accessController.error;
     });
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      setState(() {
-        _error = 'Credenciales incorrectas';
-      });
     }
   }
 
@@ -179,7 +177,14 @@ class _LoginPageState extends State<LoginPage> {
                     // Forgot password
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (dialogContext) =>
+                                const ForgotPasswordFlow(),
+                          );
+                        },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,

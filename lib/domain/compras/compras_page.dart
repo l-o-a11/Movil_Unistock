@@ -32,6 +32,12 @@ class _ComprasPageState extends State<ComprasPage> {
     _cargar();
   }
 
+  @override
+  void dispose() {
+    _busqueda.dispose();
+    super.dispose();
+  }
+
   Future<void> _cargar() async {
     try {
       setState(() {
@@ -43,7 +49,7 @@ class _ComprasPageState extends State<ComprasPage> {
         _compras = data;
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _error = 'No se pudo cargar la información de compras.';
         _loading = false;
@@ -63,137 +69,130 @@ class _ComprasPageState extends State<ComprasPage> {
   }
 
   @override
-  void dispose() {
-    _busqueda.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const GlobalBottomNav(),
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              children: [
-                AppBackButton(),
-                const SizedBox(width: 14),
-                const Text(
-                  'Compras',
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const Spacer(),
-                ProfileMenuButton(
-                  size: 42,
-                  iconSize: 20,
-                ),
-              ],
-            ),
-          ),
-
-          // ── Buscador ────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
-              ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
               child: Row(
                 children: [
-                  const SizedBox(width: 12),
-                  const Icon(
-                    Icons.search_rounded,
-                    color: Color(0xFFAEAEB2),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _busqueda,
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar por factura, proveedor o fecha...',
-                        hintStyle: TextStyle(
-                          color: Color(0xFFAEAEB2),
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                      ),
+                  AppBackButton(),
+                  const SizedBox(width: 14),
+                  const Text(
+                    'Compras',
+                    style: TextStyle(
+                      color: _text,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
                     ),
                   ),
+                  const Spacer(),
+                  ProfileMenuButton(size: 42, iconSize: 20),
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 20),
-
-          // ── Lista ───────────────────────────────────────────────────────
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator(color: _pink))
-                : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          color: Colors.red,
-                          size: 40,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _error!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+            // ── Buscador ────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    const Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFFAEAEB2),
+                      size: 20,
                     ),
-                  )
-                : RefreshIndicator(
-                    color: _pink,
-                    onRefresh: _cargar,
-                    child: _filtrados.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No se encontraron compras.',
-                              style: TextStyle(color: Color(0xFF8E8E93)),
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _filtrados.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final compra = _filtrados[index];
-                              return CompraCard(
-                                compra: compra,
-                                onDetailTap: () =>
-                                    showCompraDetail(context, compra),
-                              );
-                            },
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _busqueda,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar por factura, proveedor o fecha...',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFAEAEB2),
+                            fontSize: 15,
                           ),
-                  ),
-          ),
-        ],
-      ),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Lista ───────────────────────────────────────────────────────
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: _pink))
+                  : _error != null
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _error!,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: _pink,
+                      onRefresh: _cargar,
+                      child: _filtrados.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No se encontraron compras.',
+                                style: TextStyle(color: Color(0xFF8E8E93)),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              itemCount: _filtrados.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final compra = _filtrados[index];
+                                return CompraCard(
+                                  compra: compra,
+                                  onDetailTap: () =>
+                                      showCompraDetail(context, compra),
+                                );
+                              },
+                            ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

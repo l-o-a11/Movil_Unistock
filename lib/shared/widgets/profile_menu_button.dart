@@ -42,24 +42,24 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Perfil',
-      barrierColor: Colors.black.withOpacity(0.08),
+      barrierColor: const Color.fromRGBO(0, 0, 0, 0.08),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.topCenter,
-          child: Material(
-            type: MaterialType.transparency,
-            child: SafeArea(
-              bottom: false,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  width: double.infinity,
+        return Stack(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(color: Colors.transparent),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                  alignment: Alignment.topCenter,
-                  child: GestureDetector(
-                    onTap: () {},
+                  child: Material(
+                    type: MaterialType.transparency,
                     child: _ProfilePanel(
                       userFuture: _userFuture,
                       onEditAccount: () {
@@ -85,7 +85,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
                 ),
               ),
             ),
-          ),
+          ],
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -113,27 +113,32 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     final btnSize = widget.size ?? 40.0;
     final iSize = widget.iconSize ?? 18.0;
 
-    return GestureDetector(
-      onTap: () => _showProfileMenu(context),
-      child: Container(
-        width: btnSize,
-        height: btnSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(255, 77, 166, 0.35),
-              blurRadius: 14,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Icon(
-          Icons.person_2_sharp,
-          color: const Color(0xFFFF4DA6),
-          size: iSize,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(btnSize / 2),
+        onTap: () => _showProfileMenu(context),
+        child: Container(
+          width: btnSize,
+          height: btnSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
+            boxShadow: const [
+              BoxShadow(
+                color: Color.fromRGBO(255, 77, 166, 0.35),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.person_2_sharp,
+            color: const Color(0xFFFF4DA6),
+            size: iSize,
+          ),
         ),
       ),
     );
@@ -169,9 +174,9 @@ class _ProfilePanel extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.16),
+                color: Color.fromRGBO(0, 0, 0, 0.16),
                 blurRadius: 28,
-                offset: const Offset(0, 12),
+                offset: Offset(0, 12),
               ),
             ],
           ),
