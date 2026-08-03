@@ -15,8 +15,17 @@ class DashboardPage extends StatelessWidget {
 
   static const int _processMax = 50;
   static const _processLabels = [
-    'En espera', 'Tráfico entre sedes', 'Ficha técnica', 'Corte', 'Diseño',
-    'En producción', 'Bodega', 'Mercadeo', 'Cancelado', 'Compras', 'Recepción',
+    'En espera',
+    'Tráfico entre sedes',
+    'Ficha técnica',
+    'Corte',
+    'Diseño',
+    'En producción',
+    'Bodega',
+    'Mercadeo',
+    'Cancelado',
+    'Compras',
+    'Recepción',
   ];
 
   @override
@@ -33,26 +42,54 @@ class _DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider  = context.watch<DashboardProvider>();
-    final stats     = provider.stats;
-    final hPad      = AppTheme.sp(context, 16);
-    final s         = AppTheme.scale(context);
+    final provider = context.watch<DashboardProvider>();
+    final stats = provider.stats;
+    final hPad = AppTheme.sp(context, 16);
+    final s = AppTheme.scale(context);
     final cardRatio = 0.95 + 0.20 * (s - 0.78) / 0.22;
 
     final cards = [
-      _CardData(icon: Icons.bolt_rounded, iconColor: AppTheme.purple, iconBg: AppTheme.purpleLight,
-        title: 'ACTUALES', value: provider.isLoading ? '…' : '${stats.activas}', subtitle: 'prod.'),
-      _CardData(icon: Icons.check_rounded, iconColor: AppTheme.green, iconBg: AppTheme.greenLight,
-        title: 'COMPLETADAS', value: provider.isLoading ? '…' : '${stats.completadasMes}', subtitle: provider.period.label.toLowerCase()),
-      _CardData(icon: Icons.schedule_rounded, iconColor: AppTheme.pink, iconBg: AppTheme.pinkLight,
-        title: 'POR INICIAR', value: provider.isLoading ? '…' : '${stats.porIniciar}', subtitle: 'pendientes'),
-      _CardData(icon: Icons.access_time_rounded, iconColor: AppTheme.purple, iconBg: AppTheme.purpleLight,
-        title: 'PROMEDIO', value: provider.isLoading ? '…' : stats.avgTime, subtitle: 'días (mes ant.)'),
+      _CardData(
+        icon: Icons.bolt_rounded,
+        iconColor: AppTheme.purple,
+        iconBg: AppTheme.purpleLight,
+        title: 'ACTUALES',
+        value: provider.isLoading ? '…' : '${stats.activas}',
+        subtitle: 'prod.',
+      ),
+      _CardData(
+        icon: Icons.check_rounded,
+        iconColor: AppTheme.green,
+        iconBg: AppTheme.greenLight,
+        title: 'COMPLETADAS',
+        value: provider.isLoading ? '…' : '${stats.completadasMes}',
+        subtitle: provider.period.label.toLowerCase(),
+      ),
+      _CardData(
+        icon: Icons.schedule_rounded,
+        iconColor: AppTheme.pink,
+        iconBg: AppTheme.pinkLight,
+        title: 'POR INICIAR',
+        value: provider.isLoading ? '…' : '${stats.porIniciar}',
+        subtitle: 'pendientes',
+      ),
+      _CardData(
+        icon: Icons.access_time_rounded,
+        iconColor: AppTheme.purple,
+        iconBg: AppTheme.purpleLight,
+        title: 'PROMEDIO',
+        value: provider.isLoading ? '…' : stats.avgTime,
+        subtitle: 'días (mes ant.)',
+      ),
     ];
 
     final processes = DashboardPage._processLabels.map((label) {
       final count = stats.procesoCounts[label] ?? 0;
-      return _ProcessData(label, count, count > 0 ? AppTheme.purple : AppTheme.green);
+      return _ProcessData(
+        label,
+        count,
+        count > 0 ? AppTheme.purple : AppTheme.green,
+      );
     }).toList();
 
     return Scaffold(
@@ -63,8 +100,10 @@ class _DashboardView extends StatelessWidget {
           children: [
             const _TopBar(),
             // ── Filtro Semana / Mes / Año ──────────────────────────────────
-            _PeriodFilter(current: provider.period,
-              onChanged: (p) => provider.setPeriod(p)),
+            _PeriodFilter(
+              current: provider.period,
+              onChanged: (p) => provider.setPeriod(p),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -81,12 +120,20 @@ class _DashboardView extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: AppTheme.sp(context, 10),
-                      mainAxisSpacing:  AppTheme.sp(context, 10),
+                      mainAxisSpacing: AppTheme.sp(context, 10),
                       childAspectRatio: cardRatio,
-                      children: cards.map((c) => DashboardCard(
-                        icon: c.icon, iconColor: c.iconColor, iconBg: c.iconBg,
-                        title: c.title, value: c.value, subtitle: c.subtitle,
-                      )).toList(),
+                      children: cards
+                          .map(
+                            (c) => DashboardCard(
+                              icon: c.icon,
+                              iconColor: c.iconColor,
+                              iconBg: c.iconBg,
+                              title: c.title,
+                              value: c.value,
+                              subtitle: c.subtitle,
+                            ),
+                          )
+                          .toList(),
                     ),
 
                     SizedBox(height: AppTheme.sp(context, 24)),
@@ -96,19 +143,34 @@ class _DashboardView extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppTheme.sp(context, 16),
-                        vertical:   AppTheme.sp(context, 14),
+                        vertical: AppTheme.sp(context, 14),
                       ),
                       decoration: BoxDecoration(
                         color: AppTheme.cardColor,
-                        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.cardRadius,
+                        ),
                         boxShadow: AppTheme.cardShadow,
                       ),
                       child: provider.isLoading
-                          ? const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
-                          : Column(children: processes.map((p) => ProcessItem(
-                              label: p.label, value: p.value,
-                              maxValue: DashboardPage._processMax, barColor: p.color,
-                            )).toList()),
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : Column(
+                              children: processes
+                                  .map(
+                                    (p) => ProcessItem(
+                                      label: p.label,
+                                      value: p.value,
+                                      maxValue: DashboardPage._processMax,
+                                      barColor: p.color,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
                     ),
 
                     SizedBox(height: AppTheme.sp(context, 14)),
@@ -166,14 +228,25 @@ class _PeriodFilter extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: selected ? AppTheme.pink : Colors.transparent,
                     borderRadius: BorderRadius.circular(9),
-                    boxShadow: selected ? [BoxShadow(color: AppTheme.pink.withOpacity(0.35), blurRadius: 6, offset: const Offset(0, 2))] : null,
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.pink.withOpacity(0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
                   alignment: Alignment.center,
-                  child: Text(p.label,
+                  child: Text(
+                    p.label,
                     style: TextStyle(
                       color: selected ? Colors.white : AppTheme.mutedColor,
-                      fontSize: 12, fontWeight: FontWeight.w600,
-                    )),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             );
@@ -190,15 +263,41 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppTheme.sp(context, 20), AppTheme.sp(context, 14), AppTheme.sp(context, 20), 4),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Dashboard', style: TextStyle(fontSize: AppTheme.fs(context, 22), fontWeight: FontWeight.w800, color: AppTheme.titleColor, letterSpacing: -0.8)),
-          const SizedBox(height: 2),
-          Text('Panel administrativo', style: TextStyle(fontSize: AppTheme.fs(context, 12), color: AppTheme.mutedColor, fontWeight: FontWeight.w400)),
-        ]),
-        const _ProfileIconBtn(),
-      ]),
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.sp(context, 20),
+        AppTheme.sp(context, 14),
+        AppTheme.sp(context, 20),
+        4,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dashboard',
+                style: TextStyle(
+                  fontSize: AppTheme.fs(context, 22),
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.titleColor,
+                  letterSpacing: -0.8,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Panel administrativo',
+                style: TextStyle(
+                  fontSize: AppTheme.fs(context, 12),
+                  color: AppTheme.mutedColor,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+          const _ProfileIconBtn(),
+        ],
+      ),
     );
   }
 }
@@ -209,13 +308,25 @@ class _ProfileIconBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = AppTheme.sp(context, 40);
     return Container(
-      width: size, height: size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle, color: Colors.white,
+        shape: BoxShape.circle,
+        color: Colors.white,
         border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-        boxShadow: [BoxShadow(color: const Color(0xFFFF4DA6).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF4DA6).withOpacity(0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Icon(Icons.person_2_sharp, color: const Color(0xFFFF4DA6), size: AppTheme.sp(context, 18)),
+      child: Icon(
+        Icons.person_2_sharp,
+        color: const Color(0xFFFF4DA6),
+        size: AppTheme.sp(context, 18),
+      ),
     );
   }
 }
@@ -224,8 +335,15 @@ class _SectionLabel extends StatelessWidget {
   final String text;
   const _SectionLabel(this.text);
   @override
-  Widget build(BuildContext context) => Text(text,
-    style: TextStyle(fontSize: AppTheme.fs(context, 15), fontWeight: FontWeight.w700, color: AppTheme.titleColor, letterSpacing: -0.3));
+  Widget build(BuildContext context) => Text(
+    text,
+    style: TextStyle(
+      fontSize: AppTheme.fs(context, 15),
+      fontWeight: FontWeight.w700,
+      color: AppTheme.titleColor,
+      letterSpacing: -0.3,
+    ),
+  );
 }
 
 class _AccessButton extends StatelessWidget {
@@ -233,19 +351,49 @@ class _AccessButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity, height: AppTheme.sp(context, 52),
+      width: double.infinity,
+      height: AppTheme.sp(context, 52),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: AppTheme.pink.withOpacity(0.45), blurRadius: 20, spreadRadius: 1, offset: const Offset(0, 6))],
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.pink.withOpacity(0.45),
+            blurRadius: 20,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.pink, elevation: 0, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.pink,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
         onPressed: () => Navigator.of(context).pushNamed('/menu'),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text('Acceder al sistema', style: TextStyle(fontSize: AppTheme.fs(context, 15), fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.2)),
-          const SizedBox(width: 8),
-          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: AppTheme.sp(context, 18)),
-        ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Acceder al sistema',
+              style: TextStyle(
+                fontSize: AppTheme.fs(context, 15),
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: Colors.white,
+              size: AppTheme.sp(context, 18),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -255,10 +403,19 @@ class _CardData {
   final IconData icon;
   final Color iconColor, iconBg;
   final String title, value, subtitle;
-  const _CardData({required this.icon, required this.iconColor, required this.iconBg, required this.title, required this.value, required this.subtitle});
+  const _CardData({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.value,
+    required this.subtitle,
+  });
 }
 
 class _ProcessData {
-  final String label; final int value; final Color color;
+  final String label;
+  final int value;
+  final Color color;
   const _ProcessData(this.label, this.value, this.color);
 }
