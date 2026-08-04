@@ -5,6 +5,7 @@ import '../../shared/widgets/profile_menu_button.dart';
 import 'compra.dart';
 import 'compra_card.dart';
 import 'compra_detail.dart';
+import 'compra_export_service.dart';
 import 'compra_service.dart';
 
 class ComprasPage extends StatefulWidget {
@@ -16,10 +17,12 @@ class ComprasPage extends StatefulWidget {
 
 class _ComprasPageState extends State<ComprasPage> {
   final CompraService _service = CompraService();
+  final CompraExportService _exportService = CompraExportService();
   final TextEditingController _busqueda = TextEditingController();
 
   List<Compra> _compras = [];
   bool _loading = true;
+  bool _exportando = false;
   String? _error;
 
   static const _pink = Color(0xFFFF4FA3);
@@ -36,6 +39,30 @@ class _ComprasPageState extends State<ComprasPage> {
   void dispose() {
     _busqueda.dispose();
     super.dispose();
+  }
+
+  Future<void> _exportar() async {
+    if (_exportando) return;
+    if (_filtrados.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay compras para exportar')),
+      );
+      return;
+    }
+    setState(() => _exportando = true);
+    try {
+      await _exportService.exportarYCompartir(_filtrados);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo generar el reporte. Intenta de nuevo.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exportando = false);
+    }
   }
 
   Future<void> _cargar() async {
@@ -94,6 +121,32 @@ class _ComprasPageState extends State<ComprasPage> {
                     ),
                   ),
                   const Spacer(),
+                  GestureDetector(
+                    onTap: _exportar,
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: _pink.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _pink.withOpacity(0.4)),
+                      ),
+                      child: _exportando
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: _pink,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.ios_share_rounded,
+                              size: 18,
+                              color: _pink,
+                            ),
+                    ),
+                  ),
                   ProfileMenuButton(size: 42, iconSize: 20),
                 ],
               ),

@@ -9,6 +9,18 @@ String _fechaFormateada(String fechaIso) {
   return DateFormat('dd/MM/yyyy').format(fecha);
 }
 
+String _moneda(double valor) {
+  return '\$${valor.toStringAsFixed(2).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d)(?=[.,]))'), (m) => ',')}';
+}
+
+/// Acorta un ID largo (UUID) a sus primeros 8 caracteres + "…" para que
+/// quepa en una sola línea junto a "Número de factura". Si ya es corto
+/// (p.ej. un id numérico), lo deja tal cual.
+String _idCorto(String id) {
+  if (id.length <= 10) return id;
+  return '${id.substring(0, 8)}…';
+}
+
 Future<void> showCompraDetail(BuildContext context, Compra compra) {
   return Navigator.of(context).push(
     PageRouteBuilder(
@@ -31,6 +43,8 @@ class _CompraDetailSheet extends StatelessWidget {
   static const _grey = Color(0xFF8E8E93);
   static const _green = Color(0xFF34C759);
   static const _red = Color(0xFFFF3B30);
+  static const _tableHeaderBg = Color(0xFFF7F7FA);
+  static const _tableBorder = Color(0xFFEDEDF2);
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +73,7 @@ class _CompraDetailSheet extends StatelessWidget {
             child: Material(
               type: MaterialType.transparency,
               child: Container(
-                constraints: BoxConstraints(maxHeight: sh * 0.8),
+                constraints: BoxConstraints(maxHeight: sh * 0.85),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
@@ -76,34 +90,23 @@ class _CompraDetailSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+                    // ── Encabezado ─────────────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
                       child: Row(
                         children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: _pink.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.receipt_long,
-                              color: _pink,
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
+                          const Expanded(
                             child: Text(
-                              'Factura: ${compra.numeroFactura}',
-                              style: const TextStyle(
+                              'Detalle de Compra',
+                              style: TextStyle(
                                 color: _text,
-                                fontSize: 16,
+                                fontSize: 19,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
+                          _EstadoBadge(anulada: compra.anulada),
+                          const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
                             child: Container(
@@ -126,119 +129,87 @@ class _CompraDetailSheet extends StatelessWidget {
                     const Divider(height: 1, color: Color(0xFFF0F0F0)),
                     Flexible(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'ID: ${compra.id}',
-                              style: const TextStyle(
-                                color: _grey,
-                                fontSize: 13,
-                              ),
+                            // ── Grilla de datos generales ────────────
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'ID',
+                                    // Los ID reales son UUID largos (p.ej.
+                                    // "6a6a0b0d-c046-40ed-05af-c81b...") que
+                                    // se parten en dos líneas y rompen la
+                                    // alineación con la columna de al lado.
+                                    // Mostramos solo el bloque inicial.
+                                    value: _idCorto('${compra.id}'),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'Número de factura',
+                                    value: compra.numeroFactura,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Proveedor: ${compra.proveedorNombre ?? "Sin resolver"}',
-                              style: const TextStyle(
-                                color: _grey,
-                                fontSize: 13,
-                              ),
+                            const SizedBox(height: 18),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'Fecha',
+                                    value: _fechaFormateada(compra.fecha),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'Costo total',
+                                    value: _moneda(compra.total),
+                                    valueColor: _pink,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Fecha: ${_fechaFormateada(compra.fecha)}',
-                              style: const TextStyle(
-                                color: _grey,
-                                fontSize: 13,
-                              ),
+                            const SizedBox(height: 18),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'Proveedor',
+                                    value:
+                                        compra.proveedorNombre ??
+                                        'Sin resolver',
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _DetailField(
+                                    label: 'Observaciones',
+                                    value: (compra.observaciones ?? '').isEmpty
+                                        ? 'Sin observaciones'
+                                        : compra.observaciones!,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 24),
+
+                            // ── Tabla de detalle ──────────────────────
                             const Text(
-                              'Detalles',
+                              'Detalle de compras',
                               style: TextStyle(
-                                color: Color(0xFF8E8E93),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ...compra.detalles.map(
-                              (d) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        d.nombreMostrar,
-                                        style: const TextStyle(
-                                          color: _text,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${d.cantidad} x \$${d.precioUnitario.toStringAsFixed(2)}',
-                                      style: const TextStyle(color: _grey),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '\$${d.subtotal.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        color: _text,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                color: _text,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Total',
-                                  style: TextStyle(
-                                    color: _grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  '\$${compra.total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: _text,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: compra.anulada ? _red : _green,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  compra.anulada ? 'Anulada' : 'Activa',
-                                  style: TextStyle(
-                                    color: compra.anulada ? _red : _green,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
+                            _DetalleTable(detalles: compra.detalles),
                           ],
                         ),
                       ),
@@ -277,6 +248,222 @@ class _CompraDetailSheet extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Etiqueta + valor (usado en la grilla superior) ─────────────────────
+class _DetailField extends StatelessWidget {
+  const _DetailField({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 12.5),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor ?? const Color(0xFF1C1C1E),
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Badge de estado (Activa / Anulada) ─────────────────────────────────
+class _EstadoBadge extends StatelessWidget {
+  const _EstadoBadge({required this.anulada});
+
+  final bool anulada;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = anulada ? const Color(0xFFFF3B30) : const Color(0xFF34C759);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            anulada ? 'Anulada' : 'Activa',
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tabla de líneas de detalle ──────────────────────────────────────────
+class _DetalleTable extends StatelessWidget {
+  const _DetalleTable({required this.detalles});
+
+  final List<dynamic> detalles;
+
+  static const _tableHeaderBg = Color(0xFFF7F7FA);
+  static const _tableBorder = Color(0xFFEDEDF2);
+  static const _grey = Color(0xFF8E8E93);
+  static const _text = Color(0xFF1C1C1E);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: _tableBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Encabezado
+          Container(
+            color: _tableHeaderBg,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: const Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'ID DETALLE',
+                    style: TextStyle(
+                      color: _grey,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    'PRODUCTO/INSUMO',
+                    style: TextStyle(
+                      color: _grey,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'CANTIDAD',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: _grey,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'COSTO U',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: _grey,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Estado vacío: sin esto, una compra sin detalles se veía como
+          // una tabla "rota" (solo encabezado, sin filas ni aviso).
+          if (detalles.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              alignment: Alignment.center,
+              child: const Text(
+                'Esta compra no tiene productos registrados',
+                style: TextStyle(color: _grey, fontSize: 13),
+              ),
+            ),
+          // Filas
+          for (var i = 0; i < detalles.length; i++)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: _tableBorder)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${detalles[i].id ?? i + 1}',
+                      style: const TextStyle(color: _text, fontSize: 13),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      detalles[i].nombreMostrar as String,
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${detalles[i].cantidad}',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(color: _text, fontSize: 13),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '\$${(detalles[i].precioUnitario as double).toStringAsFixed(0)}',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(color: _text, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
