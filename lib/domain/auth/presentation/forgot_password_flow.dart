@@ -25,7 +25,12 @@ const _muted = Color(0xFFAAAAAA);
 const _fieldBg = Color(0xFFF5F5F5);
 
 class ForgotPasswordFlow extends StatefulWidget {
-  const ForgotPasswordFlow({super.key});
+  /// If [asBottomSheet] is true, the widget renders only the inner
+  /// content so it can be used inside a `showModalBottomSheet` without
+  /// drawing its own backdrop or Scaffold. Default: false (dialog mode).
+  const ForgotPasswordFlow({super.key, this.asBottomSheet = false});
+
+  final bool asBottomSheet;
 
   @override
   State<ForgotPasswordFlow> createState() => _ForgotPasswordFlowState();
@@ -155,6 +160,80 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+
+    Widget content() => SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + viewInsets),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 360,
+          maxHeight:
+              MediaQuery.of(context).size.height -
+              viewInsets -
+              MediaQuery.of(context).padding.top -
+              MediaQuery.of(context).padding.bottom -
+              48,
+        ),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.18),
+                blurRadius: 36,
+                offset: Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 18),
+              _StepDots(activeStep: _step),
+              const SizedBox(height: 4),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: KeyedSubtree(
+                  key: ValueKey(_step),
+                  child: switch (_step) {
+                    0 => _EmailStep(
+                      isLoading: _isLoading,
+                      errorMessage: _errorMessage,
+                      onSubmit: _handleSendCode,
+                    ),
+                    1 => _CodeStep(
+                      correo: _correo,
+                      isLoading: _isLoading,
+                      errorMessage: _errorMessage,
+                      onSubmit: _handleVerifyCode,
+                      onResend: _handleResendCode,
+                    ),
+                    _ => _NewPasswordStep(
+                      isLoading: _isLoading,
+                      errorMessage: _errorMessage,
+                      onSubmit: _handleResetPassword,
+                    ),
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (widget.asBottomSheet) {
+      // El inset del teclado ya se compensa una sola vez dentro de
+      // content() (padding del SingleChildScrollView + maxHeight del
+      // ConstrainedBox). No lo volvemos a restar acá para no duplicarlo.
+      return SafeArea(child: content());
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
@@ -168,75 +247,7 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
               ),
             ),
           ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + viewInsets),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: 360,
-                    maxHeight:
-                        MediaQuery.of(context).size.height -
-                        viewInsets -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom -
-                        48,
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.18),
-                          blurRadius: 36,
-                          offset: Offset(0, 16),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 18),
-                        _StepDots(activeStep: _step),
-                        const SizedBox(height: 4),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 240),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(opacity: animation, child: child),
-                          child: KeyedSubtree(
-                            key: ValueKey(_step),
-                            child: switch (_step) {
-                              0 => _EmailStep(
-                                isLoading: _isLoading,
-                                errorMessage: _errorMessage,
-                                onSubmit: _handleSendCode,
-                              ),
-                              1 => _CodeStep(
-                                correo: _correo,
-                                isLoading: _isLoading,
-                                errorMessage: _errorMessage,
-                                onSubmit: _handleVerifyCode,
-                                onResend: _handleResendCode,
-                              ),
-                              _ => _NewPasswordStep(
-                                isLoading: _isLoading,
-                                errorMessage: _errorMessage,
-                                onSubmit: _handleResetPassword,
-                              ),
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          SafeArea(child: Center(child: content())),
         ],
       ),
     );

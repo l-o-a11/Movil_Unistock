@@ -1,6 +1,13 @@
 import '../../../core/api_client.dart';
 import '../domain/auth_session_repository.dart';
 
+class LoginSessionResult {
+  const LoginSessionResult({required this.token, required this.user});
+
+  final String? token;
+  final Map<String, dynamic> user;
+}
+
 class AuthSessionRepositoryImpl implements AuthSessionRepository {
   final ApiClient _api = ApiClient.instance;
 
@@ -19,6 +26,66 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
   @override
   Future<void> clearSession() => _api.clearSession();
 
+  static LoginSessionResult parseLoginSession(dynamic payload) {
+    final responseMap = payload is Map<String, dynamic>
+        ? payload
+        : payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+
+    final data = responseMap['data'] is Map
+        ? Map<String, dynamic>.from(responseMap['data'])
+        : <String, dynamic>{};
+
+    final token = _extractStringValue(responseMap, ['token', 'accessToken', 'authToken']) ??
+        _extractStringValue(data, ['token', 'accessToken', 'authToken']);
+
+    final user = _extractUserMap(responseMap, data);
+
+    return LoginSessionResult(token: token, user: user);
+  }
+
+  static Map<String, dynamic> _extractUserMap(
+    Map<String, dynamic> responseMap,
+    Map<String, dynamic> data,
+  ) {
+    final candidates = <dynamic>[
+      responseMap['user'],
+      responseMap['usuario'],
+      responseMap['userData'],
+      data['user'],
+      data['usuario'],
+      data['userData'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is Map) {
+        return Map<String, dynamic>.from(candidate);
+      }
+    }
+
+    return <String, dynamic>{};
+  }
+
+  static String? _extractStringValue(
+    Map<String, dynamic> source,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = source[key];
+      if (value is String && value.isNotEmpty) {
+        return value;
+      }
+      if (value != null) {
+        final stringValue = value.toString();
+        if (stringValue.isNotEmpty) {
+          return stringValue;
+        }
+      }
+    }
+    return null;
+  }
+
   @override
   Future<bool> login({
     required String username,
@@ -31,34 +98,31 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
       {'username': normalizedUsername, 'password': password},
     ];
 
+    Object? lastError;
+
     for (final body in attempts) {
       try {
         final payload = await _api.post('/auth/login', body, withAuth: false);
-        final responseMap = payload is Map<String, dynamic>
-            ? payload
-            : payload is Map
-                ? Map<String, dynamic>.from(payload)
-                : null;
+        final parsed = parseLoginSession(payload);
 
-        if (responseMap == null) continue;
-
-        final token = responseMap['token']?.toString() ??
-            responseMap['accessToken']?.toString() ??
-            responseMap['data']?['token']?.toString() ??
-            responseMap['data']?['accessToken']?.toString();
-
-        final user = responseMap['user'] ??
-            responseMap['usuario'] ??
-            responseMap['userData'] ??
-            responseMap['data']?['user'] ??
-            responseMap['data']?['usuario'];
-
-        if (token != null && token.isNotEmpty && user is Map) {
-          await saveToken(token);
-          await saveUser(Map<String, dynamic>.from(user));
+        if (parsed.token != null && parsed.token!.isNotEmpty) {
+          await saveToken(parsed.token!);
+          await saveUser(parsed.user);
           return true;
         }
-      } catch (_) {}
+      } on ApiException catch (error) {
+        lastError = error;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError is ApiException) {
+      throw lastError;
+    }
+
+    if (lastError != null) {
+      throw Exception(lastError.toString());
     }
 
     return false;

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../core/api_client.dart';
 import '../data/auth_session_repository_impl.dart';
 import '../domain/auth_session_repository.dart';
 
@@ -28,8 +29,14 @@ class AccessController extends ChangeNotifier {
         error = 'Credenciales inválidas';
       }
       return success;
-    } catch (_) {
-      error = 'No se pudo iniciar sesión';
+    } catch (exception) {
+      if (exception is ApiException) {
+        error = exception.message;
+      } else {
+        error = exception.toString().isNotEmpty
+            ? exception.toString()
+            : 'No se pudo iniciar sesión';
+      }
       return false;
     } finally {
       isLoading = false;

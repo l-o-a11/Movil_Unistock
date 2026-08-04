@@ -13,10 +13,18 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  // FocusNodes: permiten controlar a qué campo salta el foco cuando el
+  // usuario presiona "Siguiente" / "Listo" en el teclado.
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   final _accessController = AccessController();
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _error;
+  // No basta con mirar MediaQuery.viewInsets: con el teclado flotante de
+  // iPad el sistema no reporta el inset, así que el panel nunca subiría.
+  // Por eso también nos fijamos si algún campo tiene el foco.
+  bool _isAnyFieldFocused = false;
 
   @override
   void initState() {
@@ -27,12 +35,27 @@ class _LoginPageState extends State<LoginPage> {
         statusBarIconBrightness: Brightness.light,
       ),
     );
+    _emailFocusNode.addListener(_onFocusChanged);
+    _passwordFocusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    final anyFocused = _emailFocusNode.hasFocus || _passwordFocusNode.hasFocus;
+    if (anyFocused != _isAnyFieldFocused) {
+      setState(() => _isAnyFieldFocused = anyFocused);
+    }
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode
+      ..removeListener(_onFocusChanged)
+      ..dispose();
+    _passwordFocusNode
+      ..removeListener(_onFocusChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -59,7 +82,10 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-    final isKeyboardVisible = keyboardInset > 0;
+    // Se considera "visible" tanto si el teclado anclado empuja la vista
+    // (keyboardInset > 0) como si algún campo tiene foco aunque el teclado
+    // sea flotante y no reporte inset.
+    final isKeyboardVisible = keyboardInset > 0 || _isAnyFieldFocused;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -128,20 +154,30 @@ class _LoginPageState extends State<LoginPage> {
                     // Email field
                     _LoginTextField(
                       controller: _emailController,
+                      focusNode: _emailFocusNode,
                       hintText: 'Nombre del usuario o correo electrónico',
                       prefixIcon: Icons.person_outline_rounded,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
+                      // Al presionar "Siguiente" en el teclado, salta al
+                      // campo de contraseña.
+                      onSubmitted: (_) => FocusScope.of(
+                        context,
+                      ).requestFocus(_passwordFocusNode),
                     ),
                     const SizedBox(height: 12),
 
                     // Password field
                     _LoginTextField(
                       controller: _passwordController,
+                      focusNode: _passwordFocusNode,
                       hintText: 'Contraseña',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
+                      // Al presionar "Listo" en este campo, se envía el
+                      // formulario directamente.
+                      onSubmitted: (_) => _isLoading ? null : _handleLogin(),
                       suffixIcon: GestureDetector(
                         onTap: () => setState(
                           () => _obscurePassword = !_obscurePassword,
@@ -178,11 +214,25 @@ class _LoginPageState extends State<LoginPage> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          showDialog<void>(
+                          showModalBottomSheet<void>(
                             context: context,
-                            barrierDismissible: true,
-                            builder: (dialogContext) =>
-                                const ForgotPasswordFlow(),
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            barrierColor: Colors.black.withOpacity(0.22),
+                            builder: (sheetContext) {
+                              // ForgotPasswordFlow (asBottomSheet: true) ya
+                              // compensa el teclado internamente — no
+                              // agregamos Padding acá para no duplicar el
+                              // inset y comprimir el panel.
+                              return SafeArea(
+                                child: FractionallySizedBox(
+                                  heightFactor: 0.92,
+                                  child: const ForgotPasswordFlow(
+                                    asBottomSheet: true,
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                         style: TextButton.styleFrom(
@@ -221,27 +271,33 @@ class _LoginTextField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.prefixIcon,
+    this.focusNode,
     this.obscureText = false,
     this.keyboardType,
     this.textInputAction,
     this.suffixIcon,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final String hintText;
   final IconData prefixIcon;
   final bool obscureText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Widget? suffixIcon;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: obscureText,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
       style: const TextStyle(fontSize: 14, color: Color(0xFF1C1C1C)),
       decoration: InputDecoration(
         hintText: hintText,
