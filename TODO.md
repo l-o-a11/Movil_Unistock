@@ -1,16 +1,6 @@
-# TODO - Arreglar login con teclado
+# TODO - Dashboard Resumen Global y Control de Insumos
 
-## Tarea
-
-Hacer que el formulario de login suba y no quede oculto por el teclado.
-
-## Pasos
-
-- [x] Analizar la estructura del login (lib/domain/Login_page.dart)
-- [x] Definir plan y aprobar con usuario
-- [x] Envolver el contenido del formulario en SingleChildScrollView
-- [x] Agregar clipBehavior: Clip.antiAlias al contenedor de la tarjeta
-- [x] Agregar auto-scroll al campo enfocado (Scrollable.ensureVisible)
-- [x] Agregar keyboardDismissBehavior a la vista de scroll
-- [x] Formatear con dart format
-- [x] Validar con flutter analyze
+- [x] 1. Editar `summary_card.dart`: aclarar etiquetas del Resumen Global manteniendo los números en su posición original.
+- [x] 2. Editar `progress_section.dart`: dar más espacio a los números en Control de Insumos (label flexible + número con FittedBox para crecer a 5 cifras).
+- [x] 3. Corregir `dashboard_data_source.dart`: stock = sumar SOLO campo `stock`; total insumos = filtrar por `estado: true`; insumosSinStock basado en `stock == 0`.
+- [x] 4. Ejecutar `flutter analyze` para verificar.

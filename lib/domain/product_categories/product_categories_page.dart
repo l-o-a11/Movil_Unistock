@@ -52,8 +52,8 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
       final matchesEstado = query == 'activo'
           ? c.estadoLabel.toLowerCase() == 'activo'
           : query == 'inactivo'
-              ? c.estadoLabel.toLowerCase() == 'inactivo'
-              : c.estadoLabel.toLowerCase().contains(query);
+          ? c.estadoLabel.toLowerCase() == 'inactivo'
+          : c.estadoLabel.toLowerCase().contains(query);
       return matchesName || matchesEstado;
     }).toList();
   }
@@ -89,7 +89,10 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF2F2F7),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFE5E5EA), width: 0.8),
+                            border: Border.all(
+                              color: const Color(0xFFE5E5EA),
+                              width: 0.8,
+                            ),
                           ),
                           child: const Icon(
                             Icons.arrow_back_ios_new_rounded,
@@ -98,27 +101,14 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
                           ),
                         ),
                       ),
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4DA6).withValues(alpha: 0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.person_2_sharp, color: Color(0xFFFF4DA6), size: 20),
-                      ),
+                      ProfileMenuButton(size: 42, iconSize: 20),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Text('Categorías', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Categorías',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 12),
                   Container(
                     height: 50,
@@ -143,21 +133,25 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
             const SizedBox(height: 10),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFFE91E8C)))
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFE91E8C),
+                      ),
+                    )
                   : _error != null
-                      ? Center(child: Text(_error!))
-                      : RefreshIndicator(
-                          color: const Color(0xFFE91E8C),
-                          onRefresh: _load,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _filteredCategories.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredCategories[index];
-                              return card(context, item);
-                            },
-                          ),
-                        ),
+                  ? Center(child: Text(_error!))
+                  : RefreshIndicator(
+                      color: const Color(0xFFE91E8C),
+                      onRefresh: _load,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _filteredCategories.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredCategories[index];
+                          return card(context, item);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -172,13 +166,21 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 350),
-            pageBuilder: (context, animation, secondaryAnimation) => ProductsPage(categoryId: item.id, categoryName: item.nombre),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.ease)),
-                child: child,
-              );
-            },
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductsPage(categoryId: item.id, categoryName: item.nombre),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+                        .animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.ease,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           ),
         );
       },
@@ -190,7 +192,11 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFFFD6E7)),
           boxShadow: [
-            BoxShadow(color: const Color(0xFFFF4DA6).withValues(alpha: 0.10), blurRadius: 18, offset: const Offset(0, 6)),
+            BoxShadow(
+              color: const Color(0xFFFF4DA6).withValues(alpha: 0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Row(
@@ -200,9 +206,20 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.nombre, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    item.nombre,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(item.descripcion.isEmpty ? 'Sin descripción' : item.descripcion, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text(
+                    item.descripcion.isEmpty
+                        ? 'Sin descripción'
+                        : item.descripcion,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
                 ],
               ),
             ),
@@ -210,9 +227,20 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.circle, size: 8, color: item.isActivo ? Colors.green : Colors.red),
+                    Icon(
+                      Icons.circle,
+                      size: 8,
+                      color: item.isActivo ? Colors.green : Colors.red,
+                    ),
                     const SizedBox(width: 5),
-                    Text(item.estadoLabel, style: TextStyle(color: item.isActivo ? Colors.green : Colors.red, fontWeight: FontWeight.w600, fontSize: 11)),
+                    Text(
+                      item.estadoLabel,
+                      style: TextStyle(
+                        color: item.isActivo ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(width: 10),
@@ -223,7 +251,11 @@ class _ProductCategoriesPageState extends State<ProductCategoriesPage> {
                     color: Color(0xFFFFE4F1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_forward_ios, size: 13, color: Color(0xFFE91E8C)),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 13,
+                    color: Color(0xFFE91E8C),
+                  ),
                 ),
               ],
             ),
@@ -258,7 +290,11 @@ class AnimatedCardState extends State<AnimatedCard> {
       onTapDown: onTapDown,
       onTapUp: onTapUp,
       onTapCancel: onTapCancel,
-      child: AnimatedScale(scale: scale, duration: const Duration(milliseconds: 120), child: widget.child),
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 120),
+        child: widget.child,
+      ),
     );
   }
 }

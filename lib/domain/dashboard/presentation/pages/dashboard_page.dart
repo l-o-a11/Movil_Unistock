@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../shared/widgets/global_bottom_nav.dart';
+import '../../../../shared/widgets/profile_menu_button.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/dashboard_card.dart';
 import '../../widgets/process_item.dart';
@@ -295,37 +296,8 @@ class _TopBar extends StatelessWidget {
               ),
             ],
           ),
-          const _ProfileIconBtn(),
+          ProfileMenuButton(size: 40, iconSize: 18),
         ],
-      ),
-    );
-  }
-}
-
-class _ProfileIconBtn extends StatelessWidget {
-  const _ProfileIconBtn();
-  @override
-  Widget build(BuildContext context) {
-    final size = AppTheme.sp(context, 40);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF4DA6).withOpacity(0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(
-        Icons.person_2_sharp,
-        color: const Color(0xFFFF4DA6),
-        size: AppTheme.sp(context, 18),
       ),
     );
   }

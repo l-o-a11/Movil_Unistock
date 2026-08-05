@@ -1,3 +1,4 @@
+import '../../../../auth/domain/role_constants.dart';
 import '../../domain/entities/orden_entity.dart';
 
 enum ProduccionTab { produccion, terceros }
@@ -6,7 +7,7 @@ class ProduccionState {
   final bool isLoading;
   final String? error;
   final List<OrdenEntity> ordenes;
-  final String? filtroEstado;   // String exacto: "Producción", "Corte", etc.
+  final String? filtroEstado; // String exacto: "Producción", "Corte", etc.
   final String searchQuery;
   final ProduccionTab activeTab;
   final Set<String> expandedIds;
@@ -30,9 +31,9 @@ class ProduccionState {
   bool get isLoaded => !isLoading && error == null;
   bool isExpanded(String id) => expandedIds.contains(id);
 
-  bool get isGerente => rolNombre == 'gerente';
-  bool get isAdministrador => rolNombre == 'administrador';
-  bool get isEmpleado => rolNombre == 'empleado';
+  bool get isGerente => esGerente(rolNombre);
+  bool get isAdministrador => esAdministrador(rolNombre);
+  bool get isEmpleado => esEmpleado(rolNombre);
 
   /// Órdenes filtradas igual que el web:
   /// - Por defecto oculta Anulada y Enviado (HIDDEN_STATUSES)
@@ -58,7 +59,8 @@ class ProduccionState {
 
       // Alcance por rol
       if (!isGerente && !isAdministrador) {
-        final esMiOrden = userId != null &&
+        final esMiOrden =
+            userId != null &&
             o.empleadoAsignadoId != null &&
             o.empleadoAsignadoId == userId;
         if (!esMiOrden || o.etapaConfirmada) return false;
@@ -67,8 +69,14 @@ class ProduccionState {
       // Search
       if (term.isNotEmpty) {
         final fields = [
-          o.cliente, o.estado, o.producto, o.ref, o.refCorte,
-          o.color, '${o.numero}', '${o.unidades}',
+          o.cliente,
+          o.estado,
+          o.producto,
+          o.ref,
+          o.refCorte,
+          o.color,
+          '${o.numero}',
+          '${o.unidades}',
         ];
         return fields.any((f) => (f ?? '').toLowerCase().contains(term));
       }
@@ -89,15 +97,17 @@ class ProduccionState {
     String? userId,
   }) {
     return ProduccionState(
-      isLoading:    isLoading    ?? this.isLoading,
-      error:        error,
-      ordenes:      ordenes      ?? this.ordenes,
-      filtroEstado: clearFiltroEstado ? null : (filtroEstado ?? this.filtroEstado),
-      searchQuery:  searchQuery  ?? this.searchQuery,
-      activeTab:    activeTab    ?? this.activeTab,
-      expandedIds:  expandedIds  ?? this.expandedIds,
-      rolNombre:    rolNombre    ?? this.rolNombre,
-      userId:       userId       ?? this.userId,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      ordenes: ordenes ?? this.ordenes,
+      filtroEstado: clearFiltroEstado
+          ? null
+          : (filtroEstado ?? this.filtroEstado),
+      searchQuery: searchQuery ?? this.searchQuery,
+      activeTab: activeTab ?? this.activeTab,
+      expandedIds: expandedIds ?? this.expandedIds,
+      rolNombre: rolNombre ?? this.rolNombre,
+      userId: userId ?? this.userId,
     );
   }
 }

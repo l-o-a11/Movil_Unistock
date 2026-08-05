@@ -17,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   // usuario presiona "Siguiente" / "Listo" en el teclado.
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
-  final _scrollController = ScrollController();
   final _accessController = AccessController();
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -45,37 +44,6 @@ class _LoginPageState extends State<LoginPage> {
     if (anyFocused != _isAnyFieldFocused) {
       setState(() => _isAnyFieldFocused = anyFocused);
     }
-    // Cuando un campo gana/cede el foco, esperamos a que termine la
-    // animación de la tarjeta (250 ms) y aseguramos que el campo enfocado
-    // quede visible dentro del área de scroll (nunca oculto por el teclado).
-    if (_isAnyFieldFocused) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _ensureFocusedFieldVisible();
-      });
-    }
-  }
-
-  void _ensureFocusedFieldVisible() {
-    if (!_scrollController.hasClients) return;
-    final target = _emailFocusNode.hasFocus
-        ? _emailFocusNode
-        : _passwordFocusNode.hasFocus
-        ? _passwordFocusNode
-        : null;
-    final targetContext = target?.context;
-    if (targetContext == null) return;
-
-    // Desplazamos el scroll para que el campo enfocado quede siempre
-    // visible dentro de la tarjeta (nunca oculto por el teclado).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      Scrollable.ensureVisible(
-        targetContext,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        alignment: 0.5,
-      );
-    });
   }
 
   @override
@@ -88,7 +56,6 @@ class _LoginPageState extends State<LoginPage> {
     _passwordFocusNode
       ..removeListener(_onFocusChanged)
       ..dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -149,7 +116,6 @@ class _LoginPageState extends State<LoginPage> {
               right: 0,
               top: isKeyboardVisible ? 80 : size.height * 0.55,
               child: Container(
-                clipBehavior: Clip.antiAlias,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -165,137 +131,129 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
                 padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Bienvenido',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1C1C1C),
-                          letterSpacing: -0.5,
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Bienvenido',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1C1C1C),
+                        letterSpacing: -0.5,
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Accede a tu panel de administración.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFFAAAAAA),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Accede a tu panel de administración.',
+                      style: TextStyle(fontSize: 14, color: Color(0xFFAAAAAA)),
+                    ),
+                    const SizedBox(height: 20),
 
-                      // Email field
-                      _LoginTextField(
-                        controller: _emailController,
-                        focusNode: _emailFocusNode,
-                        hintText: 'Nombre del usuario o correo electrónico',
-                        prefixIcon: Icons.person_outline_rounded,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        // Al presionar "Siguiente" en el teclado, salta al
-                        // campo de contraseña.
-                        onSubmitted: (_) => FocusScope.of(
-                          context,
-                        ).requestFocus(_passwordFocusNode),
+                    // Email field
+                    _LoginTextField(
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      hintText: 'Nombre del usuario o correo electrónico',
+                      prefixIcon: Icons.person_outline_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      // Al presionar "Siguiente" en el teclado, salta al
+                      // campo de contraseña.
+                      onSubmitted: (_) => FocusScope.of(
+                        context,
+                      ).requestFocus(_passwordFocusNode),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Password field
+                    _LoginTextField(
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      hintText: 'Contraseña',
+                      prefixIcon: Icons.lock_outline_rounded,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      // Al presionar "Listo" en este campo, se envía el
+                      // formulario directamente.
+                      onSubmitted: (_) => _isLoading ? null : _handleLogin(),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        child: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: const Color(0xFFBBBBBB),
+                          size: 21,
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Login button
+                    _GradientButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
+                    ),
+                    if (_error != null) ...[
                       const SizedBox(height: 12),
-
-                      // Password field
-                      _LoginTextField(
-                        controller: _passwordController,
-                        focusNode: _passwordFocusNode,
-                        hintText: 'Contraseña',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        // Al presionar "Listo" en este campo, se envía el
-                        // formulario directamente.
-                        onSubmitted: (_) => _isLoading ? null : _handleLogin(),
-                        suffixIcon: GestureDetector(
-                          onTap: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                          child: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: const Color(0xFFBBBBBB),
-                            size: 21,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Login button
-                      _GradientButton(
-                        onPressed: _isLoading ? null : _handleLogin,
-                        label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          _error!,
-                          style: const TextStyle(
-                            color: Color(0xFFEF4444),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 14),
-
-                      // Forgot password
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            showModalBottomSheet<void>(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              barrierColor: Colors.black.withOpacity(0.22),
-                              builder: (sheetContext) {
-                                // ForgotPasswordFlow (asBottomSheet: true) ya
-                                // compensa el teclado internamente — no
-                                // agregamos Padding acá para no duplicar el
-                                // inset y comprimir el panel.
-                                return SafeArea(
-                                  child: FractionallySizedBox(
-                                    heightFactor: 0.92,
-                                    child: const ForgotPasswordFlow(
-                                      asBottomSheet: true,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            '¿Olvidaste tu contraseña?',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFFFF4FA3),
-                            ),
-                          ),
+                      Text(
+                        _error!,
+                        style: const TextStyle(
+                          color: Color(0xFFEF4444),
+                          fontSize: 13,
                         ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 14),
+
+                    // Forgot password
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            barrierColor: Colors.black.withOpacity(0.22),
+                            builder: (sheetContext) {
+                              // ForgotPasswordFlow (asBottomSheet: true) ya
+                              // compensa el teclado internamente — no
+                              // agregamos Padding acá para no duplicar el
+                              // inset y comprimir el panel.
+                              return SafeArea(
+                                child: FractionallySizedBox(
+                                  heightFactor: 0.92,
+                                  child: const ForgotPasswordFlow(
+                                    asBottomSheet: true,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          '¿Olvidaste tu contraseña?',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFFF4FA3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
