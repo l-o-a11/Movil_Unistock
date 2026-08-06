@@ -1,3 +1,4 @@
+import '../../../../auth/domain/role_constants.dart';
 import '../../domain/entities/orden_detail_entity.dart';
 
 /// Estado del detalle de una orden.
@@ -28,9 +29,9 @@ class OrdenDetailState {
   bool get hasError => error != null;
   bool get isLoaded => !isLoading && error == null && detail != null;
 
-  bool get isGerente => rolNombre == 'gerente';
-  bool get isAdministrador => rolNombre == 'administrador';
-  bool get isEmpleado => rolNombre == 'empleado';
+  bool get isGerente => esGerente(rolNombre);
+  bool get isAdministrador => esAdministrador(rolNombre);
+  bool get isEmpleado => esEmpleado(rolNombre);
 
   OrdenDetailState copyWith({
     bool? isLoading,

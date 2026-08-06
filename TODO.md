@@ -1,11 +1,6 @@
-# TODO — Corrección del buscador de terceros
+# TODO - Dashboard Resumen Global y Control de Insumos
 
-## Pasos del plan aprobado
-
-- [x] 1. Análisis y diagnóstico (causa raíz identificada)
-- [x] 2. `terceros_state.dart` — guardar lista completa + getter `tercerosFiltrados` (filtro local)
-- [x] 3. `terceros_provider.dart` — cargar sin query; `updateSearch` filtra localmente sin llamadas HTTP por tecla
-- [x] 4. `terceros_page.dart` — usar `tercerosFiltrados` y diferenciar mensajes de lista vacía vs sin resultados
-- [x] 5. `terceros_embedded_list.dart` — usar `tercerosFiltrados` y diferenciar mensajes
-- [x] 6. `produccion_page.dart` — el buscador delega al proveedor correcto según pestaña activa; sincronizar búsqueda al cambiar de pestaña y refrescar la barra
-- [x] 7. Validar con `flutter analyze` (y opcionalmente `flutter run`)
+- [x] 1. Editar `summary_card.dart`: aclarar etiquetas del Resumen Global manteniendo los números en su posición original.
+- [x] 2. Editar `progress_section.dart`: dar más espacio a los números en Control de Insumos (label flexible + número con FittedBox para crecer a 5 cifras).
+- [x] 3. Corregir `dashboard_data_source.dart`: stock = sumar SOLO campo `stock`; total insumos = filtrar por `estado: true`; insumosSinStock basado en `stock == 0`.
+- [x] 4. Ejecutar `flutter analyze` para verificar.

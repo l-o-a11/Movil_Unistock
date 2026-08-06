@@ -1,4 +1,5 @@
 // lib/domain/usuarios/domain/usuario_model.dart
+import '../../auth/domain/role_constants.dart';
 //
 // Reemplaza el UsuarioEntity anterior (sin id, campos sueltos en texto).
 // Este modelo matchea EXACTAMENTE lo que devuelve GET /api/usuarios:
@@ -50,10 +51,7 @@ class UsuarioModel {
 
   // Empleados = cualquier rol que NO sea Gerente ni Administrador.
   // Se usa para filtrar la pantalla de Empleados sin tocar el backend.
-  bool get esEmpleado {
-    final r = rolNombre?.toLowerCase().trim() ?? '';
-    return r != 'gerente' && r != 'administrador';
-  }
+  bool get esEmpleado => !esRolAdministrativo(rolNombre);
 
   UsuarioModel copyWith({bool? estado}) => UsuarioModel(
     id: id,
