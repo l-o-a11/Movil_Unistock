@@ -5,7 +5,6 @@ import '../../shared/widgets/profile_menu_button.dart';
 import 'compra.dart';
 import 'compra_card.dart';
 import 'compra_detail.dart';
-import 'compra_export_service.dart';
 import 'compra_service.dart';
 
 class ComprasPage extends StatefulWidget {
@@ -17,12 +16,10 @@ class ComprasPage extends StatefulWidget {
 
 class _ComprasPageState extends State<ComprasPage> {
   final CompraService _service = CompraService();
-  final CompraExportService _exportService = CompraExportService();
   final TextEditingController _busqueda = TextEditingController();
 
   List<Compra> _compras = [];
   bool _loading = true;
-  bool _exportando = false;
   String? _error;
 
   static const _pink = Color(0xFFFF4FA3);
@@ -41,27 +38,35 @@ class _ComprasPageState extends State<ComprasPage> {
     super.dispose();
   }
 
-  Future<void> _exportar() async {
-    if (_exportando) return;
-    if (_filtrados.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay compras para exportar')),
-      );
-      return;
-    }
-    setState(() => _exportando = true);
+  Future<void> _verDetalle(Compra compra) async {
+    // FIX: el listado GET /compras no trae "detalles" (solo GET /compras/:id
+    // lo hace — el controller adjunta los ítems ahí). Antes se le pasaba
+    // directo el objeto de la lista al modal, así que la tabla de "Detalle
+    // de compras" siempre salía vacía. Ahora se pide el detalle completo
+    // primero, con un loader mientras carga.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: _pink)),
+    );
     try {
-      await _exportService.exportarYCompartir(_filtrados);
+      final completa = await _service.getCompraById(compra.id);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // cierra el loader
+      showCompraDetail(context, completa);
     } catch (_) {
       if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // cierra el loader
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No se pudo generar el reporte. Intenta de nuevo.'),
+          content: Text('No se pudo cargar el detalle de la compra.'),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _exportando = false);
+      // Respaldo: al menos muestra lo que ya se tenía en la lista, aunque
+      // no traiga items, para no dejar al usuario sin nada.
+      showCompraDetail(context, compra);
     }
   }
 
@@ -121,32 +126,6 @@ class _ComprasPageState extends State<ComprasPage> {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: _exportar,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: _pink.withOpacity(0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _pink.withOpacity(0.4)),
-                      ),
-                      child: _exportando
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: _pink,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.ios_share_rounded,
-                              size: 18,
-                              color: _pink,
-                            ),
-                    ),
-                  ),
                   ProfileMenuButton(size: 42, iconSize: 20),
                 ],
               ),
@@ -237,8 +216,7 @@ class _ComprasPageState extends State<ComprasPage> {
                                 final compra = _filtrados[index];
                                 return CompraCard(
                                   compra: compra,
-                                  onDetailTap: () =>
-                                      showCompraDetail(context, compra),
+                                  onDetailTap: () => _verDetalle(compra),
                                 );
                               },
                             ),

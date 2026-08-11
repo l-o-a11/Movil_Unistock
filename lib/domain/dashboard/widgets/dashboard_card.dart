@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+/// Tarjeta compacta de métrica (chip), estilo "4 en fila" con ícono arriba,
+/// valor grande al centro y etiqueta abajo — inspirada en el mock de
+/// referencia que compartió el equipo.
 class DashboardCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -22,74 +25,41 @@ class DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppTheme.scale(context);
-    final pad = AppTheme.sp(context, 14);
 
     return Container(
-      padding: EdgeInsets.all(pad),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppTheme.sp(context, 6),
+        vertical: AppTheme.sp(context, 10),
+      ),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-        boxShadow: AppTheme.cardShadow,
+        color: iconBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: iconColor.withOpacity(0.35), width: 1.4),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 36 * s,
-                height: 36 * s,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: iconColor, size: 18 * s),
-              ),
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppTheme.sp(context, 6),
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: AppTheme.fs(context, 8),
-                      fontWeight: FontWeight.w700,
-                      color: iconColor,
-                      letterSpacing: 0.6,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.sp(context, 8)),
+          Icon(icon, color: iconColor, size: 17 * s),
+          SizedBox(height: AppTheme.sp(context, 4)),
           Text(
             value,
             style: TextStyle(
-              fontSize: AppTheme.fs(context, 28),
+              fontSize: AppTheme.fs(context, 16),
               fontWeight: FontWeight.w800,
               color: AppTheme.titleColor,
               height: 1.0,
-              letterSpacing: -1,
+              letterSpacing: -0.4,
             ),
           ),
-          SizedBox(height: 3),
+          SizedBox(height: AppTheme.sp(context, 2)),
           Text(
             subtitle,
             style: TextStyle(
-              fontSize: AppTheme.fs(context, 11),
+              fontSize: AppTheme.fs(context, 9),
               color: AppTheme.mutedColor,
               fontWeight: FontWeight.w500,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

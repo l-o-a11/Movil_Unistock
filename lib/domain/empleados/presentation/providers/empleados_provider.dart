@@ -10,7 +10,12 @@ class EmpleadosProvider extends ChangeNotifier {
 
   final UsuariosProvider _provider;
 
-  List<UsuarioModel> get items => _provider.items;
+  // FIX: antes devolvía _provider.items tal cual (todos los usuarios, sin
+  // importar el rol) — Empleados mostraba exactamente lo mismo que
+  // Usuarios. Ahora filtra solo los que tienen rol "Empleado".
+  List<UsuarioModel> get items =>
+      _provider.items.where((u) => u.esEmpleado).toList();
+
   bool get isLoading => _provider.isLoading;
   String? get error => _provider.error;
 

@@ -10,8 +10,12 @@ import '../domain/dashboard_metric_entity.dart';
 String get _kBase => '${ApiConfig.baseUrl}/api';
 
 // Espejo exacto de ESTADO_TO_PROCESO en dashboard.jsx (web).
+// FIX: se quitaron 'En espera', 'Tráfico entre sedes' y 'Mercadeo' — no
+// existen como estados válidos en el backend (ProductionOrderModel.js no
+// los tiene en su enum, y no aparecen en ningún lado de Api_Unistock), así
+// que esos 3 procesos siempre mostraban 0. Se quitan hasta que el backend
+// implemente esas etapas.
 const _estadoAProceso = {
-  'En espera': 'En espera',
   'Diseño': 'Diseño',
   'Ficha Técnica': 'Ficha técnica',
   'Ficha tecnica': 'Ficha técnica',
@@ -22,19 +26,14 @@ const _estadoAProceso = {
   'Empaque': 'Bodega',
   'Enviado': 'Recepción',
   'Anulada': 'Cancelado',
-  'Tráfico entre sedes': 'Tráfico entre sedes',
-  'Mercadeo': 'Mercadeo',
 };
 
 const _barProcesses = [
-  'En espera',
-  'Tráfico entre sedes',
   'Ficha técnica',
   'Corte',
   'Diseño',
   'En producción',
   'Bodega',
-  'Mercadeo',
   'Cancelado',
   'Compras',
   'Recepción',
@@ -65,6 +64,13 @@ extension DashboardPeriodExt on DashboardPeriod {
 class DashboardDataSource {
   Future<DashboardStats> getStats({
     DashboardPeriod period = DashboardPeriod.mes,
+    // FIX: en la web, "Procesos en Curso" (barData) usa un período
+    // INDEPENDIENTE (barTimeView, por defecto 'Año') distinto al de las
+    // tarjetas de KPI (timeView, por defecto 'Mes'). El móvil usaba el mismo
+    // período para todo, así que "Cancelado" (y el resto de procesos)
+    // contaba solo el mes actual en vez del año — de ahí el conteo distinto
+    // entre web y móvil para el mismo dato.
+    DashboardPeriod procesoPeriod = DashboardPeriod.anio,
   }) async {
     // Los insumos se calculan de forma AISLADA e independiente: aunque el
     // procesamiento de órdenes falle, el "Control de Insumos" del dashboard
@@ -238,12 +244,18 @@ class DashboardDataSource {
         }
         if (!isDelayed) {
           final estado = (o['estado'] ?? '').toString();
-          final asignacionesRaw = o['asignaciones'];
-          final asignaciones = asignacionesRaw is List
-              ? asignacionesRaw
-              : const <dynamic>[];
-          if (_estadosEnProduccion.contains(estado) &&
-              asignaciones.isNotEmpty) {
+          // FIX: el backend no tiene un campo unificado "asignaciones" — se
+          // dividió en sedeAsignaciones/terceroAsignaciones/empleadoAsignadoId
+          // (ver Production.js toJSON). Antes esto siempre leía una lista
+          // vacía y esta señal de retraso nunca se activaba.
+          final tieneAsignacion =
+              (o['empleadoAsignadoId'] != null &&
+                  o['empleadoAsignadoId'].toString().isNotEmpty) ||
+              (o['sedeAsignaciones'] is List &&
+                  (o['sedeAsignaciones'] as List).isNotEmpty) ||
+              (o['terceroAsignaciones'] is List &&
+                  (o['terceroAsignaciones'] as List).isNotEmpty);
+          if (_estadosEnProduccion.contains(estado) && tieneAsignacion) {
             final hist = _safeHist(o['historial']);
             final entrada = hist.cast<Map>().firstWhere(
               (h) =>
@@ -267,7 +279,7 @@ class DashboardDataSource {
       for (final o in orders) {
         final estado = (o['estado'] ?? '').toString();
         if (estado.isEmpty) continue;
-        if (!matchPeriod(orderDate(o), period)) continue;
+        if (!matchPeriod(orderDate(o), procesoPeriod)) continue;
         final proceso = _estadoAProceso[estado];
         if (proceso != null)
           procesoCounts[proceso] = (procesoCounts[proceso] ?? 0) + 1;
