@@ -8,10 +8,10 @@ import '../models/orden_model.dart';
 import '../models/orden_detail_model.dart';
 import '../datasources/orden_local_datasource.dart';
 
-/// Error de la API de producción (respuesta HTTP no-200).
+/// Error de la API de producción (respuesta HTTP no-200, o de red).
 ///
-/// Se lanza en lugar de caer al mock local para que la UI muestre el error
-/// real (401, 500, etc.) — igual que Compras/Insumos.
+/// Se lanza ante una respuesta HTTP no exitosa o de red. La pantalla de
+/// producción solo debe mostrar datos obtenidos del backend real.
 class ProduccionApiException implements Exception {
   final String message;
   const ProduccionApiException(this.message);
@@ -23,23 +23,18 @@ class ProduccionApiException implements Exception {
 ///
 /// Estrategia (consistente con Compras/Insumos):
 /// - HTTP 200 → retorna los datos REALES de la base de datos (incluyendo
-///   lista vacía — NUNCA mock).
+///   lista vacía).
 /// - Error HTTP (401/404/500) → lanza [ProduccionApiException] para que la
 ///   UI muestre el error real.
-/// - Error de RED (sin conexión / backend caído) → fallback al datasource
-///   local (mock) para mantener la app funcional en desarrollo.
+/// - Error de RED (sin conexión / backend caído) → lanza
+///   [ProduccionApiException]; no se usan datos locales de respaldo.
 class ProduccionApiService implements OrdenLocalDataSource {
   final String baseUrl;
-  final OrdenLocalDataSource _local;
   final AuthService _auth;
 
-  ProduccionApiService({
-    String? baseUrl,
-    OrdenLocalDataSource? local,
-    AuthService? auth,
-  }) : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
-       _local = local ?? OrdenLocalDataSourceImpl(),
-       _auth = auth ?? AuthService();
+  ProduccionApiService({String? baseUrl, AuthService? auth})
+    : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
+      _auth = auth ?? AuthService();
 
   @override
   Future<List<OrdenModel>> getOrdenes({
@@ -52,46 +47,51 @@ class ProduccionApiService implements OrdenLocalDataSource {
     if (tipo != null) params['tipo'] = tipo;
     if (query != null && query.isNotEmpty) params['q'] = query;
 
-    final uri = Uri.parse(
-      '$baseUrl/produccion/ordenes',
-    ).replace(queryParameters: params.isEmpty ? null : params);
+    // El endpoint está paginado. Pedir solo la primera página ocultaba
+    // órdenes válidas y hacía que Producción pareciera incompleta.
+    const limit = 1000;
+    final byId = <String, OrdenModel>{};
+    var page = 1;
+    var total = 0;
 
-    http.Response response;
-    try {
-      response = await http
-          .get(uri, headers: await _authHeaders)
-          .timeout(const Duration(seconds: 10));
-    } catch (_) {
-      // Red no disponible (emulador sin backend) → fallback local/dev.
-      return _local.getOrdenes(estado: estado, tipo: tipo, query: query);
-    }
+    while (page <= 500) {
+      final response = await _getProduction(
+        '/ordenes',
+        queryParameters: {...params, 'page': '$page', 'limit': '$limit'},
+      );
 
-    if (response.statusCode == 200) {
+      if (response.statusCode != 200) {
+        throw ProduccionApiException(
+          'No se pudieron cargar las órdenes (HTTP ${response.statusCode})',
+        );
+      }
+
       final body = json.decode(response.body);
       final data = _extractList(body);
-      return data
-          .whereType<Map>()
-          .map((e) => OrdenModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-    }
+      total = _extractTotal(body, current: total);
+      if (data.isEmpty) break;
 
-    throw ProduccionApiException(
-      'No se pudieron cargar las órdenes (HTTP ${response.statusCode})',
-    );
+      var added = 0;
+      for (final raw in data.whereType<Map>()) {
+        final orden = OrdenModel.fromJson(Map<String, dynamic>.from(raw));
+        // El backend siempre entrega id; se conserva una clave única como
+        // protección adicional para respuestas malformadas.
+        final key = orden.id.isEmpty ? '__page_${page}_$added' : orden.id;
+        if (!byId.containsKey(key)) {
+          byId[key] = orden;
+          added++;
+        }
+      }
+
+      if ((total > 0 && byId.length >= total) || added == 0) break;
+      page++;
+    }
+    return byId.values.toList();
   }
 
   @override
   Future<OrdenDetailEntity?> getOrdenDetail(String id) async {
-    final uri = Uri.parse('$baseUrl/produccion/ordenes/$id');
-
-    http.Response response;
-    try {
-      response = await http
-          .get(uri, headers: await _authHeaders)
-          .timeout(const Duration(seconds: 10));
-    } catch (_) {
-      return _local.getOrdenDetail(id);
-    }
+    final response = await _getProduction('/ordenes/$id');
 
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
@@ -116,15 +116,65 @@ class ProduccionApiService implements OrdenLocalDataSource {
       if (raw['data'] is List) return raw['data'] as List;
       if (raw['data'] is Map) {
         final inner = raw['data'] as Map;
-        for (final key in ['data', 'docs', 'results', 'ordenes']) {
+        for (final key in ['data', 'docs', 'results', 'ordenes', 'items']) {
           if (inner[key] is List) return inner[key] as List;
         }
       }
-      for (final key in ['docs', 'results', 'ordenes']) {
+      for (final key in ['docs', 'results', 'ordenes', 'items']) {
         if (raw[key] is List) return raw[key] as List;
       }
     }
     return const [];
+  }
+
+  int _extractTotal(dynamic raw, {required int current}) {
+    if (raw is! Map) return current;
+    int? fromMap(Map map) {
+      final value = map['total'] ?? map['totalDocs'] ?? map['count'] ?? map['totalCount'];
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '');
+    }
+
+    final direct = fromMap(raw);
+    if (direct != null) return direct > current ? direct : current;
+    final nested = raw['data'];
+    if (nested is Map) {
+      final value = fromMap(nested);
+      if (value != null && value > current) return value;
+    }
+    return current;
+  }
+
+  /// El proyecto tiene dos montajes de servidor: el activo en `app.js` usa
+  /// `/api/produccion`, mientras otro montaje histórico usa
+  /// `/api/production`. Se prueba el alias alterno únicamente ante 404; nunca
+  /// se sustituyen datos reales por mocks.
+  Future<http.Response> _getProduction(
+    String path, {
+    Map<String, String>? queryParameters,
+  }) async {
+    http.Response? notFound;
+    Object? networkError;
+
+    for (final resource in const ['produccion', 'production']) {
+      final uri = Uri.parse('$baseUrl/$resource$path').replace(
+        queryParameters: queryParameters,
+      );
+      try {
+        final response = await http
+            .get(uri, headers: await _authHeaders)
+            .timeout(const Duration(seconds: 10));
+        if (response.statusCode != 404) return response;
+        notFound = response;
+      } catch (error) {
+        networkError = error;
+      }
+    }
+
+    if (notFound != null) return notFound;
+    throw ProduccionApiException(
+      'No se pudo conectar con el servidor de producción${networkError == null ? '' : ': $networkError'}',
+    );
   }
 
   /// Extrae un objeto tolerando distintos formatos de respuesta.

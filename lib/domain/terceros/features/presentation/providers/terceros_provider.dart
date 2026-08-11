@@ -48,12 +48,26 @@ class TercerosProvider extends ChangeNotifier {
   /// Actualiza la consulta de búsqueda.
   ///
   /// Solo actualiza el estado y notifica — el filtrado se aplica localmente
-  /// y de forma instantánea en la UI.
+  /// y de forma instantánea en la UI. Reinicia la paginación a
+  /// [kTercerosPageSize] para que la nueva búsqueda siempre empiece
+  /// mostrando el primer bloque de resultados.
   ///
   /// Parámetro:
   /// - [query]: Término de búsqueda
   void updateSearch(String query) {
-    _state = _state.copyWith(searchQuery: query);
+    _state = _state.copyWith(
+      searchQuery: query,
+      visibleCount: kTercerosPageSize,
+    );
+    notifyListeners();
+  }
+
+  /// Muestra [kTercerosPageSize] registros adicionales de la lista filtrada.
+  void showMore() {
+    if (!_state.hasMore) return;
+    _state = _state.copyWith(
+      visibleCount: _state.visibleCount + kTercerosPageSize,
+    );
     notifyListeners();
   }
 }

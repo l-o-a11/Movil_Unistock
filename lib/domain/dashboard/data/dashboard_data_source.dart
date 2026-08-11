@@ -102,7 +102,7 @@ class DashboardDataSource {
     final insumosTotal = insumosActivos.length;
 
     try {
-      final orders = await _fetchList('$_kBase/produccion/ordenes');
+      final orders = await _fetchProductionOrders();
       final now = DateTime.now();
 
       DateTime? parseDate(dynamic v) =>
@@ -347,6 +347,15 @@ class DashboardDataSource {
     return s.procesoCounts.entries
         .map((e) => DashboardChartPointEntity(label: e.key, value: e.value))
         .toList();
+  }
+
+  /// Soporta los dos prefijos existentes de Producción en los despliegues del
+  /// proyecto. La segunda ruta solo se intenta cuando la primera no devolvió
+  /// órdenes, por lo que nunca se generan datos locales ni simulados.
+  Future<List<Map<String, dynamic>>> _fetchProductionOrders() async {
+    final spanish = await _fetchList('$_kBase/produccion/ordenes');
+    if (spanish.isNotEmpty) return spanish;
+    return _fetchList('$_kBase/production/ordenes');
   }
 
   /// Descarga la lista COMPLETA de un recurso recorriendo la paginación

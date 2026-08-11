@@ -87,13 +87,32 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
             if (p.isLoading) return const Center(child:CircularProgressIndicator(color:_pink, strokeWidth:2.5));
             if (p.error != null) return Center(child:Text(p.error!, style:const TextStyle(color:_grey)));
             if (p.items.isEmpty) return const Center(child:Text('No hay proveedores', style:TextStyle(color:_grey, fontSize:14)));
+            final visibles = p.visibleItems;
             return ListView.builder(
               padding:const EdgeInsets.fromLTRB(16,0,16,24),
-              itemCount:p.items.length,
-              itemBuilder:(ctx,i) => TweenAnimationBuilder<double>(
+              itemCount:visibles.length + (p.hasMore ? 1 : 0),
+              itemBuilder:(ctx,i) {
+                if (i == visibles.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 12),
+                    child: Center(
+                      child: OutlinedButton(
+                        onPressed: p.showMore,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _pink,
+                          side: BorderSide(color: _pink.withOpacity(0.4)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Ver más'),
+                      ),
+                    ),
+                  );
+                }
+                return TweenAnimationBuilder<double>(
                 tween:Tween(begin:0,end:1), duration:Duration(milliseconds:300+i*60), curve:Curves.easeOutCubic,
                 builder:(_,v,child)=>Opacity(opacity:v, child:Transform.translate(offset:Offset(0,(1-v)*14), child:child)),
-                child:_ProveedorCard(prov:p.items[i], onTap:()=>_showDetail(context, p.items[i]))));
+                child:_ProveedorCard(prov:visibles[i], onTap:()=>_showDetail(context, visibles[i])));
+              });
           })),
       ])),
     );
