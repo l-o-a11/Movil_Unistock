@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/proveedor_entity.dart';
 import '../../data/services/proveedores_api_service.dart';
 
+const int kProveedoresPageSize = 5;
+
 /// Proveedor de estado para la lista de proveedores.
 /// 
 /// Gestiona:
@@ -19,6 +21,11 @@ class ProveedoresProvider extends ChangeNotifier {
   bool isLoading = true;
   String? error;
   String _q = '';
+  int _visibleCount = kProveedoresPageSize;
+
+  List<ProveedorEntity> get visibleItems =>
+      items.take(_visibleCount).toList();
+  bool get hasMore => _visibleCount < items.length;
 
   ProveedoresProvider({ProveedoresApiService? apiService})
       : _apiService = apiService ?? ProveedoresApiService() {
@@ -31,6 +38,7 @@ class ProveedoresProvider extends ChangeNotifier {
   /// - [q]: Búsqueda opcional (actualiza la consulta si se proporciona)
   Future<void> load({String? q}) async {
     _q = q ?? _q;
+    _visibleCount = kProveedoresPageSize;
     isLoading = true; error = null; notifyListeners();
     try {
       items = await _apiService.getAll(query: _q.isEmpty ? null : _q);
@@ -43,5 +51,11 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Término de búsqueda
   void search(String q) => load(q: q);
-}
 
+  /// Expande la lista en bloques de cinco registros.
+  void showMore() {
+    if (!hasMore) return;
+    _visibleCount += kProveedoresPageSize;
+    notifyListeners();
+  }
+}

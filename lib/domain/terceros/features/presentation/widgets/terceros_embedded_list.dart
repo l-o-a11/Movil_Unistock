@@ -84,11 +84,31 @@ class TercerosEmbeddedList extends StatelessWidget {
           );
         }
 
+        final visibles = state.tercerosVisibles;
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) =>
-              TerceroCard(tercero: filtered[index], animIndex: index),
+          itemCount: visibles.length + (state.hasMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == visibles.length) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 12),
+                child: Center(
+                  child: OutlinedButton(
+                    onPressed: provider.showMore,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Ver más'),
+                  ),
+                ),
+              );
+            }
+            return TerceroCard(tercero: visibles[index], animIndex: index);
+          },
         );
       },
     );

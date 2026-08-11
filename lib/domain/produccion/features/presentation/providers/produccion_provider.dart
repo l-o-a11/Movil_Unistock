@@ -24,7 +24,7 @@ class ProduccionProvider extends ChangeNotifier {
   /// rol/usuario logueado. El filtrado (incluido el alcance por rol) se
   /// hace localmente en [ProduccionState.ordenesFiltradas].
   Future<void> loadOrdenes() async {
-    _emit(_state.copyWith(isLoading: true));
+    _emit(_state.copyWith(isLoading: true, visibleCount: kOrdenesPageSize));
     try {
       final rolNombre = await _auth.getRolNombre();
       final userId = await _auth.getUserId();
@@ -48,19 +48,27 @@ class ProduccionProvider extends ChangeNotifier {
   /// Filtrar por estado (String exacto del backend)
   void setFiltroEstado(String? estado) {
     _emit(
-      _state.copyWith(filtroEstado: estado, clearFiltroEstado: estado == null),
+      _state.copyWith(
+        filtroEstado: estado,
+        clearFiltroEstado: estado == null,
+        visibleCount: kOrdenesPageSize,
+      ),
     );
     // No rellamamos API — el filtro es local
     notifyListeners();
   }
 
   void setSearch(String q) {
-    _emit(_state.copyWith(searchQuery: q));
+    _emit(_state.copyWith(searchQuery: q, visibleCount: kOrdenesPageSize));
     loadOrdenes();
   }
 
   void changeTab(ProduccionTab tab) {
-    _emit(_state.copyWith(activeTab: tab, expandedIds: {}));
+    _emit(_state.copyWith(
+      activeTab: tab,
+      expandedIds: {},
+      visibleCount: kOrdenesPageSize,
+    ));
     notifyListeners();
   }
 
@@ -68,6 +76,14 @@ class ProduccionProvider extends ChangeNotifier {
     final isOpen = _state.expandedIds.contains(id);
     final newSet = isOpen ? <String>{} : <String>{id};
     _emit(_state.copyWith(expandedIds: newSet));
+  }
+
+  /// Expande el listado de órdenes en bloques de cinco registros.
+  void showMore() {
+    if (!_state.hasMore) return;
+    _emit(_state.copyWith(
+      visibleCount: _state.visibleCount + kOrdenesPageSize,
+    ));
   }
 
   /// Estados únicos disponibles para los chips de filtro

@@ -13,7 +13,7 @@ class DashboardProvider extends ChangeNotifier {
   List<DashboardChartPointEntity> chartPoints = [];
   bool isLoading = false;
 
-  DashboardPeriod _period = DashboardPeriod.mes;
+  DashboardPeriod _period = DashboardPeriod.semana;
   DashboardPeriod get period => _period;
 
   Timer? _timer;

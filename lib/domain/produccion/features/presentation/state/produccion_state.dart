@@ -3,6 +3,8 @@ import '../../domain/entities/orden_entity.dart';
 
 enum ProduccionTab { produccion, terceros }
 
+const int kOrdenesPageSize = 5;
+
 class ProduccionState {
   final bool isLoading;
   final String? error;
@@ -11,6 +13,7 @@ class ProduccionState {
   final String searchQuery;
   final ProduccionTab activeTab;
   final Set<String> expandedIds;
+  final int visibleCount;
   // ── Rol / usuario logueado — ver AuthService.getRolNombre/getUserId ────
   final String rolNombre;
   final String? userId;
@@ -23,6 +26,7 @@ class ProduccionState {
     this.searchQuery = '',
     this.activeTab = ProduccionTab.produccion,
     this.expandedIds = const {},
+    this.visibleCount = kOrdenesPageSize,
     this.rolNombre = '',
     this.userId,
   });
@@ -84,6 +88,11 @@ class ProduccionState {
     }).toList();
   }
 
+  List<OrdenEntity> get ordenesVisibles =>
+      ordenesFiltradas.take(visibleCount).toList();
+
+  bool get hasMore => visibleCount < ordenesFiltradas.length;
+
   ProduccionState copyWith({
     bool? isLoading,
     String? error,
@@ -93,6 +102,7 @@ class ProduccionState {
     String? searchQuery,
     ProduccionTab? activeTab,
     Set<String>? expandedIds,
+    int? visibleCount,
     String? rolNombre,
     String? userId,
   }) {
@@ -106,6 +116,7 @@ class ProduccionState {
       searchQuery: searchQuery ?? this.searchQuery,
       activeTab: activeTab ?? this.activeTab,
       expandedIds: expandedIds ?? this.expandedIds,
+      visibleCount: visibleCount ?? this.visibleCount,
       rolNombre: rolNombre ?? this.rolNombre,
       userId: userId ?? this.userId,
     );
