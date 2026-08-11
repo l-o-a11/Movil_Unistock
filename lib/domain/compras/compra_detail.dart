@@ -13,14 +13,6 @@ String _moneda(double valor) {
   return '\$${valor.toStringAsFixed(2).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d)(?=[.,]))'), (m) => ',')}';
 }
 
-/// Acorta un ID largo (UUID) a sus primeros 8 caracteres + "…" para que
-/// quepa en una sola línea junto a "Número de factura". Si ya es corto
-/// (p.ej. un id numérico), lo deja tal cual.
-String _idCorto(String id) {
-  if (id.length <= 10) return id;
-  return '${id.substring(0, 8)}…';
-}
-
 Future<void> showCompraDetail(BuildContext context, Compra compra) {
   return Navigator.of(context).push(
     PageRouteBuilder(
@@ -134,27 +126,9 @@ class _CompraDetailSheet extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Grilla de datos generales ────────────
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _DetailField(
-                                    label: 'ID',
-                                    // Los ID reales son UUID largos (p.ej.
-                                    // "6a6a0b0d-c046-40ed-05af-c81b...") que
-                                    // se parten en dos líneas y rompen la
-                                    // alineación con la columna de al lado.
-                                    // Mostramos solo el bloque inicial.
-                                    value: _idCorto('${compra.id}'),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _DetailField(
-                                    label: 'Número de factura',
-                                    value: compra.numeroFactura,
-                                  ),
-                                ),
-                              ],
+                            _DetailField(
+                              label: 'Número de factura',
+                              value: compra.numeroFactura,
                             ),
                             const SizedBox(height: 18),
                             Row(
@@ -353,19 +327,7 @@ class _DetalleTable extends StatelessWidget {
             child: const Row(
               children: [
                 Expanded(
-                  flex: 2,
-                  child: Text(
-                    'ID DETALLE',
-                    style: TextStyle(
-                      color: _grey,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 4,
+                  flex: 5,
                   child: Text(
                     'PRODUCTO/INSUMO',
                     style: TextStyle(
@@ -426,14 +388,7 @@ class _DetalleTable extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${detalles[i].id ?? i + 1}',
-                      style: const TextStyle(color: _text, fontSize: 13),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 4,
+                    flex: 5,
                     child: Text(
                       detalles[i].nombreMostrar as String,
                       style: const TextStyle(
