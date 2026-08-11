@@ -8,6 +8,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/api_config.dart';
 
@@ -43,6 +44,13 @@ class ApiClient {
   /// están bajo el prefijo /api.
   static String get baseUrl => '${ApiConfig.baseUrl}/api';
 
+  // El token/usuario se guardan en AMBOS almacenes: SharedPreferences y
+  // FlutterSecureStorage, con la MISMA clave. Esto unifica la lectura entre
+  // todos los módulos:
+  //   - Dashboard/otros módulos leen de SharedPreferences (getString).
+  //   - ApiClient/AuthService leían de FlutterSecureStorage.
+  // Al escribir en los dos y leer priorizando SharedPreferences, todos
+  // ven la misma sesión y Producción no cae al mock por falta de token.
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'auth_token';
   static const _userKey = 'auth_user';
@@ -50,14 +58,24 @@ class ApiClient {
   // ── Token ──────────────────────────────────────────────────────────────
 
   Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
     await _storage.write(key: _tokenKey, value: token);
   }
 
   Future<String?> getToken() async {
+    // Prioridad a SharedPreferences (dashboard), fallback a secure storage.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pref = prefs.getString(_tokenKey);
+      if (pref != null && pref.isNotEmpty) return pref;
+    } catch (_) {}
     return _storage.read(key: _tokenKey);
   }
 
   Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
     await _storage.delete(key: _tokenKey);
   }
 
@@ -72,11 +90,18 @@ class ApiClient {
   // extra solo para precargar la pantalla de "Editar perfil".
 
   Future<void> saveUser(Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, jsonEncode(user));
     await _storage.write(key: _userKey, value: jsonEncode(user));
   }
 
   Future<Map<String, dynamic>?> getUser() async {
-    final raw = await _storage.read(key: _userKey);
+    String? raw;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      raw = prefs.getString(_userKey);
+    } catch (_) {}
+    raw ??= await _storage.read(key: _userKey);
     if (raw == null) return null;
     try {
       return jsonDecode(raw) as Map<String, dynamic>;
@@ -87,6 +112,9 @@ class ApiClient {
 
   /// Limpia token y usuario — usar en logout.
   Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _userKey);
   }

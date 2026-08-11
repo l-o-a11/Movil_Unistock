@@ -14,14 +14,11 @@ class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
   static const _processLabels = [
-    'En espera',
-    'Tráfico entre sedes',
     'Ficha técnica',
     'Corte',
     'Diseño',
     'En producción',
     'Bodega',
-    'Mercadeo',
     'Cancelado',
     'Compras',
     'Recepción',

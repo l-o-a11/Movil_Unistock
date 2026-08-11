@@ -19,25 +19,18 @@ class ProgressSection extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-    final maxVal = [
-      stats.insumosSinStock,
-      stats.insumosTotal,
-      1,
-    ].reduce((a, b) => a > b ? a : b);
-
-    final items = [
-      _ProgressData('Sin stock', stats.insumosSinStock, maxVal, AppTheme.pink),
+final items = [
       _ProgressData(
-        'Total insumos',
-        stats.insumosTotal,
-        maxVal,
-        AppTheme.green,
+        label: 'Almacenamiento',
+        sub: 'Total de insumos',
+        value: stats.insumosTotal,
+        color: AppTheme.purple,
       ),
       _ProgressData(
-        'Unidades',
-        stats.stockTotal.clamp(0, maxVal * 10),
-        maxVal * 10,
-        AppTheme.purple,
+        label: 'Stock',
+        sub: 'Unidades totales',
+        value: stats.stockTotal,
+        color: AppTheme.green,
       ),
     ];
 
@@ -103,63 +96,63 @@ class _InsumoBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = data.maxValue > 0
-        ? (data.value / data.maxValue).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              data.label,
-              style: TextStyle(
-                fontSize: AppTheme.fs(context, 10),
-                color: AppTheme.mutedColor,
-                fontWeight: FontWeight.w500,
+    return Container(
+      height: 62,
+      padding: EdgeInsets.symmetric(horizontal: AppTheme.sp(context, 12)),
+      decoration: BoxDecoration(
+        color: data.color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: data.color.withOpacity(0.25), width: 1.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data.label,
+                style: TextStyle(
+                  fontSize: AppTheme.fs(context, 11),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.titleColor,
+                ),
               ),
-            ),
-            Text(
-              '${data.value}',
-              style: TextStyle(
-                fontSize: AppTheme.fs(context, 12),
-                fontWeight: FontWeight.w700,
-                color: data.color,
+              const SizedBox(height: 2),
+              Text(
+                data.sub,
+                style: TextStyle(
+                  fontSize: AppTheme.fs(context, 9),
+                  color: AppTheme.mutedColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Container(
-          height: 8,
-          padding: const EdgeInsets.all(1.5),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: data.color, width: 1.2),
+            ],
           ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: progress,
-            child: Container(
-              decoration: BoxDecoration(
-                color: data.color,
-                borderRadius: BorderRadius.circular(20),
-              ),
+          Text(
+            '${data.value}',
+            style: TextStyle(
+              fontSize: AppTheme.fs(context, 16),
+              fontWeight: FontWeight.w800,
+              color: data.color,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 class _ProgressData {
   final String label;
+  final String sub;
   final int value;
-  final int maxValue;
   final Color color;
-  const _ProgressData(this.label, this.value, this.maxValue, this.color);
+  const _ProgressData({
+    required this.label,
+    required this.sub,
+    required this.value,
+    required this.color,
+  });
 }

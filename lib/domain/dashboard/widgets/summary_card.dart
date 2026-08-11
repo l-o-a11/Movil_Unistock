@@ -16,12 +16,9 @@ class SummaryCard extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-    final activos = stats.onTrack;
+final activos = stats.onTrack;
     final alertas = stats.delayed;
     final totalActivos = activos + alertas;
-    final promDias = int.tryParse(
-      RegExp(r'\d+').firstMatch(stats.avgTime)?.group(0) ?? '',
-    );
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
@@ -63,27 +60,21 @@ class SummaryCard extends StatelessWidget {
                 ),
               ),
             )
-          else ...[
+else ...[
             _SummaryRow(
-              label: 'Activos',
-              value: '$activos',
-              color: AppTheme.green,
-              progress: totalActivos > 0 ? activos / totalActivos : 0,
-              showUpIcon: true,
-            ),
-            SizedBox(height: AppTheme.sp(context, 8)),
-            _SummaryRow(
-              label: 'Alertas',
+              label: 'Producciones',
+              sub: 'Con retraso',
               value: '$alertas',
               color: AppTheme.pink,
               progress: totalActivos > 0 ? alertas / totalActivos : 0,
             ),
             SizedBox(height: AppTheme.sp(context, 8)),
             _SummaryRow(
-              label: 'Prom. días',
-              value: stats.avgTime,
-              color: AppTheme.purple,
-              progress: promDias != null ? (promDias / 15).clamp(0.0, 1.0) : 0,
+              label: 'Sin novedades',
+              sub: 'Todo en orden',
+              value: '$activos',
+              color: AppTheme.green,
+              progress: totalActivos > 0 ? activos / totalActivos : 0,
             ),
           ],
         ],
@@ -94,17 +85,17 @@ class SummaryCard extends StatelessWidget {
 
 class _SummaryRow extends StatelessWidget {
   final String label;
+  final String sub;
   final String value;
   final Color color;
   final double progress;
-  final bool showUpIcon;
 
   const _SummaryRow({
     required this.label,
+    required this.sub,
     required this.value,
     required this.color,
     required this.progress,
-    this.showUpIcon = false,
   });
 
   @override
@@ -115,30 +106,36 @@ class _SummaryRow extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: AppTheme.fs(context, 10),
-                color: AppTheme.mutedColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (showUpIcon) ...[
-                  Icon(Icons.arrow_upward_rounded, size: 9, color: color),
-                  const SizedBox(width: 2),
-                ],
                 Text(
-                  value,
+                  sub,
                   style: TextStyle(
-                    fontSize: AppTheme.fs(context, 12),
+                    fontSize: AppTheme.fs(context, 9),
+                    color: AppTheme.mutedColor,
+                    fontWeight: FontWeight.w500,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: AppTheme.fs(context, 11),
+                    color: AppTheme.titleColor,
                     fontWeight: FontWeight.w700,
-                    color: color,
                   ),
                 ),
               ],
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: AppTheme.fs(context, 18),
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
           ],
         ),
