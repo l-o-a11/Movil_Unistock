@@ -48,12 +48,12 @@ class UsuarioModel {
   // ── Helpers de presentación ────────────────────────────────────────────
   String get estadoLabel => estado ? 'ACTIVO' : 'INACTIVO';
 
-  // Empleados = cualquier rol que NO sea Gerente ni Administrador.
-  // Se usa para filtrar la pantalla de Empleados sin tocar el backend.
-  bool get esEmpleado {
-    final r = rolNombre?.toLowerCase().trim() ?? '';
-    return r != 'gerente' && r != 'administrador';
-  }
+  // Empleados = SOLO usuarios cuyo rol es exactamente "Empleado" (igual
+  // que el backend, ver GetEmployeeWorkload.js: normalizar(rolNombre) ===
+  // "empleado"). Antes esto era "cualquier rol que no sea administrativo",
+  // lo cual incluía roles como Gerente si no estaban en la lista de
+  // administrativos — ahora es un match exacto.
+  bool get esEmpleado => rolNombre?.trim().toLowerCase() == 'empleado';
 
   UsuarioModel copyWith({bool? estado}) => UsuarioModel(
     id: id,

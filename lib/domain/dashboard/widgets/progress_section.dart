@@ -4,23 +4,34 @@ import 'package:provider/provider.dart';
 import '../presentation/providers/dashboard_provider.dart';
 import '../theme/app_theme.dart';
 
+/// Tarjeta "Insumos": mismo estilo de barra fina que SummaryCard.
+/// Usa los campos reales que expone el backend (insumosSinStock,
+/// insumosTotal, stockTotal) — el mock de referencia mostraba 3 etapas
+/// (Adquisición/Almacén/Producción) que el backend actual no calcula,
+/// así que se mantienen las 3 métricas reales que ya existían.
 class ProgressSection extends StatelessWidget {
   const ProgressSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DashboardProvider>();
-    final stats    = provider.stats;
-    final hPad     = AppTheme.sp(context, 16);
-    final vPad     = AppTheme.sp(context, 14);
+    final stats = provider.stats;
+    final hPad = AppTheme.sp(context, 12);
+    final vPad = AppTheme.sp(context, 12);
 
-    // maxValue dinámico: el mayor de los tres valores (mínimo 1 para no dividir entre 0)
-    final maxVal = [stats.insumosSinStock, stats.insumosTotal, 1].reduce((a, b) => a > b ? a : b);
-
-    final items = [
-      _ProgressData('Adquisición', stats.insumosSinStock, maxVal, AppTheme.pink),
-      _ProgressData('Almacén',     stats.insumosTotal,    maxVal, AppTheme.green),
-      _ProgressData('Stock',       stats.stockTotal.clamp(0, maxVal * 10), maxVal * 10, AppTheme.purple),
+final items = [
+      _ProgressData(
+        label: 'Almacenamiento',
+        sub: 'Total de insumos',
+        value: stats.insumosTotal,
+        color: AppTheme.purple,
+      ),
+      _ProgressData(
+        label: 'Stock',
+        sub: 'Unidades totales',
+        value: stats.stockTotal,
+        color: AppTheme.green,
+      ),
     ];
 
     return Container(
@@ -35,34 +46,44 @@ class ProgressSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(
-                  color: AppTheme.pink, shape: BoxShape.circle),
+              Icon(
+                Icons.shopping_cart_outlined,
+                size: 13,
+                color: AppTheme.pink,
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: 5),
               Flexible(
                 child: Text(
-                  'Control de Insumos',
+                  'Insumos',
                   style: TextStyle(
-                    fontSize: AppTheme.fs(context, 13),
+                    fontSize: AppTheme.fs(context, 12),
                     fontWeight: FontWeight.w700,
                     color: AppTheme.titleColor,
-                    letterSpacing: -0.3,
+                    letterSpacing: -0.2,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          SizedBox(height: AppTheme.sp(context, 14)),
+          SizedBox(height: AppTheme.sp(context, 10)),
           if (provider.isLoading)
-            const Center(child: SizedBox(
-              width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ))
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
           else
-            ...items.map((item) => _InsumoBar(data: item)),
+            for (var i = 0; i < items.length; i++) ...[
+              _InsumoBar(data: items[i]),
+              if (i != items.length - 1)
+                SizedBox(height: AppTheme.sp(context, 8)),
+            ],
         ],
       ),
     );
@@ -75,61 +96,47 @@ class _InsumoBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = data.maxValue > 0
-        ? (data.value / data.maxValue).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: AppTheme.sp(context, 12)),
-      child: Column(
+    return Container(
+      height: 62,
+      padding: EdgeInsets.symmetric(horizontal: AppTheme.sp(context, 12)),
+      decoration: BoxDecoration(
+        color: data.color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: data.color.withOpacity(0.25), width: 1.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(data.label,
+              Text(
+                data.label,
                 style: TextStyle(
-                  fontSize: AppTheme.fs(context, 12),
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textColor,
+                  fontSize: AppTheme.fs(context, 11),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.titleColor,
                 ),
               ),
-              Text('${data.value}',
+              const SizedBox(height: 2),
+              Text(
+                data.sub,
                 style: TextStyle(
-                  fontSize: AppTheme.fs(context, 12),
-                  fontWeight: FontWeight.w700,
-                  color: data.color,
+                  fontSize: AppTheme.fs(context, 9),
+                  color: AppTheme.mutedColor,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Stack(
-            children: [
-              Container(
-                height: 7, width: double.infinity,
-                decoration: BoxDecoration(
-                  color: data.color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(
-                  height: 7,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      data.color.withOpacity(0.7), data.color,
-                    ]),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [BoxShadow(
-                      color: data.color.withOpacity(0.4),
-                      blurRadius: 6, offset: const Offset(0, 2),
-                    )],
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            '${data.value}',
+            style: TextStyle(
+              fontSize: AppTheme.fs(context, 16),
+              fontWeight: FontWeight.w800,
+              color: data.color,
+            ),
           ),
         ],
       ),
@@ -139,8 +146,13 @@ class _InsumoBar extends StatelessWidget {
 
 class _ProgressData {
   final String label;
+  final String sub;
   final int value;
-  final int maxValue;
   final Color color;
-  const _ProgressData(this.label, this.value, this.maxValue, this.color);
+  const _ProgressData({
+    required this.label,
+    required this.sub,
+    required this.value,
+    required this.color,
+  });
 }

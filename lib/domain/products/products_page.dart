@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/profile_menu_button.dart';
 import 'product.dart';
 import 'product_service.dart';
 
@@ -101,32 +102,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           ),
                         ),
                       ),
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(
-                            color: const Color(0xFFFF8ACD),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFFF4DA6,
-                              ).withValues(alpha: 0.35),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_2_sharp,
-                          color: Color(0xFFFF4DA6),
-                          size: 20,
-                        ),
-                      ),
+                      ProfileMenuButton(size: 42, iconSize: 20),
                     ],
                   ),
                   const SizedBox(height: 14),

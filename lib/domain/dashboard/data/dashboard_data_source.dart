@@ -1,17 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/api_config.dart';
+import '../../../core/api_client.dart';
 import '../domain/dashboard_chart_point_entity.dart';
 import '../domain/dashboard_metric_entity.dart';
 
 String get _kBase => '${ApiConfig.baseUrl}/api';
 
 // Espejo exacto de ESTADO_TO_PROCESO en dashboard.jsx (web).
+// FIX: se quitaron 'En espera', 'Tráfico entre sedes' y 'Mercadeo' — no
+// existen como estados válidos en el backend (ProductionOrderModel.js no
+// los tiene en su enum, y no aparecen en ningún lado de Api_Unistock), así
+// que esos 3 procesos siempre mostraban 0. Se quitan hasta que el backend
+// implemente esas etapas.
 const _estadoAProceso = {
-  'En espera': 'En espera',
   'Diseño': 'Diseño',
   'Ficha Técnica': 'Ficha técnica',
   'Ficha tecnica': 'Ficha técnica',
@@ -22,19 +26,14 @@ const _estadoAProceso = {
   'Empaque': 'Bodega',
   'Enviado': 'Recepción',
   'Anulada': 'Cancelado',
-  'Tráfico entre sedes': 'Tráfico entre sedes',
-  'Mercadeo': 'Mercadeo',
 };
 
 const _barProcesses = [
-  'En espera',
-  'Tráfico entre sedes',
   'Ficha técnica',
   'Corte',
   'Diseño',
   'En producción',
   'Bodega',
-  'Mercadeo',
   'Cancelado',
   'Compras',
   'Recepción',
@@ -65,15 +64,45 @@ extension DashboardPeriodExt on DashboardPeriod {
 class DashboardDataSource {
   Future<DashboardStats> getStats({
     DashboardPeriod period = DashboardPeriod.mes,
+    // FIX: en la web, "Procesos en Curso" (barData) usa un período
+    // INDEPENDIENTE (barTimeView, por defecto 'Año') distinto al de las
+    // tarjetas de KPI (timeView, por defecto 'Mes'). El móvil usaba el mismo
+    // período para todo, así que "Cancelado" (y el resto de procesos)
+    // contaba solo el mes actual en vez del año — de ahí el conteo distinto
+    // entre web y móvil para el mismo dato.
+    DashboardPeriod procesoPeriod = DashboardPeriod.anio,
   }) async {
-    try {
-      final results = await Future.wait([
-        _fetchList('$_kBase/produccion/ordenes'),
-        _fetchList('$_kBase/insumos'),
-      ]);
+    // Los insumos se calculan de forma AISLADA e independiente: aunque el
+    // procesamiento de órdenes falle, el "Control de Insumos" del dashboard
+    // siempre muestra los datos reales de insumos.
+    //
+    // Espejo de supplyAPI.getAll({ estado: true, limit: 1000 }) en dashboard.jsx:
+    // solo se cuentan los insumos ACTIVOS (estado === true) y el stock total
+    // suma EXCLUSIVAMENTE el campo `stock` (Number(s.stock) || 0), sin buscar
+    // en otros campos (cantidad, stockActual, etc.) que la web no usa.
+    final insumos = await _fetchList('$_kBase/insumos');
+    final insumosActivos = insumos.where((i) {
+      final estado = i['estado'];
+      // El backend puede reportar estado como bool o como string; solo se
+      // consideran los insumos activos (true / 'true' / 'Activo' / 'activo').
+      if (estado == null) return true;
+      if (estado is bool) return estado;
+      final es = estado.toString().toLowerCase();
+      return es == 'true' || es == 'activo';
+    }).toList();
+    // Suma SOLO el campo `stock` de cada insumo, como hace la web con
+    // Number(s.stock) || 0. Los decimales se redondean para la vista.
+    final stockTotal = insumosActivos.fold<int>(
+      0,
+      (s, i) => s + _toIntDecimal(i['stock']),
+    );
+    final insumosSinStock = insumosActivos
+        .where((s) => _toIntDecimal(s['stock']) == 0)
+        .length;
+    final insumosTotal = insumosActivos.length;
 
-      final orders = results[0];
-      final insumos = results[1];
+    try {
+      final orders = await _fetchList('$_kBase/produccion/ordenes');
       final now = DateTime.now();
 
       DateTime? parseDate(dynamic v) =>
@@ -215,12 +244,18 @@ class DashboardDataSource {
         }
         if (!isDelayed) {
           final estado = (o['estado'] ?? '').toString();
-          final asignacionesRaw = o['asignaciones'];
-          final asignaciones = asignacionesRaw is List
-              ? asignacionesRaw
-              : const <dynamic>[];
-          if (_estadosEnProduccion.contains(estado) &&
-              asignaciones.isNotEmpty) {
+          // FIX: el backend no tiene un campo unificado "asignaciones" — se
+          // dividió en sedeAsignaciones/terceroAsignaciones/empleadoAsignadoId
+          // (ver Production.js toJSON). Antes esto siempre leía una lista
+          // vacía y esta señal de retraso nunca se activaba.
+          final tieneAsignacion =
+              (o['empleadoAsignadoId'] != null &&
+                  o['empleadoAsignadoId'].toString().isNotEmpty) ||
+              (o['sedeAsignaciones'] is List &&
+                  (o['sedeAsignaciones'] as List).isNotEmpty) ||
+              (o['terceroAsignaciones'] is List &&
+                  (o['terceroAsignaciones'] as List).isNotEmpty);
+          if (_estadosEnProduccion.contains(estado) && tieneAsignacion) {
             final hist = _safeHist(o['historial']);
             final entrada = hist.cast<Map>().firstWhere(
               (h) =>
@@ -244,20 +279,11 @@ class DashboardDataSource {
       for (final o in orders) {
         final estado = (o['estado'] ?? '').toString();
         if (estado.isEmpty) continue;
-        if (!matchPeriod(orderDate(o), period)) continue;
+        if (!matchPeriod(orderDate(o), procesoPeriod)) continue;
         final proceso = _estadoAProceso[estado];
         if (proceso != null)
           procesoCounts[proceso] = (procesoCounts[proceso] ?? 0) + 1;
       }
-
-      final insumosSinStock = insumos
-          .where((s) => (s['stock'] ?? s['cantidad'] ?? 0) == 0)
-          .length;
-      final insumosTotal = insumos.length;
-      final stockTotal = insumos.fold<int>(
-        0,
-        (s, i) => s + ((i['stock'] ?? i['cantidad'] ?? 0) as num).toInt(),
-      );
 
       return DashboardStats(
         activas: activas,
@@ -272,7 +298,20 @@ class DashboardDataSource {
         stockTotal: stockTotal,
       );
     } catch (_) {
-      return DashboardStats.empty();
+      // Si el procesamiento de órdenes falla, al menos conservamos los
+      // datos de insumos ya calculados (no devolvemos todo en 0).
+      return DashboardStats(
+        activas: 0,
+        completadasMes: 0,
+        porIniciar: 0,
+        avgTime: '—',
+        delayed: 0,
+        onTrack: 0,
+        procesoCounts: {for (final p in _barProcesses) p: 0},
+        insumosSinStock: insumosSinStock,
+        insumosTotal: insumosTotal,
+        stockTotal: stockTotal,
+      );
     }
   }
 
@@ -310,63 +349,156 @@ class DashboardDataSource {
         .toList();
   }
 
+  /// Descarga la lista COMPLETA de un recurso recorriendo la paginación
+  /// del backend.
+  ///
+  /// El backend (Mongoose) pagina `/insumos` y `/produccion/ordenes` con un
+  /// límite por defecto (p. ej. 30), por lo que una sola petición devuelve
+  /// solo la primera página. Este método pide `page`/`limit` de forma
+  /// iterativa y acumula los resultados hasta:
+  ///   - alcanzar el `total` reportado en los metadatos, o
+  ///   - no obtener más registros nuevos (fin de los datos), o
+  ///   - llegar a un tope de seguridad de 500 páginas.
+  /// Los resultados se deduplican por id para evitar repetidos entre páginas.
   Future<List<Map<String, dynamic>>> _fetchList(String url) async {
     final headers = <String, String>{'Accept': 'application/json'};
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Usamos el mismo mecanismo de autenticación robusto que el resto de
+      // la app (ApiClient.getToken): lee SharedPreferences y, si no hay
+      // token allí, hace fallback a FlutterSecureStorage. Leer solo de
+      // SharedPreferences hacía que el endpoint de insumos devolviera 401
+      // (sin token) y el dashboard mostrara 0.
+      final token = await ApiClient.instance.getToken();
       if (token != null && token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
       }
     } catch (_) {}
 
-    try {
-      final response = await http
-          .get(Uri.parse(url), headers: headers)
-          .timeout(const Duration(seconds: 8));
+    const limit = 1000;
+    final byId = <String, Map<String, dynamic>>{};
+    var total = 0;
+    var page = 1;
 
-      if (response.statusCode == 200) {
+    while (page <= 500) {
+      final base = Uri.parse(url);
+      final pageUrl = base.replace(
+        queryParameters: {
+          ...base.queryParameters,
+          'page': '$page',
+          'limit': '$limit',
+        },
+      );
+
+      List<Map<String, dynamic>> items;
+      try {
+        final response = await http
+            .get(pageUrl, headers: headers)
+            .timeout(const Duration(seconds: 8));
+        if (response.statusCode != 200) break;
         final body = jsonDecode(response.body);
-        return _extractList(body);
+        items = _extractList(body);
+        final t = _extractTotal(body);
+        if (t > total) total = t;
+      } catch (_) {
+        // Error de red/parseo: conservar lo ya obtenido.
+        break;
       }
-    } catch (_) {}
-    return [];
+
+      if (items.isEmpty) break;
+
+      var added = 0;
+      for (final item in items) {
+        final id = (item['id'] ?? item['_id'] ?? '').toString();
+        if (id.isNotEmpty) {
+          if (!byId.containsKey(id)) {
+            byId[id] = item;
+            added++;
+          }
+        } else {
+          // Sin id, lo agregamos siempre.
+          byId['__no_id_${page}_${byId.length}'] = item;
+          added++;
+        }
+      }
+
+      // Si ya alcanzamos el total reportado por el backend, terminamos.
+      if (total > 0 && byId.length >= total) break;
+      // Si no hubo registros nuevos, el backend no avanzó la página:
+      // terminamos con lo que llevamos.
+      if (added == 0) break;
+
+      page++;
+    }
+    return byId.values.toList();
+  }
+
+  /// Extrae el `total` de registros de los metadatos de paginación del
+  /// backend, tolerando las variantes más comunes: `total` / `totalDocs` /
+  /// `count` / `totalCount`. Busca tanto a nivel raíz como anidado en `data`.
+  /// Devuelve 0 si no encuentra un total.
+  int _extractTotal(dynamic body) {
+    if (body is! Map) return 0;
+    final root = Map<String, dynamic>.from(body);
+
+    int? fromMap(Map<String, dynamic> m) {
+      final t = m['total'] ?? m['totalDocs'] ?? m['count'] ?? m['totalCount'];
+      return (t is num && t > 0) ? t.toInt() : null;
+    }
+
+    final direct = fromMap(root);
+    if (direct != null) return direct;
+
+    final inner = root['data'];
+    if (inner is Map) {
+      final nested = fromMap(Map<String, dynamic>.from(inner));
+      if (nested != null) return nested;
+    }
+    return 0;
+  }
+
+  /// Convierte el campo `stock` de un insumo a entero (redondeado), espejo de
+  /// `Number(s.stock) || 0` en dashboard.jsx. Tolera `num` y `String`.
+  int _toIntDecimal(dynamic value) {
+    if (value is num) return value.round();
+    if (value is String && value.trim().isNotEmpty) {
+      final v = double.tryParse(value.trim());
+      return v?.round() ?? 0;
+    }
+    return 0;
   }
 
   /// Extrae una lista tolerando varios formatos de respuesta del backend:
   /// `[...]`, `{data:[...]}`, `{data:{data:[...]}}`, `{docs:[...]}`,
-  /// `{results:[...]}`, `{ordenes:[...]}`.
+  /// `{results:[...]}`, `{ordenes:[...]}`, `{items:[...]}`, `{insumos:[...]}`
+  /// y variantes paginadas anidadas (`{data:{items:[...]}}`, etc.).
   List<Map<String, dynamic>> _extractList(dynamic raw) {
     List<dynamic> list;
     if (raw is List) {
       list = raw;
     } else if (raw is Map) {
-      if (raw['data'] is List) {
-        list = raw['data'] as List;
-      } else if (raw['data'] is Map) {
-        final inner = raw['data'] as Map;
-        list = inner['data'] is List
-            ? inner['data'] as List
-            : inner['docs'] is List
-            ? inner['docs'] as List
-            : inner['results'] is List
-            ? inner['results'] as List
-            : inner['ordenes'] is List
-            ? inner['ordenes'] as List
-            : const [];
-      } else if (raw['docs'] is List) {
-        list = raw['docs'] as List;
-      } else if (raw['results'] is List) {
-        list = raw['results'] as List;
-      } else if (raw['ordenes'] is List) {
-        list = raw['ordenes'] as List;
+      final map = Map<String, dynamic>.from(raw);
+      if (map['data'] is List) {
+        list = map['data'] as List;
+      } else if (map['data'] is Map) {
+        final inner = Map<String, dynamic>.from(map['data'] as Map);
+        list = _firstList(inner);
       } else {
-        list = const [];
+        list = _firstList(map);
       }
     } else {
       list = const [];
     }
     return list.whereType<Map>().cast<Map<String, dynamic>>().toList();
+  }
+
+  /// Devuelve la primera lista reconocible dentro de un mapa, recorriendo
+  /// las claves más comunes de respuestas paginadas del backend.
+  List<dynamic> _firstList(Map<String, dynamic> map) {
+    const keys = ['data', 'docs', 'results', 'ordenes', 'items', 'insumos'];
+    for (final key in keys) {
+      if (map[key] is List) return map[key] as List;
+    }
+    return const [];
   }
 }
 

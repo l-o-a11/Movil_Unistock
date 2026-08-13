@@ -13,16 +13,12 @@ import '../../data/dashboard_data_source.dart';
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
-  static const int _processMax = 50;
   static const _processLabels = [
-    'En espera',
-    'Tráfico entre sedes',
     'Ficha técnica',
     'Corte',
     'Diseño',
     'En producción',
     'Bodega',
-    'Mercadeo',
     'Cancelado',
     'Compras',
     'Recepción',
@@ -45,8 +41,6 @@ class _DashboardView extends StatelessWidget {
     final provider = context.watch<DashboardProvider>();
     final stats = provider.stats;
     final hPad = AppTheme.sp(context, 16);
-    final s = AppTheme.scale(context);
-    final cardRatio = 0.95 + 0.20 * (s - 0.78) / 0.22;
 
     final cards = [
       _CardData(
@@ -83,14 +77,16 @@ class _DashboardView extends StatelessWidget {
       ),
     ];
 
-    final processes = DashboardPage._processLabels.map((label) {
+    final processes = <_ProcessData>[];
+    final cycleColors = [AppTheme.purple, AppTheme.pink, AppTheme.green];
+    for (var i = 0; i < DashboardPage._processLabels.length; i++) {
+      final label = DashboardPage._processLabels[i];
       final count = stats.procesoCounts[label] ?? 0;
-      return _ProcessData(
-        label,
-        count,
-        count > 0 ? AppTheme.purple : AppTheme.green,
-      );
-    }).toList();
+      processes.add(_ProcessData(label, count, cycleColors[i % 3]));
+    }
+    final maxProcValue = processes.isEmpty
+        ? 1
+        : processes.map((p) => p.value).reduce((a, b) => a > b ? a : b);
 
     return Scaffold(
       backgroundColor: AppTheme.bgColor,
@@ -114,30 +110,53 @@ class _DashboardView extends StatelessWidget {
                     const _SectionLabel('Resumen operativo'),
                     SizedBox(height: AppTheme.sp(context, 10)),
 
-                    // 2×2 grid de KPIs
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: AppTheme.sp(context, 10),
-                      mainAxisSpacing: AppTheme.sp(context, 10),
-                      childAspectRatio: cardRatio,
-                      children: cards
-                          .map(
-                            (c) => DashboardCard(
-                              icon: c.icon,
-                              iconColor: c.iconColor,
-                              iconBg: c.iconBg,
-                              title: c.title,
-                              value: c.value,
-                              subtitle: c.subtitle,
+                    // Fila de 4 chips de métricas
+                    Row(
+                      children: [
+                        for (var i = 0; i < cards.length; i++) ...[
+                          if (i > 0) SizedBox(width: AppTheme.sp(context, 8)),
+                          Expanded(
+                            child: DashboardCard(
+                              icon: cards[i].icon,
+                              iconColor: cards[i].iconColor,
+                              iconBg: cards[i].iconBg,
+                              title: cards[i].title,
+                              value: cards[i].value,
+                              subtitle: cards[i].subtitle,
                             ),
-                          )
-                          .toList(),
+                          ),
+                        ],
+                      ],
                     ),
 
                     SizedBox(height: AppTheme.sp(context, 24)),
-                    const _SectionLabel('Procesos en Curso'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const _SectionLabel('Procesos en Curso'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.pinkLight,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppTheme.pink.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            '${processes.length} estados',
+                            style: TextStyle(
+                              fontSize: AppTheme.fs(context, 10),
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.pink,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: AppTheme.sp(context, 10)),
 
                     Container(
@@ -165,7 +184,7 @@ class _DashboardView extends StatelessWidget {
                                     (p) => ProcessItem(
                                       label: p.label,
                                       value: p.value,
-                                      maxValue: DashboardPage._processMax,
+                                      maxValue: maxProcValue,
                                       barColor: p.color,
                                     ),
                                   )
@@ -187,7 +206,6 @@ class _DashboardView extends StatelessWidget {
                     ),
 
                     SizedBox(height: AppTheme.sp(context, 20)),
-                    const _AccessButton(),
                   ],
                 ),
               ),
@@ -344,59 +362,6 @@ class _SectionLabel extends StatelessWidget {
       letterSpacing: -0.3,
     ),
   );
-}
-
-class _AccessButton extends StatelessWidget {
-  const _AccessButton();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: AppTheme.sp(context, 52),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.pink.withOpacity(0.45),
-            blurRadius: 20,
-            spreadRadius: 1,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.pink,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        onPressed: () => Navigator.of(context).pushNamed('/menu'),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Acceder al sistema',
-              style: TextStyle(
-                fontSize: AppTheme.fs(context, 15),
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 0.2,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_rounded,
-              color: Colors.white,
-              size: AppTheme.sp(context, 18),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _CardData {

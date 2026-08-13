@@ -1,11 +1,7 @@
-# TODO — Corrección del buscador de terceros
+# TODO — Reemplazar Dashboard por el diseño React
 
-## Pasos del plan aprobado
-
-- [x] 1. Análisis y diagnóstico (causa raíz identificada)
-- [x] 2. `terceros_state.dart` — guardar lista completa + getter `tercerosFiltrados` (filtro local)
-- [x] 3. `terceros_provider.dart` — cargar sin query; `updateSearch` filtra localmente sin llamadas HTTP por tecla
-- [x] 4. `terceros_page.dart` — usar `tercerosFiltrados` y diferenciar mensajes de lista vacía vs sin resultados
-- [x] 5. `terceros_embedded_list.dart` — usar `tercerosFiltrados` y diferenciar mensajes
-- [x] 6. `produccion_page.dart` — el buscador delega al proveedor correcto según pestaña activa; sincronizar búsqueda al cambiar de pestaña y refrescar la barra
-- [x] 7. Validar con `flutter analyze` (y opcionalmente `flutter run`)
+- [x] Analizar archivos del dashboard actual
+- [x] Actualizar `dashboard_page.dart` (header + métricas + layout)
+- [x] Actualizar `summary_card.dart` (Resumen: Producciones / Sin novedades)
+- [x] Actualizar `progress_section.dart` (Insumos: Almacenamiento / Stock)
+- [x] Ejecutar `flutter analyze` y verificar (solo infos de deprecación, sin errores)
