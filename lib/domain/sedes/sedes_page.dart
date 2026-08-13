@@ -76,71 +76,11 @@ class _SedesPageState extends State<SedesPage> {
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(
-<<<<<<< HEAD
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              children: [
-                AppBackButton(),
-                const SizedBox(width: 14),
-                const Text(
-                  'Sedes',
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(
-                      color: const Color(0xFFFF8ACD),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF4DA6).withOpacity(0.35),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person_2_sharp,
-                    color: Color(0xFFFF4DA6),
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Buscador ────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F7),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE8E8E8)),
-              ),
-=======
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
->>>>>>> 3a73e65a63693d3bd15b4a8998cb92431a9f9eb0
               child: Row(
                 children: [
                   AppBackButton(),
