@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
 /// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = dashboard, 1 = people/usuarios, 2 = cart, 3 = work/producción
+///   0 = dashboard, 1 = productos, 2 = cart, 3 = work/producción
 /// Pasa -1 (o no pases nada) para ninguno activo.
 ///
 /// Incluye un botón circular flotante al centro (ícono de menú) que lleva
@@ -47,10 +47,10 @@ class GlobalBottomNav extends StatelessWidget {
                       onTap: () => _goToDashboard(context),
                     ),
                     _Btn(
-                      icon: Icons.people_outline_rounded,
-                      label: 'Usuarios',
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Productos',
                       active: activeIndex == 1,
-                      onTap: () => _goToUsuarios(context),
+                      onTap: () => _goToProductos(context),
                     ),
                     // Hueco reservado para que no se apiñen los ítems
                     // alrededor del botón flotante del centro.
@@ -87,10 +87,10 @@ class GlobalBottomNav extends StatelessWidget {
     ).pushNamedAndRemoveUntil('/dashboard', (route) => route.isFirst);
   }
 
-  static void _goToUsuarios(BuildContext context) {
+  static void _goToProductos(BuildContext context) {
     Navigator.of(
       context,
-    ).pushNamedAndRemoveUntil('/usuarios', (route) => route.isFirst);
+    ).pushNamedAndRemoveUntil('/productos', (route) => route.isFirst);
   }
 
   static void _goToCompras(BuildContext context) {
