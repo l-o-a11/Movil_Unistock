@@ -8,6 +8,7 @@ class ApiClient {
     'http://localhost:3020',
     'http://127.0.0.1:3001',
     'http://localhost:3001',
+    'https://api-unistock.onrender.com',
   ];
 
   final List<String> baseUrls;
