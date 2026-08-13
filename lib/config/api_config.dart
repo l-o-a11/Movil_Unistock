@@ -10,13 +10,13 @@ class ApiConfig {
     if (_configuredBaseUrl.isNotEmpty) return _configuredBaseUrl;
 
     if (kIsWeb) {
-      return 'http://localhost:3000';
+      return 'https://api-unistock.onrender.com/api';
     }
 
     if (Platform.isAndroid) {
       return 'http://10.0.2.2:3000';
     }
 
-    return 'http://localhost:3000';
+    return 'https://api-unistock.onrender.com/api';
   }
 }

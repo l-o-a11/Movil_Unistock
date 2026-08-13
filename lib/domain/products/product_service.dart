@@ -1,34 +1,30 @@
-import 'dart:convert';
-import 'package:movil_unistock/shared/utils/api_client.dart';
+import 'package:movil_unistock/core/api_client.dart';
 import 'product.dart';
 
 class ProductService {
-  final ApiClient _client = ApiClient();
+  ProductService({ApiClient? client}) : _client = client ?? ApiClient.instance;
+
+  final ApiClient _client;
 
   Future<List<Product>> getProducts() async {
-    final response = await _client.get(
-      '/api/products',
-      headers: {'Content-Type': 'application/json'},
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('No se pudieron cargar los productos (${response.statusCode})');
-    }
-
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final data = _extractDataList(body);
-    return data.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+    final data = await _client.get('/products');
+    return _asList(data)
+        .map((item) => Product.fromJson(_asMap(item)))
+        .toList();
   }
 
-  List<dynamic> _extractDataList(Map<String, dynamic> body) {
-    final data = body['data'];
-    if (data is List<dynamic>) {
-      return data;
-    }
-    if (data is Map<String, dynamic> && data['data'] is List<dynamic>) {
+  List<dynamic> _asList(dynamic data) {
+    if (data is List<dynamic>) return data;
+    if (data is Map && data['data'] is List<dynamic>) {
       return data['data'] as List<dynamic>;
     }
-    throw Exception('Respuesta inesperada del servidor: data debe ser una lista');
+    throw Exception('Respuesta inesperada del servidor: se esperaba una lista');
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw Exception('Respuesta inesperada del servidor: se esperaba un producto');
   }
 
   Future<Product> createProduct({
@@ -38,10 +34,9 @@ class ProductService {
     required double precio,
     required int stock,
   }) async {
-    final response = await _client.post(
-      '/api/products',
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    final data = await _client.post(
+      '/products',
+      {
         'idCategoria': categoryId,
         'id_categorias': categoryId,
         'referencia': referencia,
@@ -57,25 +52,15 @@ class ProductService {
           'descripciones': 'Ficha técnica creada desde móvil',
           'materiales': [],
         },
-      }),
+      },
     );
+    return Product.fromJson(_asProductMap(data));
+  }
 
-    if (response.statusCode != 201) {
-      throw Exception('No se pudo crear el producto');
-    }
-
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final data = body['data'];
-    if (data is Map<String, dynamic>) {
-      return Product.fromJson(data);
-    }
-    if (data is Map) {
-      final product = data['product'];
-      if (product is Map<String, dynamic>) {
-        return Product.fromJson(product);
-      }
-    }
-    throw Exception('Respuesta inesperada del servidor');
+  Map<String, dynamic> _asProductMap(dynamic data) {
+    final map = _asMap(data);
+    if (map['product'] is Map) return _asMap(map['product']);
+    return map;
   }
 
   Future<Product> updateProduct({
@@ -86,41 +71,25 @@ class ProductService {
     double? precio,
     int? stock,
   }) async {
-    final response = await _client.put(
-      '/api/products/$id',
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
+    final data = await _client.put(
+      '/products/$id',
+      {
         if (categoryId != null) 'id_categorias': categoryId,
         if (referencia != null) 'referencia': referencia,
         if (nombre != null) 'nombre': nombre,
         if (precio != null) 'precio': precio,
         if (stock != null) 'stock': stock,
-      }),
+      },
     );
-
-    if (response.statusCode != 200) {
-      throw Exception('No se pudo actualizar el producto');
-    }
-
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return Product.fromJson(body['data'] as Map<String, dynamic>);
+    return Product.fromJson(_asProductMap(data));
   }
 
   Future<void> deleteProduct(String id) async {
-    final response = await _client.delete('/api/products/$id');
-    if (response.statusCode != 200) {
-      throw Exception('No se pudo eliminar el producto');
-    }
+    await _client.delete('/products/$id');
   }
 
   Future<Product> toggleProductStatus(String id, bool estado) async {
-    final response = await _client.patch('/api/products/$id/status');
-
-    if (response.statusCode != 200) {
-      throw Exception('No se pudo cambiar el estado');
-    }
-
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return Product.fromJson(body['data'] as Map<String, dynamic>);
+    final data = await _client.patch('/products/$id/status', {'estado': estado});
+    return Product.fromJson(_asProductMap(data));
   }
 }
