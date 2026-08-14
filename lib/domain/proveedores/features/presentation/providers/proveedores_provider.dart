@@ -19,6 +19,7 @@ class ProveedoresProvider extends ChangeNotifier {
   bool isLoading = true;
   String? error;
   String _q = '';
+  bool _disposed = false;
 
   ProveedoresProvider({ProveedoresApiService? apiService})
       : _apiService = apiService ?? ProveedoresApiService() {
@@ -30,11 +31,18 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Búsqueda opcional (actualiza la consulta si se proporciona)
   Future<void> load({String? q}) async {
+    if (_disposed) return;
     _q = q ?? _q;
     isLoading = true; error = null; notifyListeners();
     try {
-      items = await _apiService.getAll(query: _q.isEmpty ? null : _q);
-    } catch (e) { error = 'Error al cargar: $e'; }
+      final result = await _apiService.getAll(query: _q.isEmpty ? null : _q);
+      if (_disposed) return;
+      items = result;
+    } catch (e) {
+      if (_disposed) return;
+      error = 'Error al cargar: $e';
+    }
+    if (_disposed) return;
     isLoading = false; notifyListeners();
   }
 
@@ -43,5 +51,11 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Término de búsqueda
   void search(String q) => load(q: q);
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 }
 

@@ -33,16 +33,19 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
   Future<void> _cargar() async {
     try {
+      if (!mounted) return;
       setState(() {
         _loading = true;
         _error = null;
       });
       final data = await _service.getCategorias();
+      if (!mounted) return;
       setState(() {
         _categorias = data;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'No se pudo cargar la información de categorías.';
         _loading = false;

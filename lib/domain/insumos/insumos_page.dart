@@ -34,16 +34,19 @@ class _InsumosPageState extends State<InsumosPage> {
 
   Future<void> _cargar() async {
     try {
+      if (!mounted) return;
       setState(() {
         _loading = true;
         _error = null;
       });
       final data = await _service.getInsumos();
+      if (!mounted) return;
       setState(() {
         _insumos = data;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'No se pudo cargar la información de insumos.';
         _loading = false;

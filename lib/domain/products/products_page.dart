@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../shared/utils/paginated_list.dart';
+import '../../shared/widgets/app_back_button.dart';
+import '../../shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/profile_menu_button.dart';
 import 'product.dart';
 import 'product_service.dart';
@@ -19,6 +22,7 @@ class _ProductsPageState extends State<ProductsPage> {
   List<Product> _products = [];
   bool _loading = true;
   String? _error;
+  int _visibleCount = 5;
 
   @override
   void initState() {
@@ -28,16 +32,19 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Future<void> _load() async {
     try {
+      if (!mounted) return;
       setState(() {
         _loading = true;
         _error = null;
       });
       final products = await _service.getProducts();
+      if (!mounted) return;
       setState(() {
         _products = products;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -45,9 +52,9 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
-  List<Product> get _filteredProducts {
+  List<Product> get _allFilteredProducts {
     final query = _searchController.text.toLowerCase().trim();
-    final filtered = _products.where((p) {
+    return _products.where((p) {
       final matchesCategory =
           widget.categoryId == null || p.categoryId == widget.categoryId;
       final matchesQuery =
@@ -61,7 +68,22 @@ class _ProductsPageState extends State<ProductsPage> {
               : p.estadoLabel.toLowerCase().contains(query));
       return matchesCategory && matchesQuery;
     }).toList();
-    return filtered;
+  }
+
+  List<Product> get _filteredProducts {
+    return paginateItems(
+      _allFilteredProducts,
+      visibleCount: _visibleCount,
+      pageSize: 5,
+    );
+  }
+
+  bool get _hasMoreProducts {
+    return hasMoreItems(
+      _allFilteredProducts,
+      visibleCount: _visibleCount,
+      pageSize: 5,
+    );
   }
 
   @override
@@ -73,67 +95,74 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
+      bottomNavigationBar: const GlobalBottomNav(),
+      backgroundColor: const Color(0xFFF5F5F7),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF2F2F7),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                      ProfileMenuButton(size: 42, iconSize: 20),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                  const AppBackButton(),
+                  const SizedBox(width: 14),
                   Text(
                     widget.categoryName ?? 'Productos',
                     style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1C1C1E),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF6F6F6),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar productos...',
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+                  const Spacer(),
+                  ProfileMenuButton(size: 42, iconSize: 20),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    const Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFFAEAEB2),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (_) {
+                          setState(() {
+                            _visibleCount = 5;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar por nombre...',
+                          hintStyle: TextStyle(
+                            color: Color(0xFFAEAEB2),
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Expanded(
               child: _loading
                   ? const Center(
@@ -148,8 +177,27 @@ class _ProductsPageState extends State<ProductsPage> {
                       onRefresh: _load,
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _filteredProducts.length,
+                        itemCount: _filteredProducts.length + (_hasMoreProducts ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == _filteredProducts.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8, bottom: 16),
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _visibleCount = nextVisibleCount(
+                                      _allFilteredProducts,
+                                      visibleCount: _visibleCount,
+                                      pageSize: 5,
+                                    );
+                                  });
+                                },
+                                icon: const Icon(Icons.expand_more_rounded),
+                                label: const Text('Ver más'),
+                              ),
+                            );
+                          }
+
                           final item = _filteredProducts[index];
                           return _productCard(context, item);
                         },

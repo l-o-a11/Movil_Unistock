@@ -6,6 +6,7 @@ import '../state/produccion_state.dart';
 class ProduccionProvider extends ChangeNotifier {
   final GetOrdenesUseCase getOrdenesUseCase;
   final AuthService _auth;
+  bool _disposed = false;
 
   ProduccionProvider({required this.getOrdenesUseCase, AuthService? auth})
     : _auth = auth ?? AuthService() {
@@ -16,6 +17,7 @@ class ProduccionProvider extends ChangeNotifier {
   ProduccionState get state => _state;
 
   void _emit(ProduccionState s) {
+    if (_disposed) return;
     _state = s;
     notifyListeners();
   }
@@ -24,14 +26,16 @@ class ProduccionProvider extends ChangeNotifier {
   /// rol/usuario logueado. El filtrado (incluido el alcance por rol) se
   /// hace localmente en [ProduccionState.ordenesFiltradas].
   Future<void> loadOrdenes() async {
+    if (_disposed) return;
     _emit(_state.copyWith(isLoading: true));
     try {
       final rolNombre = await _auth.getRolNombre();
       final userId = await _auth.getUserId();
-      // Sin pasar estado ni tipo: traer todo y filtrar en cliente
+      if (_disposed) return;
       final ordenes = await getOrdenesUseCase(
         query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
       );
+      if (_disposed) return;
       _emit(
         _state.copyWith(
           isLoading: false,
@@ -41,6 +45,7 @@ class ProduccionProvider extends ChangeNotifier {
         ),
       );
     } catch (e) {
+      if (_disposed) return;
       _emit(_state.copyWith(isLoading: false, error: e.toString()));
     }
   }
@@ -75,5 +80,11 @@ class ProduccionProvider extends ChangeNotifier {
     final all = _state.ordenes.map((o) => o.estado).toSet().toList();
     all.sort();
     return all;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
