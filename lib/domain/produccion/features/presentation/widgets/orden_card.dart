@@ -62,7 +62,7 @@ class OrdenCard extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFFF4FA3).withOpacity(0.22),
+            color: AppColors.cardBorder,
             width: 1.1,
           ),
           boxShadow: [

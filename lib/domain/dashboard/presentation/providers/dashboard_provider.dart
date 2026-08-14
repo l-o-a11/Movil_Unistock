@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../data/dashboard_data_source.dart';
@@ -16,12 +15,9 @@ class DashboardProvider extends ChangeNotifier {
   DashboardPeriod _period = DashboardPeriod.semana;
   DashboardPeriod get period => _period;
 
-  Timer? _timer;
-
   DashboardProvider({DashboardDataSource? dataSource})
       : _dataSource = dataSource ?? DashboardDataSource() {
     load();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) => load());
   }
 
   Future<void> setPeriod(DashboardPeriod p) async {
@@ -52,7 +48,6 @@ class DashboardProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _timer?.cancel();
     super.dispose();
   }
 }

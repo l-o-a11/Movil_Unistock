@@ -10,7 +10,7 @@ class ApiConfig {
     if (_configuredBaseUrl.isNotEmpty) return _configuredBaseUrl;
 
     if (kIsWeb) {
-      return 'https://api-unistock.onrender.com/api';
+      return 'https://api-unistock.onrender.com';
     }
 
     if (Platform.isAndroid) {
