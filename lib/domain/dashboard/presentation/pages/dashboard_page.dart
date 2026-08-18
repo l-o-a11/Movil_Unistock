@@ -101,10 +101,12 @@ class _DashboardView extends StatelessWidget {
               onChanged: (p) => provider.setPeriod(p),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 24),
-                child: Column(
+              child: RefreshIndicator(
+                onRefresh: () => provider.load(),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 24),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _SectionLabel('Resumen operativo'),
@@ -205,11 +207,12 @@ class _DashboardView extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: AppTheme.sp(context, 20)),
-                  ],
-                ),
-              ),
-            ),
+                     SizedBox(height: AppTheme.sp(context, 20)),
+                   ],
+                 ),
+               ),
+             ),
+           ),
           ],
         ),
       ),
