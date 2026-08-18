@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../usuarios/presentation/usuarios_page.dart';
 import '../empleados/presentation/empleados_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/profile_menu_button.dart';
@@ -73,7 +74,7 @@ class MenuPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(builder: (_) => const RolesPage()),
                         ),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                     ],
@@ -83,8 +84,24 @@ class MenuPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   // Usuarios
                   const _SH('Usuarios'), const SizedBox(height: 12),
-                  Row(
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
                     children: [
+                      _MI(
+                        icon: Icons.group_outlined,
+                        label: 'Usuarios',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const UsuariosPage(),
+                          ),
+                        ),
+                        backgroundColor: const Color(0xFFFF4DB8),
+                        shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                        size: 70,
+                        iconSize: 30,
+                      ),
                       _MI(
                         icon: Icons.group_outlined,
                         label: 'Empleados',
@@ -96,7 +113,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFFF4DB8),
                         shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                     ],
@@ -122,7 +139,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFC63A8F),
                         shadowColor: Colors.black.withOpacity(0.20),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       _MI(
@@ -136,7 +153,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFC63A8F),
                         shadowColor: Colors.black.withOpacity(0.20),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       _MI(
@@ -150,7 +167,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFC63A8F),
                         shadowColor: Colors.black.withOpacity(0.20),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       _MI(
@@ -164,7 +181,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFC63A8F),
                         shadowColor: Colors.black.withOpacity(0.20),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                     ],
@@ -190,7 +207,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFFB8FD0),
                         shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       _MI(
@@ -204,7 +221,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFFB8FD0),
                         shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       // Terceros → abre Producción en tab Terceros
@@ -220,7 +237,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFFB8FD0),
                         shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                       // Producción → abre Producción en tab Producciones
@@ -235,7 +252,7 @@ class MenuPage extends StatelessWidget {
                         ),
                         backgroundColor: const Color(0xFFFB8FD0),
                         shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 74,
+                        size: 70,
                         iconSize: 30,
                       ),
                     ],
@@ -289,7 +306,7 @@ class _MI extends StatelessWidget {
     required this.onTap,
     this.backgroundColor = const Color(0xFFFF4FA3),
     this.shadowColor = const Color(0x33FF4FA3),
-    this.size = 74,
+    this.size = 70,
     this.iconSize = 30,
   });
 

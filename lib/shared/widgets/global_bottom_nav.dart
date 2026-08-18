@@ -1,78 +1,62 @@
 import 'package:flutter/material.dart';
 
-/// Bottom nav global presente en TODAS las pantallas.
-/// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = dashboard, 1 = productos, 2 = cart, 3 = work/producción
-/// Pasa -1 (o no pases nada) para ninguno activo.
+/// Barra de navegación fija mostrada en la parte inferior de la aplicación.
 ///
-/// Incluye un botón circular flotante al centro (ícono de menú) que lleva
-/// directamente a la pantalla de Menú, reemplazando el antiguo botón
-/// "Acceder al sistema" que estaba en el Dashboard.
+/// Índices: 0 = Dash, 1 = Productos, 2 = Explorar, 3 = Compras,
+/// 4 = Producción. Usa -1 para no resaltar ningún acceso.
 class GlobalBottomNav extends StatelessWidget {
-  final int activeIndex;
-
   const GlobalBottomNav({super.key, this.activeIndex = -1});
 
+  final int activeIndex;
+
   static const _pink = Color(0xFFFF4FA3);
-  static const _grey = Color(0xFFB0B0B8);
+  static const _pinkBackground = Color(0xFFFFE4F2);
+  static const _grey = Color(0xFF9AA3B2);
+  static const _labelGrey = Color(0xFF8791A2);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F8)],
-        ),
-        border: Border(top: BorderSide(color: Color(0xFFF5E4EE), width: 1)),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF1F1F3))),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 80,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
+          height: 76,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _Btn(
-                      icon: Icons.show_chart_rounded,
-                      label: 'Inicio',
-                      active: activeIndex == 0,
-                      onTap: () => _goToDashboard(context),
-                    ),
-                    _Btn(
-                      icon: Icons.inventory_2_outlined,
-                      label: 'Productos',
-                      active: activeIndex == 1,
-                      onTap: () => _goToProductos(context),
-                    ),
-                    // Hueco reservado para que no se apiñen los ítems
-                    // alrededor del botón flotante del centro.
-                    const SizedBox(width: 58),
-                    _Btn(
-                      icon: Icons.shopping_cart_outlined,
-                      label: 'Compras',
-                      active: activeIndex == 2,
-                      onTap: () => _goToCompras(context),
-                    ),
-                    _Btn(
-                      icon: Icons.work_outline_rounded,
-                      label: 'Producción',
-                      active: activeIndex == 3,
-                      onTap: () => _goToProduccion(context),
-                    ),
-                  ],
-                ),
+              _NavItem(
+                icon: Icons.trending_up_rounded,
+                label: 'Dash',
+                active: activeIndex == 0,
+                onTap: () => _replaceWith(context, '/dashboard'),
               ),
-              Positioned(
-                top: -26,
-                child: _FloatingMenuButton(onTap: () => _goToMenu(context)),
+              _NavItem(
+                icon: Icons.inventory_2_outlined,
+                label: 'Productos',
+                active: activeIndex == 1,
+                onTap: () => _replaceWith(context, '/productos'),
+              ),
+              _NavItem(
+                icon: Icons.grid_view_rounded,
+                label: 'Explorar',
+                active: activeIndex == 2,
+                onTap: () => Navigator.of(context).pushNamed('/menu'),
+              ),
+              _NavItem(
+                icon: Icons.shopping_cart_outlined,
+                label: 'Compras',
+                active: activeIndex == 3,
+                onTap: () => _replaceWith(context, '/compras'),
+              ),
+              _NavItem(
+                icon: Icons.work_outline_rounded,
+                label: 'Producción',
+                active: activeIndex == 4,
+                onTap: () => _replaceWith(context, '/produccion'),
               ),
             ],
           ),
@@ -81,148 +65,57 @@ class GlobalBottomNav extends StatelessWidget {
     );
   }
 
-  static void _goToDashboard(BuildContext context) {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/dashboard', (route) => route.isFirst);
-  }
-
-  static void _goToProductos(BuildContext context) {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/productos', (route) => route.isFirst);
-  }
-
-  static void _goToCompras(BuildContext context) {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/compras', (route) => route.isFirst);
-  }
-
-  static void _goToProduccion(BuildContext context) {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/produccion', (route) => route.isFirst);
-  }
-
-  static void _goToMenu(BuildContext context) {
-    Navigator.of(context).pushNamed('/menu');
+  static void _replaceWith(BuildContext context, String routeName) {
+    Navigator.of(context).pushNamedAndRemoveUntil(routeName, (route) => route.isFirst);
   }
 }
 
-class _Btn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback? onTap;
-
-  const _Btn({
+class _NavItem extends StatelessWidget {
+  const _NavItem({
     required this.icon,
     required this.label,
     required this.active,
     required this.onTap,
   });
 
-  static const _pink = GlobalBottomNav._pink;
-  static const _grey = GlobalBottomNav._grey;
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    const pink = GlobalBottomNav._pink;
+    const grey = GlobalBottomNav._grey;
+    const labelGrey = GlobalBottomNav._labelGrey;
+
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        width: 60,
+        width: 64,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: active
-                    ? _pink.withOpacity(0.14)
-                    : _pink.withOpacity(0.05),
-                shape: BoxShape.circle,
+                color: active ? GlobalBottomNav._pinkBackground : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, size: 19, color: active ? _pink : _grey),
+              child: Icon(icon, size: 24, color: active ? pink : grey),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
               style: TextStyle(
+                color: active ? pink : labelGrey,
                 fontSize: 10,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? _pink : _grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingMenuButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _FloatingMenuButton({required this.onTap});
-
-  static const _pink = GlobalBottomNav._pink;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 112,
-        height: 76,
-        child: Stack(
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.none,
-          children: [
-            // Halo suave detrás del botón, imita el resplandor difuminado.
-            Container(
-              width: 112,
-              height: 76,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x59FF4FA3), Color(0x00FF4FA3)],
-                  stops: [0.0, 1.0],
-                ),
-              ),
-            ),
-            Container(
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: _pink.withOpacity(0.5),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [_pink, Color(0xFFFF8ACD)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.grid_view_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],
