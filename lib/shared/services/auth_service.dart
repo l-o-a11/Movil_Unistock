@@ -18,7 +18,7 @@ class AuthService implements AuthSessionRepository {
       _repository.saveUser(user);
 
   @override
-  Future<Map<String, dynamic>?> getUser() => _repository.getUser();c
+  Future<Map<String, dynamic>?> getUser() => _repository.getUser();
 
   @override
   Future<void> clearSession() => _repository.clearSession();
