@@ -125,14 +125,6 @@ class _SedeDetailSheet extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              'ID: ${sede.id}',
-                              style: const TextStyle(
-                                color: _grey,
-                                fontSize: 13,
-                              ),
-                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'Ubicación',
