@@ -1,20 +1,41 @@
 import 'package:flutter/material.dart';
+import '../../domain/auth/data/auth_session_repository_impl.dart';
+import '../../domain/auth/domain/auth_session_repository.dart';
+import '../../domain/auth/domain/modulo_constants.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
 /// [activeIndex] indica qué ícono se resalta en rosado:
 ///   0 = dashboard, 1 = productos, 2 = cart, 3 = work/producción
 /// Pasa -1 (o no pases nada) para ninguno activo.
 ///
-/// Incluye un botón circular flotante al centro (ícono de menú) que lleva
-/// directamente a la pantalla de Menú, reemplazando el antiguo botón
-/// "Acceder al sistema" que estaba en el Dashboard.
-class GlobalBottomNav extends StatelessWidget {
+/// Cada ícono se muestra solo si el rol del usuario tiene permiso sobre el
+/// módulo correspondiente (mismo criterio que MenuPage). El botón flotante
+/// central siempre se muestra: solo exige sesión iniciada, no un módulo
+/// puntual.
+class GlobalBottomNav extends StatefulWidget {
   final int activeIndex;
 
   const GlobalBottomNav({super.key, this.activeIndex = -1});
 
   static const _pink = Color(0xFFFF4FA3);
   static const _grey = Color(0xFFB0B0B8);
+
+  @override
+  State<GlobalBottomNav> createState() => _GlobalBottomNavState();
+}
+
+class _GlobalBottomNavState extends State<GlobalBottomNav> {
+  final AuthSessionRepository _repository = AuthSessionRepositoryImpl();
+  late Future<List<String>> _modulosFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Se apoya en la caché en memoria de getModulosPermitidos(): como este
+    // widget vive en casi todas las pantallas, no vuelve a pedir el rol a
+    // la API en cada una, solo la primera vez tras el login.
+    _modulosFuture = _repository.getModulosPermitidos();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,50 +52,70 @@ class GlobalBottomNav extends StatelessWidget {
         top: false,
         child: SizedBox(
           height: 80,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _Btn(
-                      icon: Icons.show_chart_rounded,
-                      label: 'Inicio',
-                      active: activeIndex == 0,
-                      onTap: () => _goToDashboard(context),
+          child: FutureBuilder<List<String>>(
+            future: _modulosFuture,
+            builder: (context, snapshot) {
+              final modulos = snapshot.data ?? const <String>[];
+              final tiene = (String m) => modulos.contains(m);
+
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        if (tiene(moduloDashboard))
+                          _Btn(
+                            icon: Icons.show_chart_rounded,
+                            label: 'Inicio',
+                            active: widget.activeIndex == 0,
+                            onTap: () => _goToDashboard(context),
+                          )
+                        else
+                          const SizedBox(width: 60),
+                        if (tiene(moduloProductos))
+                          _Btn(
+                            icon: Icons.inventory_2_outlined,
+                            label: 'Productos',
+                            active: widget.activeIndex == 1,
+                            onTap: () => _goToProductos(context),
+                          )
+                        else
+                          const SizedBox(width: 60),
+                        // Hueco reservado para que no se apiñen los ítems
+                        // alrededor del botón flotante del centro.
+                        const SizedBox(width: 58),
+                        if (tiene(moduloCompras))
+                          _Btn(
+                            icon: Icons.shopping_cart_outlined,
+                            label: 'Compras',
+                            active: widget.activeIndex == 2,
+                            onTap: () => _goToCompras(context),
+                          )
+                        else
+                          const SizedBox(width: 60),
+                        if (tiene(moduloProduccion))
+                          _Btn(
+                            icon: Icons.work_outline_rounded,
+                            label: 'Producción',
+                            active: widget.activeIndex == 3,
+                            onTap: () => _goToProduccion(context),
+                          )
+                        else
+                          const SizedBox(width: 60),
+                      ],
                     ),
-                    _Btn(
-                      icon: Icons.inventory_2_outlined,
-                      label: 'Productos',
-                      active: activeIndex == 1,
-                      onTap: () => _goToProductos(context),
-                    ),
-                    // Hueco reservado para que no se apiñen los ítems
-                    // alrededor del botón flotante del centro.
-                    const SizedBox(width: 58),
-                    _Btn(
-                      icon: Icons.shopping_cart_outlined,
-                      label: 'Compras',
-                      active: activeIndex == 2,
-                      onTap: () => _goToCompras(context),
-                    ),
-                    _Btn(
-                      icon: Icons.work_outline_rounded,
-                      label: 'Producción',
-                      active: activeIndex == 3,
-                      onTap: () => _goToProduccion(context),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: -26,
-                child: _FloatingMenuButton(onTap: () => _goToMenu(context)),
-              ),
-            ],
+                  ),
+                  Positioned(
+                    top: -26,
+                    child: _FloatingMenuButton(onTap: () => _goToMenu(context)),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
