@@ -5,20 +5,21 @@ import '../../domain/auth/domain/modulo_constants.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
 /// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = dashboard, 1 = productos, 2 = cart, 3 = work/producción
+///   0 = dashboard, 1 = productos, 2 = explorar, 3 = compras, 4 = producción
 /// Pasa -1 (o no pases nada) para ninguno activo.
 ///
 /// Cada ícono se muestra solo si el rol del usuario tiene permiso sobre el
-/// módulo correspondiente (mismo criterio que MenuPage). El botón flotante
-/// central siempre se muestra: solo exige sesión iniciada, no un módulo
-/// puntual.
+/// módulo correspondiente (mismo criterio que MenuPage). "Explorar" siempre
+/// se muestra: solo exige sesión iniciada, no un módulo puntual.
 class GlobalBottomNav extends StatefulWidget {
   final int activeIndex;
 
   const GlobalBottomNav({super.key, this.activeIndex = -1});
 
   static const _pink = Color(0xFFFF4FA3);
-  static const _grey = Color(0xFFB0B0B8);
+  static const _pinkBackground = Color(0xFFFFE4F2);
+  static const _grey = Color(0xFF9AA3B2);
+  static const _labelGrey = Color(0xFF8791A2);
 
   @override
   State<GlobalBottomNav> createState() => _GlobalBottomNavState();
@@ -39,80 +40,66 @@ class _GlobalBottomNavState extends State<GlobalBottomNav> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF2F8)],
-        ),
-        border: Border(top: BorderSide(color: Color(0xFFF5E4EE), width: 1)),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF1F1F3))),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 80,
+          height: 76,
           child: FutureBuilder<List<String>>(
             future: _modulosFuture,
             builder: (context, snapshot) {
               final modulos = snapshot.data ?? const <String>[];
               final tiene = (String m) => modulos.contains(m);
 
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (tiene(moduloDashboard))
-                          _Btn(
-                            icon: Icons.show_chart_rounded,
-                            label: 'Inicio',
-                            active: widget.activeIndex == 0,
-                            onTap: () => _goToDashboard(context),
-                          )
-                        else
-                          const SizedBox(width: 60),
-                        if (tiene(moduloProductos))
-                          _Btn(
-                            icon: Icons.inventory_2_outlined,
-                            label: 'Productos',
-                            active: widget.activeIndex == 1,
-                            onTap: () => _goToProductos(context),
-                          )
-                        else
-                          const SizedBox(width: 60),
-                        // Hueco reservado para que no se apiñen los ítems
-                        // alrededor del botón flotante del centro.
-                        const SizedBox(width: 58),
-                        if (tiene(moduloCompras))
-                          _Btn(
-                            icon: Icons.shopping_cart_outlined,
-                            label: 'Compras',
-                            active: widget.activeIndex == 2,
-                            onTap: () => _goToCompras(context),
-                          )
-                        else
-                          const SizedBox(width: 60),
-                        if (tiene(moduloProduccion))
-                          _Btn(
-                            icon: Icons.work_outline_rounded,
-                            label: 'Producción',
-                            active: widget.activeIndex == 3,
-                            onTap: () => _goToProduccion(context),
-                          )
-                        else
-                          const SizedBox(width: 60),
-                      ],
-                    ),
+                  if (tiene(moduloDashboard))
+                    _Btn(
+                      icon: Icons.trending_up_rounded,
+                      label: 'Dash',
+                      active: widget.activeIndex == 0,
+                      onTap: () => _goToDashboard(context),
+                    )
+                  else
+                    const SizedBox(width: 64),
+                  if (tiene(moduloProductos))
+                    _Btn(
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Productos',
+                      active: widget.activeIndex == 1,
+                      onTap: () => _goToProductos(context),
+                    )
+                  else
+                    const SizedBox(width: 64),
+                  _Btn(
+                    icon: Icons.grid_view_rounded,
+                    label: 'Explorar',
+                    active: widget.activeIndex == 2,
+                    onTap: () => _goToMenu(context),
                   ),
-                  Positioned(
-                    top: -26,
-                    child: _FloatingMenuButton(onTap: () => _goToMenu(context)),
-                  ),
+                  if (tiene(moduloCompras))
+                    _Btn(
+                      icon: Icons.shopping_cart_outlined,
+                      label: 'Compras',
+                      active: widget.activeIndex == 3,
+                      onTap: () => _goToCompras(context),
+                    )
+                  else
+                    const SizedBox(width: 64),
+                  if (tiene(moduloProduccion))
+                    _Btn(
+                      icon: Icons.work_outline_rounded,
+                      label: 'Producción',
+                      active: widget.activeIndex == 4,
+                      onTap: () => _goToProduccion(context),
+                    )
+                  else
+                    const SizedBox(width: 64),
                 ],
               );
             },
@@ -165,105 +152,39 @@ class _Btn extends StatelessWidget {
   });
 
   static const _pink = GlobalBottomNav._pink;
+  static const _pinkBackground = GlobalBottomNav._pinkBackground;
   static const _grey = GlobalBottomNav._grey;
+  static const _labelGrey = GlobalBottomNav._labelGrey;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        width: 60,
+        width: 64,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: active
-                    ? _pink.withOpacity(0.14)
-                    : _pink.withOpacity(0.05),
-                shape: BoxShape.circle,
+                color: active ? _pinkBackground : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, size: 19, color: active ? _pink : _grey),
+              child: Icon(icon, size: 24, color: active ? _pink : _grey),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? _pink : _grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingMenuButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _FloatingMenuButton({required this.onTap});
-
-  static const _pink = GlobalBottomNav._pink;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 112,
-        height: 76,
-        child: Stack(
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.none,
-          children: [
-            // Halo suave detrás del botón, imita el resplandor difuminado.
-            Container(
-              width: 112,
-              height: 76,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [Color(0x59FF4FA3), Color(0x00FF4FA3)],
-                  stops: [0.0, 1.0],
-                ),
-              ),
-            ),
-            Container(
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(color: Colors.white, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: _pink.withOpacity(0.5),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [_pink, Color(0xFFFF8ACD)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.grid_view_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                color: active ? _pink : _labelGrey,
               ),
             ),
           ],
