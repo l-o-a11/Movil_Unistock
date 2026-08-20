@@ -4,6 +4,7 @@ import '../auth/domain/auth_session_repository.dart';
 import '../auth/domain/modulo_constants.dart';
 import '../auth/presentation/route_guard.dart';
 import '../empleados/presentation/empleados_page.dart';
+import '../usuarios/presentation/usuarios_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/profile_menu_button.dart';
 import '../product_categories/product_categories_page.dart';
@@ -38,7 +39,7 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const GlobalBottomNav(),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 2),
       body: SafeArea(
         child: Column(
           children: [
@@ -64,25 +65,54 @@ class _MenuPageState extends State<MenuPage> {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Text(
-                'Sede 1',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1C1C1C),
-                ),
-              ),
-            ),
+            const SizedBox(height: 8),
             Expanded(
               child: FutureBuilder<List<String>>(
                 future: _modulosFuture,
                 builder: (context, snapshot) {
+                  // ---- DEBUG temporal ----
+                  print(
+                    'MENU DEBUG -> connectionState: ${snapshot.connectionState}',
+                  );
+                  print('MENU DEBUG -> hasError: ${snapshot.hasError}');
+                  if (snapshot.hasError) {
+                    print('MENU DEBUG -> error: ${snapshot.error}');
+                    print('MENU DEBUG -> stackTrace: ${snapshot.stackTrace}');
+                  }
+                  print('MENU DEBUG -> data: ${snapshot.data}');
+                  // -------------------------
+
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
+                  if (snapshot.hasError) {
+                    // Muestra el error en pantalla en vez de dejarla en blanco
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Error cargando módulos:\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    );
+                  }
+
                   final modulos = snapshot.data ?? const <String>[];
+
+                  if (modulos.isEmpty) {
+                    // Estado vacío visible en vez de blanco silencioso
+                    return const Center(
+                      child: Text(
+                        'No tienes módulos asignados.\n(modulos llegó vacío)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
                   return _MenuList(modulos: modulos);
                 },
               ),
@@ -279,6 +309,24 @@ class _MenuList extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
+              _MI(
+                icon: Icons.person_outline_rounded,
+                label: 'Usuarios',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RouteGuard(
+                      requiredModule: moduloEmpleados,
+                      child: UsuariosPage(),
+                    ),
+                  ),
+                ),
+                backgroundColor: const Color(0xFFFF4DB8),
+                shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                size: 74,
+                iconSize: 30,
+              ),
+              const SizedBox(width: 16),
               _MI(
                 icon: Icons.group_outlined,
                 label: 'Empleados',

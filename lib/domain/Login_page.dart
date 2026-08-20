@@ -115,145 +115,153 @@ class _LoginPageState extends State<LoginPage> {
               left: 0,
               right: 0,
               top: isKeyboardVisible ? 80 : size.height * 0.55,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x22000000),
-                      blurRadius: 30,
-                      offset: Offset(0, -8),
-                    ),
-                  ],
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: size.height - (isKeyboardVisible ? 100 : 60),
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Bienvenido',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF1C1C1C),
-                        letterSpacing: -0.5,
-                      ),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Accede a tu panel de administración.',
-                      style: TextStyle(fontSize: 14, color: Color(0xFFAAAAAA)),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Email field
-                    _LoginTextField(
-                      controller: _emailController,
-                      focusNode: _emailFocusNode,
-                      hintText: 'Nombre del usuario o correo electrónico',
-                      prefixIcon: Icons.person_outline_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      // Al presionar "Siguiente" en el teclado, salta al
-                      // campo de contraseña.
-                      onSubmitted: (_) => FocusScope.of(
-                        context,
-                      ).requestFocus(_passwordFocusNode),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Password field
-                    _LoginTextField(
-                      controller: _passwordController,
-                      focusNode: _passwordFocusNode,
-                      hintText: 'Contraseña',
-                      prefixIcon: Icons.lock_outline_rounded,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      // Al presionar "Listo" en este campo, se envía el
-                      // formulario directamente.
-                      onSubmitted: (_) => _isLoading ? null : _handleLogin(),
-                      suffixIcon: GestureDetector(
-                        onTap: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                        child: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: const Color(0xFFBBBBBB),
-                          size: 21,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Login button
-                    _GradientButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _error!,
-                        style: const TextStyle(
-                          color: Color(0xFFEF4444),
-                          fontSize: 13,
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x22000000),
+                        blurRadius: 30,
+                        offset: Offset(0, -8),
                       ),
                     ],
-                    const SizedBox(height: 14),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Bienvenido',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1C1C1C),
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Accede a tu panel de administración.',
+                          style: TextStyle(fontSize: 14, color: Color(0xFFAAAAAA)),
+                        ),
+                        const SizedBox(height: 20),
 
-                    // Forgot password
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          showModalBottomSheet<void>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            barrierColor: Colors.black.withOpacity(0.22),
-                            builder: (sheetContext) {
-                              // ForgotPasswordFlow (asBottomSheet: true) ya
-                              // compensa el teclado internamente — no
-                              // agregamos Padding acá para no duplicar el
-                              // inset y comprimir el panel.
-                              return SafeArea(
-                                child: FractionallySizedBox(
-                                  heightFactor: 0.92,
-                                  child: const ForgotPasswordFlow(
-                                    asBottomSheet: true,
-                                  ),
-                                ),
+                        // Email field
+                        _LoginTextField(
+                          controller: _emailController,
+                          focusNode: _emailFocusNode,
+                          hintText: 'Nombre del usuario o correo electrónico',
+                          prefixIcon: Icons.person_outline_rounded,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          // Al presionar "Siguiente" en el teclado, salta al
+                          // campo de contraseña.
+                          onSubmitted: (_) => FocusScope.of(
+                            context,
+                          ).requestFocus(_passwordFocusNode),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Password field
+                        _LoginTextField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocusNode,
+                          hintText: 'Contraseña',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          // Al presionar "Listo" en este campo, se envía el
+                          // formulario directamente.
+                          onSubmitted: (_) => _isLoading ? null : _handleLogin(),
+                          suffixIcon: GestureDetector(
+                            onTap: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            child: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: const Color(0xFFBBBBBB),
+                              size: 21,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Login button
+                        _GradientButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          label: _isLoading ? 'Cargando...' : 'Iniciar sesión',
+                        ),
+                        if (_error != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _error!,
+                            style: const TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+
+                        // Forgot password
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              showModalBottomSheet<void>(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                barrierColor: Colors.black.withOpacity(0.22),
+                                builder: (sheetContext) {
+                                  // ForgotPasswordFlow (asBottomSheet: true) ya
+                                  // compensa el teclado internamente — no
+                                  // agregamos Padding acá para no duplicar el
+                                  // inset y comprimir el panel.
+                                  return SafeArea(
+                                    child: FractionallySizedBox(
+                                      heightFactor: 0.92,
+                                      child: const ForgotPasswordFlow(
+                                        asBottomSheet: true,
+                                      ),
+                                    ),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              '¿Olvidaste tu contraseña?',
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFFFF4FA3),
+                              ),
+                            ),
                           ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFFFF4FA3),
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

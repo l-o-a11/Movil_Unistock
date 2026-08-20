@@ -19,7 +19,7 @@ class ProgressSection extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-final items = [
+    final items = [
       _ProgressData(
         label: 'Almacenamiento',
         sub: 'Total de insumos',
@@ -79,11 +79,12 @@ final items = [
               ),
             )
           else
-            for (var i = 0; i < items.length; i++) ...[
-              _InsumoBar(data: items[i]),
-              if (i != items.length - 1)
-                SizedBox(height: AppTheme.sp(context, 8)),
-            ],
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [for (final item in items) _InsumoBar(data: item)],
+              ),
+            ),
         ],
       ),
     );

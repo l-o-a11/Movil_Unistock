@@ -64,7 +64,7 @@ class _ProduccionPageState extends State<ProduccionPage> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
+          bottomNavigationBar: const GlobalBottomNav(activeIndex: 4),
           body: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +162,9 @@ class _ProduccionPageState extends State<ProduccionPage> {
                             controller: _searchCtrl,
                             onChanged: (v) {
                               if (!isProduccion) {
-                                context.read<TercerosProvider>().updateSearch(v);
+                                context.read<TercerosProvider>().updateSearch(
+                                  v,
+                                );
                               } else {
                                 provider.setSearch(v);
                               }
@@ -349,7 +351,9 @@ class _OrdenList extends StatelessWidget {
                 onPressed: onShowMore,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

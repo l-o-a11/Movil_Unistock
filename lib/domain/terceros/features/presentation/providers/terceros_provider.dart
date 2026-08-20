@@ -15,6 +15,7 @@ import '../../data/services/terceros_api_service.dart';
 class TercerosProvider extends ChangeNotifier {
   final GetTercerosUseCase getTercerosUseCase;
   final TercerosApiService _apiService;
+  bool _disposed = false;
 
   TercerosState _state = const TercerosState();
   TercerosState get state => _state;
@@ -31,18 +32,21 @@ class TercerosProvider extends ChangeNotifier {
   /// El filtrado por búsqueda se hace localmente en
   /// [TercerosState.tercerosFiltrados], evitando una llamada HTTP por tecla.
   Future<void> loadTerceros() async {
+    if (_disposed) return;
     _state = _state.copyWith(isLoading: true);
     notifyListeners();
     try {
       final terceros = await _apiService.getTerceros();
+      if (_disposed) return;
       _state = _state.copyWith(terceros: terceros, isLoading: false);
     } catch (e) {
+      if (_disposed) return;
       _state = _state.copyWith(
         isLoading: false,
         error: 'Error al cargar terceros: $e',
       );
     }
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Actualiza la consulta de búsqueda.
@@ -55,19 +59,21 @@ class TercerosProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [query]: Término de búsqueda
   void updateSearch(String query) {
-    _state = _state.copyWith(
-      searchQuery: query,
-      visibleCount: kTercerosPageSize,
-    );
+    _state = _state.copyWith(searchQuery: query);
     notifyListeners();
   }
 
-  /// Muestra [kTercerosPageSize] registros adicionales de la lista filtrada.
   void showMore() {
-    if (!_state.hasMore) return;
+    if (_disposed) return;
     _state = _state.copyWith(
       visibleCount: _state.visibleCount + kTercerosPageSize,
     );
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

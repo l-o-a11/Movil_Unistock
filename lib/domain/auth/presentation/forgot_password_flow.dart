@@ -192,33 +192,47 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
               const SizedBox(height: 18),
               _StepDots(activeStep: _step),
               const SizedBox(height: 4),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 240),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: KeyedSubtree(
-                  key: ValueKey(_step),
-                  child: switch (_step) {
-                    0 => _EmailStep(
-                      isLoading: _isLoading,
-                      errorMessage: _errorMessage,
-                      onSubmit: _handleSendCode,
-                    ),
-                    1 => _CodeStep(
-                      correo: _correo,
-                      isLoading: _isLoading,
-                      errorMessage: _errorMessage,
-                      onSubmit: _handleVerifyCode,
-                      onResend: _handleResendCode,
-                    ),
-                    _ => _NewPasswordStep(
-                      isLoading: _isLoading,
-                      errorMessage: _errorMessage,
-                      onSubmit: _handleResetPassword,
-                    ),
-                  },
+              // FIX: antes el AnimatedSwitcher era hijo directo de este
+              // Column con mainAxisSize.min. Un Column así le da a sus
+              // hijos altura NO acotada (crece a su tamaño natural), así
+              // que el SingleChildScrollView de cada paso (_NewPasswordStep,
+              // etc.) nunca tenía un límite real dentro del cual
+              // desplazarse — cuando el contenido + teclado no cabían,
+              // se desbordaba en vez de scrollear ("BOTTOM OVERFLOWED").
+              // Flexible sí le da un límite de altura genuino (el espacio
+              // restante dentro del maxHeight del ConstrainedBox de
+              // afuera), habilitando el scroll interno quando hace falta,
+              // y dejando que el modal se achique cuando el paso es corto
+              // (p. ej. el primer paso, solo el campo de correo).
+              Flexible(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 240),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: KeyedSubtree(
+                    key: ValueKey(_step),
+                    child: switch (_step) {
+                      0 => _EmailStep(
+                        isLoading: _isLoading,
+                        errorMessage: _errorMessage,
+                        onSubmit: _handleSendCode,
+                      ),
+                      1 => _CodeStep(
+                        correo: _correo,
+                        isLoading: _isLoading,
+                        errorMessage: _errorMessage,
+                        onSubmit: _handleVerifyCode,
+                        onResend: _handleResendCode,
+                      ),
+                      _ => _NewPasswordStep(
+                        isLoading: _isLoading,
+                        errorMessage: _errorMessage,
+                        onSubmit: _handleResetPassword,
+                      ),
+                    },
+                  ),
                 ),
               ),
             ],

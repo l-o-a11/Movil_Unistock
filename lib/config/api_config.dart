@@ -17,6 +17,6 @@ class ApiConfig {
       return 'http://10.0.2.2:3000';
     }
 
-    return 'https://api-unistock.onrender.com/api';
+    return 'https://api-unistock.onrender.com';
   }
 }

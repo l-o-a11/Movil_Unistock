@@ -42,38 +42,35 @@ class _DashboardView extends StatelessWidget {
     final stats = provider.stats;
     final hPad = AppTheme.sp(context, 16);
 
+    final currentYear = DateTime.now().year;
     final cards = [
       _CardData(
-        icon: Icons.bolt_rounded,
+        icon: Icons.grid_view_rounded,
         iconColor: AppTheme.purple,
         iconBg: AppTheme.purpleLight,
-        title: 'ACTUALES',
+        title: 'Producciones actuales',
         value: provider.isLoading ? '…' : '${stats.activas}',
-        subtitle: 'prod.',
       ),
       _CardData(
         icon: Icons.check_rounded,
-        iconColor: AppTheme.green,
-        iconBg: AppTheme.greenLight,
-        title: 'COMPLETADAS',
-        value: provider.isLoading ? '…' : '${stats.completadasMes}',
-        subtitle: provider.period.label.toLowerCase(),
-      ),
-      _CardData(
-        icon: Icons.schedule_rounded,
         iconColor: AppTheme.pink,
         iconBg: AppTheme.pinkLight,
-        title: 'POR INICIAR',
-        value: provider.isLoading ? '…' : '${stats.porIniciar}',
-        subtitle: 'pendientes',
+        title: 'Completadas en $currentYear',
+        value: provider.isLoading ? '…' : '${stats.completadasMes}',
       ),
       _CardData(
         icon: Icons.access_time_rounded,
-        iconColor: AppTheme.purple,
-        iconBg: AppTheme.purpleLight,
-        title: 'PROMEDIO',
+        iconColor: AppTheme.pink,
+        iconBg: AppTheme.pinkLight,
+        title: 'Por iniciar',
+        value: provider.isLoading ? '…' : '${stats.porIniciar}',
+      ),
+      _CardData(
+        icon: Icons.calendar_today_rounded,
+        iconColor: AppTheme.pink,
+        iconBg: AppTheme.pinkLight,
+        title: 'Tiempo promedio (${currentYear - 1})',
         value: provider.isLoading ? '…' : stats.avgTime,
-        subtitle: 'días (mes ant.)',
       ),
     ];
 
@@ -107,112 +104,157 @@ class _DashboardView extends StatelessWidget {
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(hPad, 8, hPad, 24),
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _SectionLabel('Resumen operativo'),
-                    SizedBox(height: AppTheme.sp(context, 10)),
-
-                    // Fila de 4 chips de métricas
-                    Row(
-                      children: [
-                        for (var i = 0; i < cards.length; i++) ...[
-                          if (i > 0) SizedBox(width: AppTheme.sp(context, 8)),
-                          Expanded(
-                            child: DashboardCard(
-                              icon: cards[i].icon,
-                              iconColor: cards[i].iconColor,
-                              iconBg: cards[i].iconBg,
-                              title: cards[i].title,
-                              value: cards[i].value,
-                              subtitle: cards[i].subtitle,
-                            ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Estado general de producción ───────────────────
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(AppTheme.sp(context, 16)),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardColor,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.cardRadius,
                           ),
-                        ],
-                      ],
-                    ),
-
-                    SizedBox(height: AppTheme.sp(context, 24)),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const _SectionLabel('Procesos en Curso'),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.pinkLight,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppTheme.pink.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Text(
-                            '${processes.length} estados',
-                            style: TextStyle(
-                              fontSize: AppTheme.fs(context, 10),
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.pink,
-                            ),
-                          ),
+                          boxShadow: AppTheme.cardShadow,
                         ),
-                      ],
-                    ),
-                    SizedBox(height: AppTheme.sp(context, 10)),
-
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppTheme.sp(context, 16),
-                        vertical: AppTheme.sp(context, 14),
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardColor,
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.cardRadius,
-                        ),
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: provider.isLoading
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
-                              ),
-                            )
-                          : Column(
-                              children: processes
-                                  .map(
-                                    (p) => ProcessItem(
-                                      label: p.label,
-                                      value: p.value,
-                                      maxValue: maxProcValue,
-                                      barColor: p.color,
-                                    ),
-                                  )
-                                  .toList(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _SectionLabel('Estado general de producción'),
+                            SizedBox(height: AppTheme.sp(context, 12)),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[0].icon,
+                                    iconColor: cards[0].iconColor,
+                                    iconBg: cards[0].iconBg,
+                                    title: cards[0].title,
+                                    value: cards[0].value,
+                                  ),
+                                ),
+                                SizedBox(width: AppTheme.sp(context, 8)),
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[1].icon,
+                                    iconColor: cards[1].iconColor,
+                                    iconBg: cards[1].iconBg,
+                                    title: cards[1].title,
+                                    value: cards[1].value,
+                                  ),
+                                ),
+                              ],
                             ),
-                    ),
+                            SizedBox(height: AppTheme.sp(context, 8)),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[2].icon,
+                                    iconColor: cards[2].iconColor,
+                                    iconBg: cards[2].iconBg,
+                                    title: cards[2].title,
+                                    value: cards[2].value,
+                                  ),
+                                ),
+                                SizedBox(width: AppTheme.sp(context, 8)),
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[3].icon,
+                                    iconColor: cards[3].iconColor,
+                                    iconBg: cards[3].iconBg,
+                                    title: cards[3].title,
+                                    value: cards[3].value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
 
-                    SizedBox(height: AppTheme.sp(context, 14)),
-
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      SizedBox(height: AppTheme.sp(context, 24)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Expanded(child: SummaryCard()),
-                          SizedBox(width: AppTheme.sp(context, 10)),
-                          const Expanded(child: ProgressSection()),
+                          const _SectionLabel('Procesos en Curso'),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.pinkLight,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppTheme.pink.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              '${processes.length} estados',
+                              style: TextStyle(
+                                fontSize: AppTheme.fs(context, 10),
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.pink,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                      SizedBox(height: AppTheme.sp(context, 10)),
 
-                     SizedBox(height: AppTheme.sp(context, 20)),
-                   ],
-                 ),
-               ),
-             ),
-           ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppTheme.sp(context, 16),
+                          vertical: AppTheme.sp(context, 14),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardColor,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.cardRadius,
+                          ),
+                          boxShadow: AppTheme.cardShadow,
+                        ),
+                        child: provider.isLoading
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            : Column(
+                                children: processes
+                                    .map(
+                                      (p) => ProcessItem(
+                                        label: p.label,
+                                        value: p.value,
+                                        maxValue: maxProcValue,
+                                        barColor: p.color,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                      ),
+
+                      SizedBox(height: AppTheme.sp(context, 14)),
+
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Expanded(child: SummaryCard()),
+                            SizedBox(width: AppTheme.sp(context, 10)),
+                            const Expanded(child: ProgressSection()),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: AppTheme.sp(context, 20)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -370,20 +412,26 @@ class _SectionLabel extends StatelessWidget {
 class _CardData {
   final IconData icon;
   final Color iconColor, iconBg;
-  final String title, value, subtitle;
+  final String title, value;
   const _CardData({
     required this.icon,
+
     required this.iconColor,
+
     required this.iconBg,
+
     required this.title,
+
     required this.value,
-    required this.subtitle,
   });
 }
 
 class _ProcessData {
   final String label;
+
   final int value;
+
   final Color color;
+
   const _ProcessData(this.label, this.value, this.color);
 }

@@ -3,8 +3,5 @@ class DashboardChartPointEntity {
   final String label;
   final int value;
 
-  const DashboardChartPointEntity({
-    required this.label,
-    required this.value,
-  });
+  const DashboardChartPointEntity({required this.label, required this.value});
 }
