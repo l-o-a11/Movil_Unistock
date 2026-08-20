@@ -95,7 +95,7 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const GlobalBottomNav(),
+            bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
       backgroundColor: const Color(0xFFF5F5F7),
       body: SafeArea(
         child: Column(
