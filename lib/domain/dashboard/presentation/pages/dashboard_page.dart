@@ -385,16 +385,24 @@ class _CardData {
   final String title, value;
   const _CardData({
     required this.icon,
+    
     required this.iconColor,
+
     required this.iconBg,
+
     required this.title,
+
+
     required this.value,
   });
 }
 
 class _ProcessData {
   final String label;
+
   final int value;
+
   final Color color;
+
   const _ProcessData(this.label, this.value, this.color);
 }
