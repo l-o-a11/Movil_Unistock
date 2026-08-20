@@ -208,6 +208,7 @@ class _ProduccionPageState extends State<ProduccionPage> {
                           state: state,
                           onTap: (o) => _goToDetail(context, o),
                           onToggle: provider.toggleExpanded,
+                          onShowMore: provider.showMore,
                           onRetry: provider.loadOrdenes,
                         )
                       : const TercerosEmbeddedList(),
@@ -227,12 +228,14 @@ class _OrdenList extends StatelessWidget {
   final ProduccionState state;
   final ValueChanged<OrdenEntity> onTap;
   final ValueChanged<String> onToggle;
+  final VoidCallback onShowMore;
   final VoidCallback onRetry;
 
   const _OrdenList({
     required this.state,
     required this.onTap,
     required this.onToggle,
+    required this.onShowMore,
     required this.onRetry,
   });
 
@@ -280,7 +283,7 @@ class _OrdenList extends StatelessWidget {
     }
 
     // Usar ordenesFiltradas (aplica HIDDEN_STATUSES y filtroEstado)
-    final ordenes = state.ordenesFiltradas;
+    final ordenes = state.ordenesVisibles;
 
     if (ordenes.isEmpty) {
       return Center(
@@ -304,8 +307,26 @@ class _OrdenList extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      itemCount: ordenes.length,
+      itemCount: ordenes.length + (state.hasMore ? 1 : 0),
       itemBuilder: (_, i) {
+        if (i == ordenes.length) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 12),
+            child: Center(
+              child: OutlinedButton(
+                onPressed: onShowMore,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Ver más'),
+              ),
+            ),
+          );
+        }
         final orden = ordenes[i];
         return OrdenCard(
           orden: orden,

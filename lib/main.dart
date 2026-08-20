@@ -6,6 +6,7 @@ import 'package:movil_unistock/domain/terceros/features/presentation/pages/terce
 import 'domain/Login_page.dart';
 import 'domain/produccion/produccion.dart';
 import 'domain/compras/compras_page.dart';
+import 'domain/products/products_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -28,6 +29,7 @@ class MainApp extends StatelessWidget {
         '/usuarios': (_) => const UsuariosPage(),
         '/compras': (_) => const ComprasPage(),
         '/terceros': (_) => const TercerosPage(),
+        '/productos': (_) => const ProductsPage(),
       },
     );
   }

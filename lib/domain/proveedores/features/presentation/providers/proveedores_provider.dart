@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/proveedor_entity.dart';
 import '../../data/services/proveedores_api_service.dart';
 
+const int kProveedoresPageSize = 5;
+
 /// Proveedor de estado para la lista de proveedores.
 /// 
 /// Gestiona:
@@ -19,7 +21,6 @@ class ProveedoresProvider extends ChangeNotifier {
   bool isLoading = true;
   String? error;
   String _q = '';
-  bool _disposed = false;
 
   ProveedoresProvider({ProveedoresApiService? apiService})
       : _apiService = apiService ?? ProveedoresApiService() {
@@ -33,6 +34,7 @@ class ProveedoresProvider extends ChangeNotifier {
   Future<void> load({String? q}) async {
     if (_disposed) return;
     _q = q ?? _q;
+    _visibleCount = kProveedoresPageSize;
     isLoading = true; error = null; notifyListeners();
     try {
       final result = await _apiService.getAll(query: _q.isEmpty ? null : _q);
@@ -51,11 +53,5 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Término de búsqueda
   void search(String q) => load(q: q);
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
 }
 

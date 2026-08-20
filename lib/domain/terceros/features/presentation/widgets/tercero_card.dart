@@ -170,13 +170,16 @@ class _TerceroSheetState extends State<_TerceroSheet>
 
   @override
   Widget build(BuildContext context) {
-    // DraggableScrollableSheet da altura acotada correctamente
+    // DraggableScrollableSheet da altura acotada correctamente.
+    // Tamaño reducido para ahorrar espacio en pantalla: el sheet arranca
+    // más bajo y el usuario puede arrastrarlo hasta un máximo más
+    // compacto que antes.
     return DraggableScrollableSheet(
-      initialChildSize: 0.76,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.7,
       snap: true,
-      snapSizes: const [0.76, 0.92],
+      snapSizes: const [0.55, 0.7],
       builder: (ctx, scrollCtrl) {
         return Container(
           decoration: const BoxDecoration(
@@ -188,7 +191,7 @@ class _TerceroSheetState extends State<_TerceroSheet>
             children: [
               // ── Drag handle ────────────────────────────────────────────────
               Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                margin: const EdgeInsets.only(top: 8, bottom: 6),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
@@ -198,7 +201,7 @@ class _TerceroSheetState extends State<_TerceroSheet>
               ),
               // ── Header ─────────────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+                padding: const EdgeInsets.fromLTRB(18, 2, 18, 8),
                 child: Row(
                   children: [
                     Expanded(
@@ -209,7 +212,7 @@ class _TerceroSheetState extends State<_TerceroSheet>
                             'CÓDIGO: ${widget.tercero.codigo}',
                             style: const TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.4,
                             ),
@@ -218,7 +221,7 @@ class _TerceroSheetState extends State<_TerceroSheet>
                             widget.tercero.nombre,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
-                              fontSize: 17,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.3,
                             ),
@@ -227,7 +230,7 @@ class _TerceroSheetState extends State<_TerceroSheet>
                             widget.tercero.contacto,
                             style: const TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 12,
+                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -236,15 +239,15 @@ class _TerceroSheetState extends State<_TerceroSheet>
                     GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
                       child: Container(
-                        width: 30,
-                        height: 30,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
                           color: AppColors.chipBackground,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
                           Icons.close_rounded,
-                          size: 16,
+                          size: 15,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -258,10 +261,10 @@ class _TerceroSheetState extends State<_TerceroSheet>
                 color: AppColors.background,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 8,
+                  vertical: 6,
                 ),
                 child: Container(
-                  height: 40,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.chipBackground,
                     borderRadius: BorderRadius.circular(10),

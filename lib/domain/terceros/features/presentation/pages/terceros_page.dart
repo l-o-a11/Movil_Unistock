@@ -200,11 +200,45 @@ class _TercerosBodyState extends State<_TercerosBody> {
                   );
                 }
 
+                final visibles = s.tercerosVisibles;
+                final hasMore = s.hasMore;
+
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                  itemCount: filtered.length,
-                  itemBuilder: (ctx, i) =>
-                      TerceroCard(tercero: filtered[i], animIndex: i),
+                  itemCount: visibles.length + (hasMore ? 1 : 0),
+                  itemBuilder: (ctx, i) {
+                    if (i >= visibles.length) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 12),
+                        child: Center(
+                          child: OutlinedButton(
+                            onPressed: provider.showMore,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: AppColors.primary.withOpacity(0.4),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 10,
+                              ),
+                            ),
+                            child: const Text(
+                              'Ver más',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return TerceroCard(tercero: visibles[i], animIndex: i);
+                  },
                 );
               },
             ),
