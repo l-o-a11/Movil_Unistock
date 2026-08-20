@@ -63,30 +63,55 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
         // Search
         Padding(padding:const EdgeInsets.symmetric(horizontal:16),
           child:Container(
+            height: 46,
             decoration:BoxDecoration(
-              color:const Color(0xFFF5F5F7),
+              color:Colors.white,
               borderRadius:BorderRadius.circular(12),
-              border:Border.all(color:const Color(0xFFE8E8E8))),
-            child:TextField(controller:_ctrl,
-              onChanged: (v) { setState((){}); context.read<ProveedoresProvider>().search(v); },
-              style:const TextStyle(fontSize:13, color:Color(0xFF1C1C1E)),
-              decoration:InputDecoration(
-                hintText:'Buscar...',
-                hintStyle:const TextStyle(color: Color(0xFFAEAEB2), fontSize:13),
-                prefixIcon:const Icon(Icons.search_rounded, size:17, color:Color(0xFFAEAEB2)),
-                suffixIcon:_ctrl.text.isNotEmpty
-                  ? IconButton(icon:const Icon(Icons.clear_rounded, size:16, color:Color(0xFFAEAEB2)),
-                      onPressed:(){ _ctrl.clear(); setState((){}); context.read<ProveedoresProvider>().search(''); })
-                  : null,
-                border:InputBorder.none, isDense:true,
-                contentPadding:const EdgeInsets.symmetric(vertical:12))))),
+              border:Border.all(color:const Color(0xFFEEEEEE))),
+            child:Row(
+              children: [
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFFAEAEB2),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _ctrl,
+                    onChanged: (v) => context.read<ProveedoresProvider>().search(v),
+                    style: const TextStyle(
+                      color: Color(0xFF8E8E93),
+                      fontSize: 15,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar proveedores...',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFAEAEB2),
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height:16),
         // List
         Expanded(child:Consumer<ProveedoresProvider>(
           builder:(_,p,__)  {
             if (p.isLoading) return const Center(child:CircularProgressIndicator(color:_pink, strokeWidth:2.5));
-            if (p.error != null) return Center(child:Text(p.error!, style:const TextStyle(color:_grey)));
-            if (p.items.isEmpty) return const Center(child:Text('No hay proveedores', style:TextStyle(color:_grey, fontSize:14)));
+            if (p.error != null) return Center(child:Column(children:[
+              const Icon(Icons.error_outline_rounded, color: _pink, size: 40),
+              const SizedBox(height: 8),
+              Text(p.error!, style:const TextStyle(color: _grey), textAlign: TextAlign.center),
+            ]));
+            final filtrados = p.proveedoresFiltrados;
+            if (filtrados.isEmpty) return const Center(child:Text('No se encontraron proveedores.', style:TextStyle(color: _grey, fontSize:14)));
             final visibles = p.visibleItems;
             return ListView.builder(
               padding:const EdgeInsets.fromLTRB(16,0,16,24),

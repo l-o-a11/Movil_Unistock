@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import '../usuarios/presentation/usuarios_page.dart';
+import '../auth/data/auth_session_repository_impl.dart';
+import '../auth/domain/auth_session_repository.dart';
+import '../auth/domain/modulo_constants.dart';
+import '../auth/presentation/route_guard.dart';
 import '../empleados/presentation/empleados_page.dart';
+import '../usuarios/presentation/usuarios_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/profile_menu_button.dart';
 import '../product_categories/product_categories_page.dart';
@@ -14,15 +18,28 @@ import '../sedes/sedes_page.dart';
 import '../categoriainsumo/categorias_page.dart';
 import '../products/products_page.dart';
 
-class MenuPage extends StatelessWidget {
+class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
-  static const _pink = Color(0xFFFF4FA3);
+
+  @override
+  State<MenuPage> createState() => _MenuPageState();
+}
+
+class _MenuPageState extends State<MenuPage> {
+  final AuthSessionRepository _repository = AuthSessionRepositoryImpl();
+  late Future<List<String>> _modulosFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _modulosFuture = _repository.getModulosPermitidos();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const GlobalBottomNav(),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 2),
       body: SafeArea(
         child: Column(
           children: [
@@ -35,7 +52,7 @@ class MenuPage extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: _pink,
+                      color: const Color(0xFFFF4FA3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -48,239 +65,333 @@ class MenuPage extends StatelessWidget {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Text(
-                'Sede 1',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1C1C1C),
-                ),
-              ),
-            ),
+            const SizedBox(height: 8),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Roles
-                  const _SH('Roles'), const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _MI(
-                        icon: Icons.admin_panel_settings_outlined,
-                        label: 'Roles',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const RolesPage()),
-                        ),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-                  const SizedBox(height: 8),
-                  // Usuarios
-                  const _SH('Usuarios'), const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _MI(
-                        icon: Icons.group_outlined,
-                        label: 'Usuarios',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const UsuariosPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFF4DB8),
-                        shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      _MI(
-                        icon: Icons.group_outlined,
-                        label: 'Empleados',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EmpleadosPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFF4DB8),
-                        shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-                  const SizedBox(height: 8),
+              child: FutureBuilder<List<String>>(
+                future: _modulosFuture,
+                builder: (context, snapshot) {
+                  // ---- DEBUG temporal ----
+                  print(
+                    'MENU DEBUG -> connectionState: ${snapshot.connectionState}',
+                  );
+                  print('MENU DEBUG -> hasError: ${snapshot.hasError}');
+                  if (snapshot.hasError) {
+                    print('MENU DEBUG -> error: ${snapshot.error}');
+                    print('MENU DEBUG -> stackTrace: ${snapshot.stackTrace}');
+                  }
+                  print('MENU DEBUG -> data: ${snapshot.data}');
+                  // -------------------------
 
-                  // Compras
-                  const _SH('Compras'), const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _MI(
-                        icon: Icons.grid_view_rounded,
-                        label: 'Categorías\nde insumo',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const CategoriasPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFC63A8F),
-                        shadowColor: Colors.black.withOpacity(0.20),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      _MI(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'Insumo',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const InsumosPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFC63A8F),
-                        shadowColor: Colors.black.withOpacity(0.20),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      _MI(
-                        icon: Icons.local_shipping_outlined,
-                        label: 'Proveedores',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProveedoresPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFC63A8F),
-                        shadowColor: Colors.black.withOpacity(0.20),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      _MI(
-                        icon: Icons.shopping_cart_outlined,
-                        label: 'Compras',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ComprasPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFC63A8F),
-                        shadowColor: Colors.black.withOpacity(0.20),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-                  const SizedBox(height: 8),
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  // Producción — sin "Órdenes"
-                  const _SH('Producción'), const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _MI(
-                        icon: Icons.grid_view_rounded,
-                        label: 'Categoría\nde producto',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProductCategoriesPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFB8FD0),
-                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      _MI(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'Producto',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProductsPage(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFB8FD0),
-                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      // Terceros → abre Producción en tab Terceros
-                      _MI(
-                        icon: Icons.group_outlined,
-                        label: 'Terceros',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const ProduccionApp(openTerceros: true),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFB8FD0),
-                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                      // Producción → abre Producción en tab Producciones
-                      _MI(
-                        icon: Icons.work_outline_rounded,
-                        label: 'Producción',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProduccionApp(),
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFFFB8FD0),
-                        shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-                        size: 70,
-                        iconSize: 30,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Sedes
-                  const _SH('Sedes'), const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _MI(
-                        icon: Icons.location_on_outlined,
-                        label: 'Sedes',
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SedesPage()),
+                  if (snapshot.hasError) {
+                    // Muestra el error en pantalla en vez de dejarla en blanco
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Error cargando módulos:\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-                  const SizedBox(height: 8),
-                ],
+                    );
+                  }
+
+                  final modulos = snapshot.data ?? const <String>[];
+
+                  if (modulos.isEmpty) {
+                    // Estado vacío visible en vez de blanco silencioso
+                    return const Center(
+                      child: Text(
+                        'No tienes módulos asignados.\n(modulos llegó vacío)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  return _MenuList(modulos: modulos);
+                },
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MenuList extends StatelessWidget {
+  const _MenuList({required this.modulos});
+
+  final List<String> modulos;
+
+  bool _tiene(String modulo) => modulos.contains(modulo);
+
+  @override
+  Widget build(BuildContext context) {
+    final mostrarRoles = _tiene(moduloRoles);
+    final mostrarEmpleados = _tiene(moduloEmpleados);
+    final mostrarSedes = _tiene(moduloSedes);
+
+    // Cada entrada de "Compras" y "Producción" se filtra individualmente;
+    // la sección completa (encabezado + separador) se oculta si ninguno de
+    // sus íconos quedó permitido.
+    final comprasItems = <Widget>[
+      if (_tiene(moduloCategoriasInsumos))
+        _MI(
+          icon: Icons.grid_view_rounded,
+          label: 'Categorías\nde insumo',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloCategoriasInsumos,
+                child: CategoriasPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFC63A8F),
+          shadowColor: Colors.black.withOpacity(0.20),
+        ),
+      if (_tiene(moduloInsumos))
+        _MI(
+          icon: Icons.inventory_2_outlined,
+          label: 'Insumo',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloInsumos,
+                child: InsumosPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFC63A8F),
+          shadowColor: Colors.black.withOpacity(0.20),
+        ),
+      if (_tiene(moduloProveedores))
+        _MI(
+          icon: Icons.local_shipping_outlined,
+          label: 'Proveedores',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloProveedores,
+                child: ProveedoresPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFC63A8F),
+          shadowColor: Colors.black.withOpacity(0.20),
+        ),
+      if (_tiene(moduloCompras))
+        _MI(
+          icon: Icons.shopping_cart_outlined,
+          label: 'Compras',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloCompras,
+                child: ComprasPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFC63A8F),
+          shadowColor: Colors.black.withOpacity(0.20),
+        ),
+    ];
+
+    final produccionItems = <Widget>[
+      if (_tiene(moduloCategoriasProductos))
+        _MI(
+          icon: Icons.grid_view_rounded,
+          label: 'Categoría\nde producto',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloCategoriasProductos,
+                child: ProductCategoriesPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFFB8FD0),
+          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+        ),
+      if (_tiene(moduloProductos))
+        _MI(
+          icon: Icons.inventory_2_outlined,
+          label: 'Producto',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloProductos,
+                child: ProductsPage(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFFB8FD0),
+          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+        ),
+      if (_tiene(moduloTerceros))
+        _MI(
+          icon: Icons.group_outlined,
+          label: 'Terceros',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloTerceros,
+                child: ProduccionApp(openTerceros: true),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFFB8FD0),
+          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+        ),
+      if (_tiene(moduloProduccion))
+        _MI(
+          icon: Icons.work_outline_rounded,
+          label: 'Producción',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const RouteGuard(
+                requiredModule: moduloProduccion,
+                child: ProduccionApp(),
+              ),
+            ),
+          ),
+          backgroundColor: const Color(0xFFFB8FD0),
+          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+        ),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        if (mostrarRoles) ...[
+          const _SH('Roles'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _MI(
+                icon: Icons.admin_panel_settings_outlined,
+                label: 'Roles',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RouteGuard(
+                      requiredModule: moduloRoles,
+                      child: RolesPage(),
+                    ),
+                  ),
+                ),
+                size: 74,
+                iconSize: 30,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+          const SizedBox(height: 8),
+        ],
+
+        if (mostrarEmpleados) ...[
+          const _SH('Usuarios'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _MI(
+                icon: Icons.person_outline_rounded,
+                label: 'Usuarios',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RouteGuard(
+                      requiredModule: moduloEmpleados,
+                      child: UsuariosPage(),
+                    ),
+                  ),
+                ),
+                backgroundColor: const Color(0xFFFF4DB8),
+                shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                size: 74,
+                iconSize: 30,
+              ),
+              const SizedBox(width: 16),
+              _MI(
+                icon: Icons.group_outlined,
+                label: 'Empleados',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RouteGuard(
+                      requiredModule: moduloEmpleados,
+                      child: EmpleadosPage(),
+                    ),
+                  ),
+                ),
+                backgroundColor: const Color(0xFFFF4DB8),
+                shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                size: 74,
+                iconSize: 30,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+          const SizedBox(height: 8),
+        ],
+
+        if (comprasItems.isNotEmpty) ...[
+          const _SH('Compras'),
+          const SizedBox(height: 12),
+          Wrap(spacing: 16, runSpacing: 16, children: comprasItems),
+          const SizedBox(height: 8),
+          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+          const SizedBox(height: 8),
+        ],
+
+        if (produccionItems.isNotEmpty) ...[
+          const _SH('Producción'),
+          const SizedBox(height: 12),
+          Wrap(spacing: 16, runSpacing: 16, children: produccionItems),
+          const SizedBox(height: 24),
+        ],
+
+        if (mostrarSedes) ...[
+          const _SH('Sedes'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _MI(
+                icon: Icons.location_on_outlined,
+                label: 'Sedes',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RouteGuard(
+                      requiredModule: moduloSedes,
+                      child: SedesPage(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+          const SizedBox(height: 8),
+        ],
+      ],
     );
   }
 }
@@ -306,7 +417,7 @@ class _MI extends StatelessWidget {
     required this.onTap,
     this.backgroundColor = const Color(0xFFFF4FA3),
     this.shadowColor = const Color(0x33FF4FA3),
-    this.size = 70,
+    this.size = 74,
     this.iconSize = 30,
   });
 

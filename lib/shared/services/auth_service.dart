@@ -35,4 +35,8 @@ class AuthService implements AuthSessionRepository {
 
   @override
   Future<String?> getUserId() => _repository.getUserId();
+
+  @override
+  Future<List<String>> getModulosPermitidos() =>
+      _repository.getModulosPermitidos();
 }

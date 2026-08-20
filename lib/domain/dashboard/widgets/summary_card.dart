@@ -16,7 +16,7 @@ class SummaryCard extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-final activos = stats.onTrack;
+    final activos = stats.onTrack;
     final alertas = stats.delayed;
     final totalActivos = activos + alertas;
 
@@ -60,23 +60,28 @@ final activos = stats.onTrack;
                 ),
               ),
             )
-else ...[
-            _SummaryRow(
-              label: 'Producciones',
-              sub: 'Con retraso',
-              value: '$alertas',
-              color: AppTheme.pink,
-              progress: totalActivos > 0 ? alertas / totalActivos : 0,
+          else
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _SummaryRow(
+                    label: 'Producciones',
+                    sub: 'Con retraso',
+                    value: '$alertas',
+                    color: AppTheme.pink,
+                    progress: totalActivos > 0 ? alertas / totalActivos : 0,
+                  ),
+                  _SummaryRow(
+                    label: 'Sin novedades',
+                    sub: 'Todo en orden',
+                    value: '$activos',
+                    color: AppTheme.green,
+                    progress: totalActivos > 0 ? activos / totalActivos : 0,
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: AppTheme.sp(context, 8)),
-            _SummaryRow(
-              label: 'Sin novedades',
-              sub: 'Todo en orden',
-              value: '$activos',
-              color: AppTheme.green,
-              progress: totalActivos > 0 ? activos / totalActivos : 0,
-            ),
-          ],
         ],
       ),
     );

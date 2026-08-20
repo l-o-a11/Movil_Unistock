@@ -27,6 +27,20 @@ class ProveedoresProvider extends ChangeNotifier {
       items.take(_visibleCount).toList();
   bool get hasMore => _visibleCount < items.length;
 
+  List<ProveedorEntity> get proveedoresFiltrados {
+    final q = _q.trim().toLowerCase();
+    if (q.isEmpty) return items;
+    return items.where((p) {
+      return p.nombre.toLowerCase().contains(q) ||
+          p.nit.toLowerCase().contains(q) ||
+          p.contacto.toLowerCase().contains(q) ||
+          p.telefono.toLowerCase().contains(q) ||
+          p.direccion.toLowerCase().contains(q) ||
+          p.correo.toLowerCase().contains(q) ||
+          p.sitioWeb.toLowerCase().contains(q);
+    }).toList();
+  }
+
   ProveedoresProvider({ProveedoresApiService? apiService})
       : _apiService = apiService ?? ProveedoresApiService() {
     load();
@@ -39,7 +53,7 @@ class ProveedoresProvider extends ChangeNotifier {
   Future<void> load({String? q}) async {
     _q = q ?? _q;
     _visibleCount = kProveedoresPageSize;
-    isLoading = true; error = null; notifyListeners();
+    notifyListeners();
     try {
       items = await _apiService.getAll(query: _q.isEmpty ? null : _q);
     } catch (e) { error = 'Error al cargar: $e'; }

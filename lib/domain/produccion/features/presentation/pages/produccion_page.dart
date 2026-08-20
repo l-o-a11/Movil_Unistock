@@ -10,7 +10,6 @@ import '../../domain/entities/orden_entity.dart';
 import '../providers/produccion_provider.dart';
 import '../providers/orden_detail_provider.dart';
 import '../state/produccion_state.dart';
-import '../widgets/app_search_bar.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/orden_card.dart';
 import '../widgets/toggle_tab_bar.dart';
@@ -139,23 +138,58 @@ class _ProduccionPageState extends State<ProduccionPage> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── Buscador ──────────────────────────────────────────────
+                // ── Buscador─────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: AppSearchBar(
-                    controller: _searchCtrl,
-                    onChanged: (v) {
-                      // Refresca el botón de limpiar del buscador.
-                      setState(() {});
-                      if (!isProduccion) {
-                        // Pestaña Terceros → filtrar la lista de terceros.
-                        context.read<TercerosProvider>().updateSearch(v);
-                      } else {
-                        // Pestaña Producciones → filtrar las órdenes.
-                        provider.setSearch(v);
-                      }
-                    },
-                    hintText: 'Buscar...',
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        const Icon(
+                          Icons.search_rounded,
+                          color: Color(0xFFAEAEB2),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchCtrl,
+                            onChanged: (v) {
+                              if (!isProduccion) {
+                                context.read<TercerosProvider>().updateSearch(
+                                  v,
+                                );
+                              } else {
+                                provider.setSearch(v);
+                              }
+                            },
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Buscar...',
+                              hintStyle: TextStyle(
+                                color: Color(0xFFAEAEB2),
+                                fontSize: 15,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              isDense: true,
+                              fillColor: Colors.white,
+                              filled: true,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -317,7 +351,9 @@ class _OrdenList extends StatelessWidget {
                 onPressed: onShowMore,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

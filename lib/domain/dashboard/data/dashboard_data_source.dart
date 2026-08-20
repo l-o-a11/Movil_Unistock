@@ -64,14 +64,15 @@ extension DashboardPeriodExt on DashboardPeriod {
 class DashboardDataSource {
   Future<DashboardStats> getStats({
     DashboardPeriod period = DashboardPeriod.mes,
-    // FIX: en la web, "Procesos en Curso" (barData) usa un período
-    // INDEPENDIENTE (barTimeView, por defecto 'Año') distinto al de las
-    // tarjetas de KPI (timeView, por defecto 'Mes'). El móvil usaba el mismo
-    // período para todo, así que "Cancelado" (y el resto de procesos)
-    // contaba solo el mes actual en vez del año — de ahí el conteo distinto
-    // entre web y móvil para el mismo dato.
-    DashboardPeriod procesoPeriod = DashboardPeriod.anio,
+    // FIX: en la web, "Procesos en Curso" usa un período INDEPENDIENTE
+    // (barTimeView, por defecto 'Año') del de las tarjetas KPI (timeView).
+    // El móvil solo tiene UN selector visible (Semana/Mes/Año), así que
+    // dejarlo fijo en 'Año' hacía que tocar el filtro no moviera nada en
+    // "Procesos en Curso" — parecía que "no servía". Ahora, si no se pasa
+    // explícitamente, sigue al mismo `period` que el resto del dashboard.
+    DashboardPeriod? procesoPeriod,
   }) async {
+    final effectiveProcesoPeriod = procesoPeriod ?? period;
     // Los insumos se calculan de forma AISLADA e independiente: aunque el
     // procesamiento de órdenes falle, el "Control de Insumos" del dashboard
     // siempre muestra los datos reales de insumos.
@@ -279,7 +280,7 @@ class DashboardDataSource {
       for (final o in orders) {
         final estado = (o['estado'] ?? '').toString();
         if (estado.isEmpty) continue;
-        if (!matchPeriod(orderDate(o), procesoPeriod)) continue;
+        if (!matchPeriod(orderDate(o), effectiveProcesoPeriod)) continue;
         final proceso = _estadoAProceso[estado];
         if (proceso != null)
           procesoCounts[proceso] = (procesoCounts[proceso] ?? 0) + 1;

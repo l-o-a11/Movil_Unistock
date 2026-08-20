@@ -160,10 +160,6 @@ class _RolDetailSheet extends StatelessWidget {
                                   ),
                               ],
                             ),
-                            const SizedBox(height: 2),
-                            Text('ID: ${rol.id}',
-                                style: const TextStyle(
-                                    color: _grey, fontSize: 13)),
                             const SizedBox(height: 10),
                             // Descripción
                             Text(
