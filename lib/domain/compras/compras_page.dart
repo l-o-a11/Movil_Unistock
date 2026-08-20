@@ -72,19 +72,16 @@ class _ComprasPageState extends State<ComprasPage> {
 
   Future<void> _cargar() async {
     try {
-      if (!mounted) return;
       setState(() {
         _loading = true;
         _error = null;
       });
       final data = await _service.getCompras();
-      if (!mounted) return;
       setState(() {
         _compras = data;
         _loading = false;
       });
     } catch (_) {
-      if (!mounted) return;
       setState(() {
         _error = 'No se pudo cargar la información de compras.';
         _loading = false;
@@ -106,7 +103,7 @@ class _ComprasPageState extends State<ComprasPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const GlobalBottomNav(),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(

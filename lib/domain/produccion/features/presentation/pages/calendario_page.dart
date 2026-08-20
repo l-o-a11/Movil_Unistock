@@ -219,7 +219,7 @@ class _CalendarioPageState extends State<CalendarioPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
+      bottomNavigationBar: const GlobalBottomNav(activeIndex: 4),
       body: SafeArea(
         child: Column(
           children: [
