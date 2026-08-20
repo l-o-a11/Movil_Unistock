@@ -124,19 +124,49 @@ class _DashboardView extends StatelessWidget {
                             SizedBox(height: AppTheme.sp(context, 12)),
                             Row(
                               children: [
-                                for (var i = 0; i < cards.length; i++) ...[
-                                  if (i > 0)
-                                    SizedBox(width: AppTheme.sp(context, 8)),
-                                  Expanded(
-                                    child: DashboardCard(
-                                      icon: cards[i].icon,
-                                      iconColor: cards[i].iconColor,
-                                      iconBg: cards[i].iconBg,
-                                      title: cards[i].title,
-                                      value: cards[i].value,
-                                    ),
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[0].icon,
+                                    iconColor: cards[0].iconColor,
+                                    iconBg: cards[0].iconBg,
+                                    title: cards[0].title,
+                                    value: cards[0].value,
                                   ),
-                                ],
+                                ),
+                                SizedBox(width: AppTheme.sp(context, 8)),
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[1].icon,
+                                    iconColor: cards[1].iconColor,
+                                    iconBg: cards[1].iconBg,
+                                    title: cards[1].title,
+                                    value: cards[1].value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: AppTheme.sp(context, 8)),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[2].icon,
+                                    iconColor: cards[2].iconColor,
+                                    iconBg: cards[2].iconBg,
+                                    title: cards[2].title,
+                                    value: cards[2].value,
+                                  ),
+                                ),
+                                SizedBox(width: AppTheme.sp(context, 8)),
+                                Expanded(
+                                  child: DashboardCard(
+                                    icon: cards[3].icon,
+                                    iconColor: cards[3].iconColor,
+                                    iconBg: cards[3].iconBg,
+                                    title: cards[3].title,
+                                    value: cards[3].value,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -385,13 +415,12 @@ class _CardData {
   final String title, value;
   const _CardData({
     required this.icon,
-    
+
     required this.iconColor,
 
     required this.iconBg,
 
     required this.title,
-
 
     required this.value,
   });

@@ -79,11 +79,12 @@ class ProgressSection extends StatelessWidget {
               ),
             )
           else
-            for (var i = 0; i < items.length; i++) ...[
-              _InsumoBar(data: items[i]),
-              if (i != items.length - 1)
-                SizedBox(height: AppTheme.sp(context, 8)),
-            ],
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [for (final item in items) _InsumoBar(data: item)],
+              ),
+            ),
         ],
       ),
     );
