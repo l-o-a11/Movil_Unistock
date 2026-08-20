@@ -16,7 +16,7 @@ class SummaryCard extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-final activos = stats.onTrack;
+    final activos = stats.onTrack;
     final alertas = stats.delayed;
     final totalActivos = activos + alertas;
 
@@ -60,7 +60,7 @@ final activos = stats.onTrack;
                 ),
               ),
             )
-else ...[
+          else ...[
             _SummaryRow(
               label: 'Producciones',
               sub: 'Con retraso',

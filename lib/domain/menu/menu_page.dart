@@ -79,10 +79,49 @@ class _MenuPageState extends State<MenuPage> {
               child: FutureBuilder<List<String>>(
                 future: _modulosFuture,
                 builder: (context, snapshot) {
+                  // ---- DEBUG temporal ----
+                  print(
+                    'MENU DEBUG -> connectionState: ${snapshot.connectionState}',
+                  );
+                  print('MENU DEBUG -> hasError: ${snapshot.hasError}');
+                  if (snapshot.hasError) {
+                    print('MENU DEBUG -> error: ${snapshot.error}');
+                    print('MENU DEBUG -> stackTrace: ${snapshot.stackTrace}');
+                  }
+                  print('MENU DEBUG -> data: ${snapshot.data}');
+                  // -------------------------
+
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
+                  if (snapshot.hasError) {
+                    // Muestra el error en pantalla en vez de dejarla en blanco
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Error cargando módulos:\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    );
+                  }
+
                   final modulos = snapshot.data ?? const <String>[];
+
+                  if (modulos.isEmpty) {
+                    // Estado vacío visible en vez de blanco silencioso
+                    return const Center(
+                      child: Text(
+                        'No tienes módulos asignados.\n(modulos llegó vacío)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
                   return _MenuList(modulos: modulos);
                 },
               ),

@@ -19,7 +19,7 @@ class ProgressSection extends StatelessWidget {
     final hPad = AppTheme.sp(context, 12);
     final vPad = AppTheme.sp(context, 12);
 
-final items = [
+    final items = [
       _ProgressData(
         label: 'Almacenamiento',
         sub: 'Total de insumos',
