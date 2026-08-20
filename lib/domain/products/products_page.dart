@@ -179,24 +179,35 @@ class _ProductsPageState extends State<ProductsPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: _filteredProducts.length + (_hasMoreProducts ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (index == _filteredProducts.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 16),
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    _visibleCount = nextVisibleCount(
-                                      _allFilteredProducts,
-                                      visibleCount: _visibleCount,
-                                      pageSize: 5,
-                                    );
-                                  });
-                                },
-                                icon: const Icon(Icons.expand_more_rounded),
-                                label: const Text('Ver más'),
-                              ),
-                            );
-                          }
+                           if (index == _filteredProducts.length) {
+                             return Padding(
+                               padding: const EdgeInsets.only(top: 8, bottom: 16),
+                               child: Center(
+                                 child: OutlinedButton(
+                                   onPressed: () {
+                                     setState(() {
+                                       _visibleCount = nextVisibleCount(
+                                         _allFilteredProducts,
+                                         visibleCount: _visibleCount,
+                                         pageSize: 5,
+                                       );
+                                     });
+                                   },
+                                   style: OutlinedButton.styleFrom(
+                                     foregroundColor: const Color(0xFFFF4FA3),
+                                     side: const BorderSide(
+                                       color: Color(0xFFFF4FA3),
+                                       width: 1.2,
+                                     ),
+                                     shape: RoundedRectangleBorder(
+                                       borderRadius: BorderRadius.circular(10),
+                                     ),
+                                   ),
+                                   child: const Text('Ver más'),
+                                 ),
+                               ),
+                             );
+                           }
 
                           final item = _filteredProducts[index];
                           return _productCard(context, item);

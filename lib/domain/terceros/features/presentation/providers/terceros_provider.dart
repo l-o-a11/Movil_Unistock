@@ -63,6 +63,14 @@ class TercerosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void showMore() {
+    if (_disposed) return;
+    _state = _state.copyWith(
+      visibleCount: _state.visibleCount + kTercerosPageSize,
+    );
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;

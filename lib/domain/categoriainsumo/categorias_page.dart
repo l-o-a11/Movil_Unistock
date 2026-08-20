@@ -107,9 +107,9 @@ class _CategoriasPageState extends State<CategoriasPage> {
             child: Container(
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF5F5F7),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
+                border: Border.all(color: const Color(0xFFE8E8E8)),
               ),
               child: Row(
                 children: [

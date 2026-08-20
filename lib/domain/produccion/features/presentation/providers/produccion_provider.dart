@@ -22,19 +22,15 @@ class ProduccionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga TODAS las órdenes sin filtrar (igual que el web) junto con el
-  /// rol/usuario logueado. El filtrado (incluido el alcance por rol) se
-  /// hace localmente en [ProduccionState.ordenesFiltradas].
   Future<void> loadOrdenes() async {
     _emit(_state.copyWith(isLoading: true));
     try {
       final rolNombre = await _auth.getRolNombre();
       final userId = await _auth.getUserId();
-      if (_disposed) return;
+      // Sin pasar estado ni tipo: traer todo y filtrar en cliente
       final ordenes = await getOrdenesUseCase(
-        query: _state.searchQuery.isEmpty ? null : _state.searchQuery,
+         query: _state.searchQuery?.isEmpty ?? true ? null : _state.searchQuery,
       );
-      if (_disposed) return;
       _emit(
         _state.copyWith(
           isLoading: false,
@@ -49,7 +45,6 @@ class ProduccionProvider extends ChangeNotifier {
     }
   }
 
-  /// Filtrar por estado (String exacto del backend)
   void setFiltroEstado(String? estado) {
     _emit(
       _state.copyWith(
@@ -58,13 +53,16 @@ class ProduccionProvider extends ChangeNotifier {
         visibleCount: kOrdenesPageSize,
       ),
     );
-    // No rellamamos API — el filtro es local
     notifyListeners();
   }
 
-  void setSearch(String q) {
-    _emit(_state.copyWith(searchQuery: q, visibleCount: kOrdenesPageSize));
-    loadOrdenes();
+  /// Actualiza el texto de búsqueda y reinicia la paginación.
+  /// ProduccionState.ordenesFiltradas ya filtra por este campo
+  /// (número, cliente, producto, color, sede, tercero, estado, tipo).
+  void setSearch(String query) {
+    _emit(
+      _state.copyWith(searchQuery: query, visibleCount: kOrdenesPageSize),
+    );
   }
 
   void changeTab(ProduccionTab tab) {
@@ -82,7 +80,6 @@ class ProduccionProvider extends ChangeNotifier {
     _emit(_state.copyWith(expandedIds: newSet));
   }
 
-  /// Expande el listado de órdenes en bloques de cinco registros.
   void showMore() {
     if (!_state.hasMore) return;
     _emit(_state.copyWith(
@@ -90,7 +87,6 @@ class ProduccionProvider extends ChangeNotifier {
     ));
   }
 
-  /// Estados únicos disponibles para los chips de filtro
   List<String> get estadosDisponibles {
     final all = _state.ordenes.map((o) => o.estado).toSet().toList();
     all.sort();

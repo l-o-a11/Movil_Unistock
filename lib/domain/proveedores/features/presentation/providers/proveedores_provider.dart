@@ -21,6 +21,25 @@ class ProveedoresProvider extends ChangeNotifier {
   bool isLoading = true;
   String? error;
   String _q = '';
+  int _visibleCount = kProveedoresPageSize;
+
+  List<ProveedorEntity> get visibleItems =>
+      items.take(_visibleCount).toList();
+  bool get hasMore => _visibleCount < items.length;
+
+  List<ProveedorEntity> get proveedoresFiltrados {
+    final q = _q.trim().toLowerCase();
+    if (q.isEmpty) return items;
+    return items.where((p) {
+      return p.nombre.toLowerCase().contains(q) ||
+          p.nit.toLowerCase().contains(q) ||
+          p.contacto.toLowerCase().contains(q) ||
+          p.telefono.toLowerCase().contains(q) ||
+          p.direccion.toLowerCase().contains(q) ||
+          p.correo.toLowerCase().contains(q) ||
+          p.sitioWeb.toLowerCase().contains(q);
+    }).toList();
+  }
 
   ProveedoresProvider({ProveedoresApiService? apiService})
       : _apiService = apiService ?? ProveedoresApiService() {
@@ -32,19 +51,12 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Búsqueda opcional (actualiza la consulta si se proporciona)
   Future<void> load({String? q}) async {
-    if (_disposed) return;
     _q = q ?? _q;
     _visibleCount = kProveedoresPageSize;
-    isLoading = true; error = null; notifyListeners();
+    notifyListeners();
     try {
-      final result = await _apiService.getAll(query: _q.isEmpty ? null : _q);
-      if (_disposed) return;
-      items = result;
-    } catch (e) {
-      if (_disposed) return;
-      error = 'Error al cargar: $e';
-    }
-    if (_disposed) return;
+      items = await _apiService.getAll(query: _q.isEmpty ? null : _q);
+    } catch (e) { error = 'Error al cargar: $e'; }
     isLoading = false; notifyListeners();
   }
 
@@ -53,5 +65,11 @@ class ProveedoresProvider extends ChangeNotifier {
   /// Parámetro:
   /// - [q]: Término de búsqueda
   void search(String q) => load(q: q);
-}
 
+  /// Expande la lista en bloques de cinco registros.
+  void showMore() {
+    if (!hasMore) return;
+    _visibleCount += kProveedoresPageSize;
+    notifyListeners();
+  }
+}

@@ -1,4 +1,5 @@
 import '../../../core/api_client.dart';
+import '../../roles/rol_service.dart';
 import '../domain/auth_session_repository.dart';
 
 class LoginSessionResult {
@@ -24,7 +25,11 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
   Future<Map<String, dynamic>?> getUser() => _api.getUser();
 
   @override
-  Future<void> clearSession() => _api.clearSession();
+  Future<void> clearSession() async {
+    await _api.clearSession();
+    _cachedModulosUserId = null;
+    _cachedModulos = null;
+  }
 
   static LoginSessionResult parseLoginSession(dynamic payload) {
     final responseMap = payload is Map<String, dynamic>
@@ -141,5 +146,42 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
   Future<String?> getUserId() async {
     final user = await getUser();
     return user?['id']?.toString() ?? user?['_id']?.toString();
+  }
+
+  // ── Módulos permitidos según el rol ───────────────────────────────────
+  // El login solo devuelve rolId/rolNombre, no los permisos del rol. Para
+  // saber qué módulos puede ver el usuario se pide una vez el Rol completo
+  // (GET /roles/:id) y se cachea en memoria mientras dure la sesión, para
+  // no repetir la petición en cada pantalla que consulta el menú.
+  static String? _cachedModulosUserId;
+  static List<String>? _cachedModulos;
+
+  @override
+  Future<List<String>> getModulosPermitidos() async {
+    final userId = await getUserId();
+
+    if (_cachedModulos != null && _cachedModulosUserId == userId) {
+      return _cachedModulos!;
+    }
+
+    final user = await getUser();
+    final rolId = user?['rolId']?.toString();
+    if (rolId == null || rolId.isEmpty) return const [];
+
+    try {
+      final rol = await RolService().getRolById(rolId);
+      final modulos = rol.permisos
+          .where((m) => m.privilegios.isNotEmpty)
+          .map((m) => m.modulo.trim().toLowerCase())
+          .toSet()
+          .toList();
+      _cachedModulosUserId = userId;
+      _cachedModulos = modulos;
+      return modulos;
+    } catch (_) {
+      // Si falla la consulta (sin red, rol eliminado, etc.) no se rompe el
+      // menú: simplemente no se muestra ningún módulo restringido.
+      return const [];
+    }
   }
 }

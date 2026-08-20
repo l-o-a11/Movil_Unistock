@@ -139,14 +139,6 @@ class _InsumoDetailSheet extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'ID: ${insumo.id}',
-                              style: const TextStyle(
-                                color: _grey,
-                                fontSize: 13,
-                              ),
-                            ),
                             const SizedBox(height: 16),
                             // Estado
                             const _SectionLabel('Estado'),
