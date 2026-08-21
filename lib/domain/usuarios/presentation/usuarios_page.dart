@@ -245,9 +245,35 @@ class _UsuariosViewState extends State<_UsuariosView> {
                           onRefresh: () => provider.load(),
                           child: ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                            itemCount: provider.items.length,
+                            itemCount:
+                                provider.visibleItems.length +
+                                (provider.hasMore ? 1 : 0),
                             itemBuilder: (context, index) {
-                              final usuario = provider.items[index];
+                              if (index == provider.visibleItems.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 4,
+                                    bottom: 12,
+                                  ),
+                                  child: Center(
+                                    child: OutlinedButton(
+                                      onPressed: provider.showMore,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: _pink,
+                                        side: BorderSide(
+                                          color: _pink.withOpacity(0.4),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      child: const Text('Ver más'),
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final usuario = provider.visibleItems[index];
                               return _buildUsuarioCard(
                                 context,
                                 provider,

@@ -9,6 +9,8 @@ import '../../data/usuario_service.dart';
 import '../../domain/usuario_model.dart';
 import '../../../../core/api_client.dart';
 
+const int kUsuariosPageSize = 5;
+
 class UsuariosProvider extends ChangeNotifier {
   final UsuarioService _service;
 
@@ -16,6 +18,11 @@ class UsuariosProvider extends ChangeNotifier {
   List<UsuarioModel> items = []; // lista mostrada (filtrada por búsqueda)
   bool isLoading = false;
   String? error;
+  String _query = '';
+  int _visibleCount = kUsuariosPageSize;
+
+  List<UsuarioModel> get visibleItems => items.take(_visibleCount).toList();
+  bool get hasMore => _visibleCount < items.length;
 
   UsuariosProvider({UsuarioService? service})
     : _service = service ?? UsuarioService() {
@@ -23,6 +30,8 @@ class UsuariosProvider extends ChangeNotifier {
   }
 
   Future<void> load({String q = ''}) async {
+    _query = q;
+    _visibleCount = kUsuariosPageSize;
     isLoading = true;
     error = null;
     notifyListeners();
@@ -43,7 +52,15 @@ class UsuariosProvider extends ChangeNotifier {
   }
 
   void search(String q) {
+    _query = q;
+    _visibleCount = kUsuariosPageSize;
     _applyFilter(q);
+    notifyListeners();
+  }
+
+  void showMore() {
+    if (!hasMore) return;
+    _visibleCount += kUsuariosPageSize;
     notifyListeners();
   }
 
@@ -67,7 +84,7 @@ class UsuariosProvider extends ChangeNotifier {
     try {
       final updated = await _service.toggleStatus(id);
       _all = _all.map((u) => u.id == id ? updated : u).toList();
-      _applyFilter('');
+      _applyFilter(_query);
       notifyListeners();
       return null;
     } on ApiException catch (e) {
@@ -83,7 +100,7 @@ class UsuariosProvider extends ChangeNotifier {
     try {
       await _service.deleteUsuario(id);
       _all = _all.where((u) => u.id != id).toList();
-      _applyFilter('');
+      _applyFilter(_query);
       notifyListeners();
       return null;
     } on ApiException catch (e) {
