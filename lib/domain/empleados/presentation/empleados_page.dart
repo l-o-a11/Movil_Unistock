@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
 import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/profile_menu_button.dart';
+import '../../../shared/utils/responsive.dart';
 import 'providers/empleados_provider.dart';
 import '../../usuarios/domain/usuario_model.dart'; // Reutiliza el mismo modelo que Usuarios
 
@@ -11,7 +12,6 @@ const Color _pink = Color(0xFFFF4FA3);
 const Color _bg = Color(0xFFF5F5F7);
 const Color _text = Color(0xFF1C1C1E);
 const Color _grey = Color(0xFF8E8E93);
-const Color _border = Color(0xFFE8E8E8);
 const Color _green = Color(0xFF00C853);
 const Color _red = Color(0xFFE53935);
 
@@ -139,66 +139,65 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
           builder: (context, provider, __) {
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                  child: Row(
-                    children: [
-                      const AppBackButton(),
-                      const SizedBox(width: 14),
-                      const Text(
-                        'Empleados',
-                        style: TextStyle(
-                          color: _text,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
+                ResponsiveCenter(
+                  maxWidth: 900,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                    child: Row(
+                      children: [
+                        const AppBackButton(),
+                        const SizedBox(width: 14),
+                        const Text(
+                          'Empleados',
+                          style: TextStyle(
+                            color: _text,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      ProfileMenuButton(size: 42, iconSize: 20),
-                    ],
+                        const Spacer(),
+                        ProfileMenuButton(size: 42, iconSize: 20),
+                      ],
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _bg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _border),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: provider.search,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar empleado...',
-                        hintStyle: const TextStyle(
-                          color: Color(0xFFAEAEB2),
-                          fontSize: 13,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
-                          size: 18,
-                          color: Color(0xFFAEAEB2),
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  provider.search('');
-                                },
-                                icon: const Icon(
-                                  Icons.clear_rounded,
-                                  size: 18,
+                ResponsiveCenter(
+                  maxWidth: 900,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFFAEAEB2),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: provider.search,
+                              decoration: const InputDecoration(
+                                hintText: 'Buscar empleado...',
+                                hintStyle: TextStyle(
                                   color: Color(0xFFAEAEB2),
+                                  fontSize: 15,
                                 ),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -243,17 +242,21 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
                       : RefreshIndicator(
                           color: _pink,
                           onRefresh: () => provider.load(),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                            itemCount: provider.items.length,
-                            itemBuilder: (context, index) {
-                              final usuario = provider.items[index];
-                              return _buildEmpleadoCard(
-                                context,
-                                provider,
-                                usuario,
-                              );
-                            },
+                          child: ResponsiveCenter(
+                            maxWidth: 1100,
+                            child: ResponsiveCardGrid(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              itemCount: provider.items.length,
+                              childAspectRatio: 2.8,
+                              itemBuilder: (context, index) {
+                                final usuario = provider.items[index];
+                                return _buildEmpleadoCard(
+                                  context,
+                                  provider,
+                                  usuario,
+                                );
+                              },
+                            ),
                           ),
                         ),
                 ),
@@ -276,7 +279,9 @@ class _EmpleadosViewState extends State<_EmpleadosView> {
     return GestureDetector(
       onTap: () => _showEmpleadoDetail(context, usuario),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        // El espaciado entre tarjetas ya lo maneja ResponsiveCardGrid
+        // (lista o grilla, según el ancho), así que ya no se necesita
+        // este margen propio.
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -400,8 +405,8 @@ class _EmpleadoDetail extends StatelessWidget {
             child: Container(color: Colors.black.withOpacity(0.35)),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
+        ResponsiveSheet(
+          maxWidth: 560,
           child: SlideTransition(
             position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
                 .animate(

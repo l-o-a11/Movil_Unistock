@@ -35,14 +35,19 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
     final responseMap = payload is Map<String, dynamic>
         ? payload
         : payload is Map
-            ? Map<String, dynamic>.from(payload)
-            : <String, dynamic>{};
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
 
     final data = responseMap['data'] is Map
         ? Map<String, dynamic>.from(responseMap['data'])
         : <String, dynamic>{};
 
-    final token = _extractStringValue(responseMap, ['token', 'accessToken', 'authToken']) ??
+    final token =
+        _extractStringValue(responseMap, [
+          'token',
+          'accessToken',
+          'authToken',
+        ]) ??
         _extractStringValue(data, ['token', 'accessToken', 'authToken']);
 
     final user = _extractUserMap(responseMap, data);

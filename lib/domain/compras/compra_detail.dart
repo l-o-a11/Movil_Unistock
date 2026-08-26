@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../shared/utils/responsive.dart';
 import 'compra.dart';
 
 String _fechaFormateada(String fechaIso) {
@@ -52,8 +53,8 @@ class _CompraDetailSheet extends StatelessWidget {
             child: Container(color: Colors.black.withOpacity(0.35)),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
+        ResponsiveSheet(
+          maxWidth: 560,
           child: SlideTransition(
             position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
                 .animate(

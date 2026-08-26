@@ -21,8 +21,8 @@ class CompraService {
   final AuthService _auth;
 
   CompraService({String? baseUrl, AuthService? auth})
-      : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
-        _auth = auth ?? AuthService();
+    : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
+      _auth = auth ?? AuthService();
 
   // ─── Métodos públicos ─────────────────────────────────────────────────────
 
@@ -34,10 +34,12 @@ class CompraService {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      final List<dynamic> data =
-          body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
-      final compras =
-          data.map((e) => Compra.fromJson(e as Map<String, dynamic>)).toList();
+      final List<dynamic> data = body is List
+          ? body
+          : (body is Map ? (body['data'] as List? ?? []) : []);
+      final compras = data
+          .map((e) => Compra.fromJson(e as Map<String, dynamic>))
+          .toList();
       return _enriquecerProveedores(compras);
     }
     throw Exception('Error al cargar compras (${response.statusCode})');
@@ -101,8 +103,9 @@ class CompraService {
     if (response.statusCode != 200) return {};
 
     final body = jsonDecode(response.body);
-    final List<dynamic> data =
-        body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+    final List<dynamic> data = body is List
+        ? body
+        : (body is Map ? (body['data'] as List? ?? []) : []);
 
     final mapa = <String, String>{};
     for (final p in data) {
@@ -123,8 +126,9 @@ class CompraService {
     if (response.statusCode != 200) return {};
 
     final body = jsonDecode(response.body);
-    final List<dynamic> data =
-        body is List ? body : (body is Map ? (body['data'] as List? ?? []) : []);
+    final List<dynamic> data = body is List
+        ? body
+        : (body is Map ? (body['data'] as List? ?? []) : []);
 
     final mapa = <String, String>{};
     for (final i in data) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/app_back_button.dart';
 import '../../shared/widgets/profile_menu_button.dart';
+import '../../shared/utils/responsive.dart';
 import 'compra.dart';
 import 'compra_card.dart';
 import 'compra_detail.dart';
@@ -110,62 +111,69 @@ class _ComprasPageState extends State<ComprasPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ──────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-              child: Row(
-                children: [
-                  AppBackButton(),
-                  const SizedBox(width: 14),
-                  const Text(
-                    'Compras',
-                    style: TextStyle(
-                      color: _text,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
+            ResponsiveCenter(
+              maxWidth: 900,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                child: Row(
+                  children: [
+                    AppBackButton(),
+                    const SizedBox(width: 14),
+                    const Text(
+                      'Compras',
+                      style: TextStyle(
+                        color: _text,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  ProfileMenuButton(size: 42, iconSize: 20),
-                ],
+                    const Spacer(),
+                    ProfileMenuButton(size: 42, iconSize: 20),
+                  ],
+                ),
               ),
             ),
 
             // ── Buscador ────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                height: 46,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.search_rounded,
-                      color: Color(0xFFAEAEB2),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _busqueda,
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar por factura, proveedor o fecha...',
-                          hintStyle: TextStyle(
-                            color: Color(0xFFAEAEB2),
-                            fontSize: 15,
+            ResponsiveCenter(
+              maxWidth: 900,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEEEEEE)),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFFAEAEB2),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _busqueda,
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            hintText:
+                                'Buscar por factura, proveedor o fecha...',
+                            hintStyle: TextStyle(
+                              color: Color(0xFFAEAEB2),
+                              fontSize: 15,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
-                          border: InputBorder.none,
-                          isDense: true,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -205,20 +213,22 @@ class _ComprasPageState extends State<ComprasPage> {
                                 style: TextStyle(color: Color(0xFF8E8E93)),
                               ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                          : ResponsiveCenter(
+                              maxWidth: 1100,
+                              child: ResponsiveCardGrid(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                itemCount: _filtrados.length,
+                                childAspectRatio: 2.4,
+                                itemBuilder: (context, index) {
+                                  final compra = _filtrados[index];
+                                  return CompraCard(
+                                    compra: compra,
+                                    onDetailTap: () => _verDetalle(compra),
+                                  );
+                                },
                               ),
-                              itemCount: _filtrados.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final compra = _filtrados[index];
-                                return CompraCard(
-                                  compra: compra,
-                                  onDetailTap: () => _verDetalle(compra),
-                                );
-                              },
                             ),
                     ),
             ),

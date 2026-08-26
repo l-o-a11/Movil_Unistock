@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
+import '../../../shared/utils/responsive.dart';
 import '../../dashboard/theme/app_theme.dart';
 import '../data/auth_service.dart';
 import '../domain/auth_user.dart';
@@ -65,19 +66,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
           : SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ProfileHeader(user: _user),
-                    const SizedBox(height: 20),
-                    _PersonalDataCard(
-                      user: _user,
-                      authService: _authService,
-                      onUpdated: (updated) => setState(() => _user = updated),
-                    ),
-                    const SizedBox(height: 16),
-                    _ChangePasswordCard(authService: _authService),
-                  ],
+                child: ResponsiveCenter(
+                  maxWidth: 560,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ProfileHeader(user: _user),
+                      const SizedBox(height: 20),
+                      _PersonalDataCard(
+                        user: _user,
+                        authService: _authService,
+                        onUpdated: (updated) => setState(() => _user = updated),
+                      ),
+                      const SizedBox(height: 16),
+                      _ChangePasswordCard(authService: _authService),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -323,7 +327,11 @@ class _ChangePasswordCardState extends State<_ChangePasswordCard> {
       children: [
         const Text(
           'Mínimo 8 caracteres, con mayúscula, minúscula, número y un carácter especial (* - _ # ~ \$).',
-          style: TextStyle(fontSize: 12.5, color: AppTheme.mutedColor, height: 1.4),
+          style: TextStyle(
+            fontSize: 12.5,
+            color: AppTheme.mutedColor,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: 14),
         const _FieldLabel('Contraseña actual'),
@@ -386,7 +394,11 @@ class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<Widget> children;
-  const _SectionCard({required this.icon, required this.title, required this.children});
+  const _SectionCard({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -484,12 +496,18 @@ class _ProfileTextField extends StatelessWidget {
         ),
         prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: suffixIcon != null
-            ? Padding(padding: const EdgeInsets.only(right: 12), child: suffixIcon)
+            ? Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: suffixIcon,
+              )
             : null,
         suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         filled: true,
         fillColor: const Color(0xFFF5F5F5),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -537,7 +555,9 @@ class _InlineMessage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
-          isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+          isError
+              ? Icons.error_outline_rounded
+              : Icons.check_circle_outline_rounded,
           color: color,
           size: 16,
         ),
@@ -545,7 +565,11 @@ class _InlineMessage extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -557,7 +581,11 @@ class _PrimaryButton extends StatelessWidget {
   final String label;
   final bool isLoading;
   final VoidCallback? onPressed;
-  const _PrimaryButton({required this.label, required this.isLoading, required this.onPressed});
+  const _PrimaryButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -569,18 +597,27 @@ class _PrimaryButton extends StatelessWidget {
           backgroundColor: AppTheme.pink,
           disabledBackgroundColor: const Color(0xFFFFB8D9),
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
         onPressed: onPressed,
         child: isLoading
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.2,
+                ),
               )
             : Text(
                 label,
-                style: const TextStyle(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
       ),
     );

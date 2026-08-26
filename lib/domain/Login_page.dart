@@ -86,6 +86,13 @@ class _LoginPageState extends State<LoginPage> {
     // (keyboardInset > 0) como si algún campo tiene foco aunque el teclado
     // sea flotante y no reporte inset.
     final isKeyboardVisible = keyboardInset > 0 || _isAnyFieldFocused;
+    // En tablet/escritorio/web el panel de login ya no se estira de borde
+    // a borde: se limita a un ancho fijo y se centra horizontalmente. En
+    // celular (size.width <= _panelMaxWidth) se comporta como antes.
+    const panelMaxWidth = 440.0;
+    final panelSideInset = size.width > panelMaxWidth
+        ? (size.width - panelMaxWidth) / 2
+        : 0.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -112,20 +119,22 @@ class _LoginPageState extends State<LoginPage> {
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
               bottom: keyboardInset,
-              left: 0,
-              right: 0,
+              left: panelSideInset,
+              right: panelSideInset,
               top: isKeyboardVisible ? 80 : size.height * 0.55,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: size.height - (isKeyboardVisible ? 100 : 60),
                 ),
                 child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
+                    borderRadius: panelSideInset > 0
+                        ? BorderRadius.circular(32)
+                        : const BorderRadius.only(
+                            topLeft: Radius.circular(32),
+                            topRight: Radius.circular(32),
+                          ),
                     boxShadow: [
                       BoxShadow(
                         color: Color(0x22000000),
@@ -153,7 +162,10 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 4),
                         const Text(
                           'Accede a tu panel de administración.',
-                          style: TextStyle(fontSize: 14, color: Color(0xFFAAAAAA)),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFFAAAAAA),
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -183,7 +195,8 @@ class _LoginPageState extends State<LoginPage> {
                           textInputAction: TextInputAction.done,
                           // Al presionar "Listo" en este campo, se envía el
                           // formulario directamente.
-                          onSubmitted: (_) => _isLoading ? null : _handleLogin(),
+                          onSubmitted: (_) =>
+                              _isLoading ? null : _handleLogin(),
                           suffixIcon: GestureDetector(
                             onTap: () => setState(
                               () => _obscurePassword = !_obscurePassword,

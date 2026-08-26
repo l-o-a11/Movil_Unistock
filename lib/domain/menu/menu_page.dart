@@ -70,24 +70,11 @@ class _MenuPageState extends State<MenuPage> {
               child: FutureBuilder<List<String>>(
                 future: _modulosFuture,
                 builder: (context, snapshot) {
-                  // ---- DEBUG temporal ----
-                  print(
-                    'MENU DEBUG -> connectionState: ${snapshot.connectionState}',
-                  );
-                  print('MENU DEBUG -> hasError: ${snapshot.hasError}');
-                  if (snapshot.hasError) {
-                    print('MENU DEBUG -> error: ${snapshot.error}');
-                    print('MENU DEBUG -> stackTrace: ${snapshot.stackTrace}');
-                  }
-                  print('MENU DEBUG -> data: ${snapshot.data}');
-                  // -------------------------
-
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
-                    // Muestra el error en pantalla en vez de dejarla en blanco
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
@@ -103,7 +90,6 @@ class _MenuPageState extends State<MenuPage> {
                   final modulos = snapshot.data ?? const <String>[];
 
                   if (modulos.isEmpty) {
-                    // Estado vacío visible en vez de blanco silencioso
                     return const Center(
                       child: Text(
                         'No tienes módulos asignados.\n(modulos llegó vacío)',
@@ -124,6 +110,51 @@ class _MenuPageState extends State<MenuPage> {
   }
 }
 
+/// Calcula tamaños de ícono/tipografía/columnas según el ancho disponible,
+/// para que en celulares angostos (incluso los alargados tipo "candy bar")
+/// los botones no se amontonen ni el texto se vea apretado.
+class _GridMetrics {
+  final double itemSize;
+  final double iconSize;
+  final double fontSize;
+  final double spacing;
+  final double soloSize;
+  final double soloIconSize;
+  final double soloFontSize;
+
+  const _GridMetrics({
+    required this.itemSize,
+    required this.iconSize,
+    required this.fontSize,
+    required this.spacing,
+    required this.soloSize,
+    required this.soloIconSize,
+    required this.soloFontSize,
+  });
+
+  /// [contentWidth] es el ancho ya disponible dentro del padding horizontal
+  /// del ListView (16 a cada lado).
+  factory _GridMetrics.of(double contentWidth) {
+    final bool angosto = contentWidth < 340; // ~360px de pantalla real
+    final int columns = angosto ? 3 : 4;
+    const double spacing = 14.0;
+
+    final double rawItemSize =
+        (contentWidth - spacing * (columns - 1)) / columns;
+    final double itemSize = rawItemSize.clamp(56.0, 78.0);
+
+    return _GridMetrics(
+      itemSize: itemSize,
+      iconSize: itemSize * 0.40,
+      fontSize: angosto ? 11.0 : 12.0,
+      spacing: spacing,
+      soloSize: angosto ? 64.0 : 74.0,
+      soloIconSize: angosto ? 26.0 : 30.0,
+      soloFontSize: angosto ? 11.0 : 12.0,
+    );
+  }
+}
+
 class _MenuList extends StatelessWidget {
   const _MenuList({required this.modulos});
 
@@ -137,261 +168,303 @@ class _MenuList extends StatelessWidget {
     final mostrarEmpleados = _tiene(moduloEmpleados);
     final mostrarSedes = _tiene(moduloSedes);
 
-    // Cada entrada de "Compras" y "Producción" se filtra individualmente;
-    // la sección completa (encabezado + separador) se oculta si ninguno de
-    // sus íconos quedó permitido.
-    final comprasItems = <Widget>[
-      if (_tiene(moduloCategoriasInsumos))
-        _MI(
-          icon: Icons.grid_view_rounded,
-          label: 'Categorías\nde insumo',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloCategoriasInsumos,
-                child: CategoriasPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFC63A8F),
-          shadowColor: Colors.black.withOpacity(0.20),
-        ),
-      if (_tiene(moduloInsumos))
-        _MI(
-          icon: Icons.inventory_2_outlined,
-          label: 'Insumo',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloInsumos,
-                child: InsumosPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFC63A8F),
-          shadowColor: Colors.black.withOpacity(0.20),
-        ),
-      if (_tiene(moduloProveedores))
-        _MI(
-          icon: Icons.local_shipping_outlined,
-          label: 'Proveedores',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloProveedores,
-                child: ProveedoresPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFC63A8F),
-          shadowColor: Colors.black.withOpacity(0.20),
-        ),
-      if (_tiene(moduloCompras))
-        _MI(
-          icon: Icons.shopping_cart_outlined,
-          label: 'Compras',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloCompras,
-                child: ComprasPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFC63A8F),
-          shadowColor: Colors.black.withOpacity(0.20),
-        ),
-    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // El ListView de abajo tiene padding horizontal de 16 a cada lado.
+        final metrics = _GridMetrics.of(constraints.maxWidth - 32);
 
-    final produccionItems = <Widget>[
-      if (_tiene(moduloCategoriasProductos))
-        _MI(
-          icon: Icons.grid_view_rounded,
-          label: 'Categoría\nde producto',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloCategoriasProductos,
-                child: ProductCategoriesPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFFB8FD0),
-          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-        ),
-      if (_tiene(moduloProductos))
-        _MI(
-          icon: Icons.inventory_2_outlined,
-          label: 'Producto',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloProductos,
-                child: ProductsPage(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFFB8FD0),
-          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-        ),
-      if (_tiene(moduloTerceros))
-        _MI(
-          icon: Icons.group_outlined,
-          label: 'Terceros',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloTerceros,
-                child: ProduccionApp(openTerceros: true),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFFB8FD0),
-          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-        ),
-      if (_tiene(moduloProduccion))
-        _MI(
-          icon: Icons.work_outline_rounded,
-          label: 'Producción',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const RouteGuard(
-                requiredModule: moduloProduccion,
-                child: ProduccionApp(),
-              ),
-            ),
-          ),
-          backgroundColor: const Color(0xFFFB8FD0),
-          shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
-        ),
-    ];
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      children: [
-        if (mostrarRoles) ...[
-          const _SH('Roles'),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _MI(
-                icon: Icons.admin_panel_settings_outlined,
-                label: 'Roles',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RouteGuard(
-                      requiredModule: moduloRoles,
-                      child: RolesPage(),
-                    ),
+        final comprasItems = <Widget>[
+          if (_tiene(moduloCategoriasInsumos))
+            _MI(
+              icon: Icons.grid_view_rounded,
+              label: 'Categorías\nde insumo',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloCategoriasInsumos,
+                    child: CategoriasPage(),
                   ),
                 ),
-                size: 74,
-                iconSize: 30,
               ),
+              backgroundColor: const Color(0xFFC63A8F),
+              shadowColor: Colors.black.withOpacity(0.20),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloInsumos))
+            _MI(
+              icon: Icons.inventory_2_outlined,
+              label: 'Insumo',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloInsumos,
+                    child: InsumosPage(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFC63A8F),
+              shadowColor: Colors.black.withOpacity(0.20),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloProveedores))
+            _MI(
+              icon: Icons.local_shipping_outlined,
+              label: 'Proveedores',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloProveedores,
+                    child: ProveedoresPage(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFC63A8F),
+              shadowColor: Colors.black.withOpacity(0.20),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloCompras))
+            _MI(
+              icon: Icons.shopping_cart_outlined,
+              label: 'Compras',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloCompras,
+                    child: ComprasPage(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFC63A8F),
+              shadowColor: Colors.black.withOpacity(0.20),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+        ];
+
+        final produccionItems = <Widget>[
+          if (_tiene(moduloCategoriasProductos))
+            _MI(
+              icon: Icons.grid_view_rounded,
+              label: 'Categoría\nde producto',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloCategoriasProductos,
+                    child: ProductCategoriesPage(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFFB8FD0),
+              shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloProductos))
+            _MI(
+              icon: Icons.inventory_2_outlined,
+              label: 'Producto',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloProductos,
+                    child: ProductsPage(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFFB8FD0),
+              shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloTerceros))
+            _MI(
+              icon: Icons.group_outlined,
+              label: 'Terceros',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloTerceros,
+                    child: ProduccionApp(openTerceros: true),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFFB8FD0),
+              shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+          if (_tiene(moduloProduccion))
+            _MI(
+              icon: Icons.work_outline_rounded,
+              label: 'Producción',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RouteGuard(
+                    requiredModule: moduloProduccion,
+                    child: ProduccionApp(),
+                  ),
+                ),
+              ),
+              backgroundColor: const Color(0xFFFB8FD0),
+              shadowColor: const Color(0xFFFFC7E6).withOpacity(0.45),
+              size: metrics.itemSize,
+              iconSize: metrics.iconSize,
+              fontSize: metrics.fontSize,
+            ),
+        ];
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            if (mostrarRoles) ...[
+              const _SH('Roles'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _MI(
+                    icon: Icons.admin_panel_settings_outlined,
+                    label: 'Roles',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RouteGuard(
+                          requiredModule: moduloRoles,
+                          child: RolesPage(),
+                        ),
+                      ),
+                    ),
+                    size: metrics.soloSize,
+                    iconSize: metrics.soloIconSize,
+                    fontSize: metrics.soloFontSize,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+              const SizedBox(height: 8),
             ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-          const SizedBox(height: 8),
-        ],
 
-        if (mostrarEmpleados) ...[
-          const _SH('Usuarios'),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _MI(
-                icon: Icons.person_outline_rounded,
-                label: 'Usuarios',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RouteGuard(
-                      requiredModule: moduloEmpleados,
-                      child: UsuariosPage(),
+            if (mostrarEmpleados) ...[
+              const _SH('Usuarios'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _MI(
+                    icon: Icons.person_outline_rounded,
+                    label: 'Usuarios',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RouteGuard(
+                          requiredModule: moduloEmpleados,
+                          child: UsuariosPage(),
+                        ),
+                      ),
                     ),
+                    backgroundColor: const Color(0xFFFF4DB8),
+                    shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                    size: metrics.soloSize,
+                    iconSize: metrics.soloIconSize,
+                    fontSize: metrics.soloFontSize,
                   ),
-                ),
-                backgroundColor: const Color(0xFFFF4DB8),
-                shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
-                size: 74,
-                iconSize: 30,
-              ),
-              const SizedBox(width: 16),
-              _MI(
-                icon: Icons.group_outlined,
-                label: 'Empleados',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RouteGuard(
-                      requiredModule: moduloEmpleados,
-                      child: EmpleadosPage(),
+                  SizedBox(width: metrics.spacing + 2),
+                  _MI(
+                    icon: Icons.group_outlined,
+                    label: 'Empleados',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RouteGuard(
+                          requiredModule: moduloEmpleados,
+                          child: EmpleadosPage(),
+                        ),
+                      ),
                     ),
+                    backgroundColor: const Color(0xFFFF4DB8),
+                    shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
+                    size: metrics.soloSize,
+                    iconSize: metrics.soloIconSize,
+                    fontSize: metrics.soloFontSize,
                   ),
-                ),
-                backgroundColor: const Color(0xFFFF4DB8),
-                shadowColor: const Color(0xFFFF4DB8).withOpacity(0.40),
-                size: 74,
-                iconSize: 30,
+                ],
               ),
+              const SizedBox(height: 8),
+              const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+              const SizedBox(height: 8),
             ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-          const SizedBox(height: 8),
-        ],
 
-        if (comprasItems.isNotEmpty) ...[
-          const _SH('Compras'),
-          const SizedBox(height: 12),
-          Wrap(spacing: 16, runSpacing: 16, children: comprasItems),
-          const SizedBox(height: 8),
-          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-          const SizedBox(height: 8),
-        ],
-
-        if (produccionItems.isNotEmpty) ...[
-          const _SH('Producción'),
-          const SizedBox(height: 12),
-          Wrap(spacing: 16, runSpacing: 16, children: produccionItems),
-          const SizedBox(height: 24),
-        ],
-
-        if (mostrarSedes) ...[
-          const _SH('Sedes'),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _MI(
-                icon: Icons.location_on_outlined,
-                label: 'Sedes',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RouteGuard(
-                      requiredModule: moduloSedes,
-                      child: SedesPage(),
-                    ),
-                  ),
-                ),
+            if (comprasItems.isNotEmpty) ...[
+              const _SH('Compras'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: metrics.spacing,
+                runSpacing: 16,
+                children: comprasItems,
               ),
+              const SizedBox(height: 8),
+              const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+              const SizedBox(height: 8),
             ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-          const SizedBox(height: 8),
-        ],
-      ],
+
+            if (produccionItems.isNotEmpty) ...[
+              const _SH('Producción'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: metrics.spacing,
+                runSpacing: 16,
+                children: produccionItems,
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            if (mostrarSedes) ...[
+              const _SH('Sedes'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _MI(
+                    icon: Icons.location_on_outlined,
+                    label: 'Sedes',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RouteGuard(
+                          requiredModule: moduloSedes,
+                          child: SedesPage(),
+                        ),
+                      ),
+                    ),
+                    size: metrics.soloSize,
+                    iconSize: metrics.soloIconSize,
+                    fontSize: metrics.soloFontSize,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Divider(color: Color(0xFFF0F0F0), thickness: 1),
+              const SizedBox(height: 8),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -419,6 +492,7 @@ class _MI extends StatelessWidget {
     this.shadowColor = const Color(0x33FF4FA3),
     this.size = 74,
     this.iconSize = 30,
+    this.fontSize = 12,
   });
 
   final IconData icon;
@@ -428,6 +502,8 @@ class _MI extends StatelessWidget {
   final Color shadowColor;
   final double size;
   final double iconSize;
+  final double fontSize;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -453,14 +529,22 @@ class _MI extends StatelessWidget {
               ),
               child: Icon(icon, color: Colors.white, size: iconSize),
             ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF444444),
-                height: 1.3,
+            const SizedBox(height: 8),
+            // Alto fijo para el texto: así todos los botones de una misma
+            // fila quedan alineados aunque unos tengan 1 línea de label y
+            // otros 2 (evita el desnivel que se ve feo en pantallas angostas).
+            SizedBox(
+              height: fontSize * 2.6,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  color: const Color(0xFF444444),
+                  height: 1.25,
+                ),
               ),
             ),
           ],

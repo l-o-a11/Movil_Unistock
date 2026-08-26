@@ -245,7 +245,10 @@ class _ForgotPasswordFlowState extends State<ForgotPasswordFlow> {
       // El inset del teclado ya se compensa una sola vez dentro de
       // content() (padding del SingleChildScrollView + maxHeight del
       // ConstrainedBox). No lo volvemos a restar acá para no duplicarlo.
-      return SafeArea(child: content());
+      // Se envuelve en Center para que, en tablet/escritorio/web, el panel
+      // (limitado a maxWidth: 360 dentro de content()) quede centrado en
+      // vez de pegado al borde izquierdo de la hoja inferior.
+      return SafeArea(child: Center(child: content()));
     }
 
     return Scaffold(

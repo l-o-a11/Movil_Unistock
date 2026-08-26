@@ -24,7 +24,8 @@ class AuthService {
               'correo': correo,
             }, withAuth: false)
             as Map<String, dynamic>;
-    return data['message'] as String? ?? 'Si el correo existe, recibirás un código';
+    return data['message'] as String? ??
+        'Si el correo existe, recibirás un código';
   }
 
   /// Paso 2 — valida el código de 6 dígitos y devuelve el resetToken de un
@@ -57,7 +58,10 @@ class AuthService {
 
   /// Actualiza nombre y/o correo del usuario autenticado.
   /// El backend solo aplica los campos que vengan no-nulos/no-vacíos.
-  Future<AuthUser> updateProfile({String? nombreCompleto, String? correo}) async {
+  Future<AuthUser> updateProfile({
+    String? nombreCompleto,
+    String? correo,
+  }) async {
     final body = <String, dynamic>{};
     if (nombreCompleto != null && nombreCompleto.trim().isNotEmpty) {
       body['nombreCompleto'] = nombreCompleto.trim();

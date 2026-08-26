@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/global_bottom_nav.dart';
 import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/profile_menu_button.dart';
+import '../../../shared/utils/responsive.dart';
 import 'providers/usuarios_provider.dart';
 import '../domain/usuario_model.dart'; // FIX: antes era usuarios_entity.dart (UsuarioEntity)
 
@@ -11,7 +12,6 @@ const Color _pink = Color(0xFFFF4FA3);
 const Color _bg = Color(0xFFF5F5F7);
 const Color _text = Color(0xFF1C1C1E);
 const Color _grey = Color(0xFF8E8E93);
-const Color _border = Color(0xFFE8E8E8);
 const Color _green = Color(0xFF00C853);
 const Color _red = Color(0xFFE53935);
 
@@ -139,66 +139,65 @@ class _UsuariosViewState extends State<_UsuariosView> {
           builder: (context, provider, __) {
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                  child: Row(
-                    children: [
-                      const AppBackButton(),
-                      const SizedBox(width: 14),
-                      const Text(
-                        'Usuarios',
-                        style: TextStyle(
-                          color: _text,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
+                ResponsiveCenter(
+                  maxWidth: 900,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                    child: Row(
+                      children: [
+                        const AppBackButton(),
+                        const SizedBox(width: 14),
+                        const Text(
+                          'Usuarios',
+                          style: TextStyle(
+                            color: _text,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      ProfileMenuButton(size: 42, iconSize: 20),
-                    ],
+                        const Spacer(),
+                        ProfileMenuButton(size: 42, iconSize: 20),
+                      ],
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _bg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _border),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: provider.search,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar usuario...',
-                        hintStyle: const TextStyle(
-                          color: Color(0xFFAEAEB2),
-                          fontSize: 13,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
-                          size: 18,
-                          color: Color(0xFFAEAEB2),
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  provider.search('');
-                                },
-                                icon: const Icon(
-                                  Icons.clear_rounded,
-                                  size: 18,
+                ResponsiveCenter(
+                  maxWidth: 900,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFFAEAEB2),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: provider.search,
+                              decoration: const InputDecoration(
+                                hintText: 'Buscar usuario...',
+                                hintStyle: TextStyle(
                                   color: Color(0xFFAEAEB2),
+                                  fontSize: 15,
                                 ),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -243,43 +242,48 @@ class _UsuariosViewState extends State<_UsuariosView> {
                       : RefreshIndicator(
                           color: _pink,
                           onRefresh: () => provider.load(),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                            itemCount:
-                                provider.visibleItems.length +
-                                (provider.hasMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index == provider.visibleItems.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4,
-                                    bottom: 12,
-                                  ),
-                                  child: Center(
-                                    child: OutlinedButton(
-                                      onPressed: provider.showMore,
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: _pink,
-                                        side: BorderSide(
-                                          color: _pink.withOpacity(0.4),
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                      child: const Text('Ver más'),
+                          child: ResponsiveCenter(
+                            maxWidth: 900,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              itemCount:
+                                  provider.visibleItems.length +
+                                  (provider.hasMore ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index == provider.visibleItems.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 12,
                                     ),
-                                  ),
-                                );
-                              }
+                                    child: Center(
+                                      child: OutlinedButton(
+                                        onPressed: provider.showMore,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: _pink,
+                                          side: BorderSide(
+                                            color: _pink.withOpacity(0.4),
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('Ver más'),
+                                      ),
+                                    ),
+                                  );
+                                }
 
-                              final usuario = provider.visibleItems[index];
-                              return _buildUsuarioCard(
-                                context,
-                                provider,
-                                usuario,
-                              );
-                            },
+                                final usuario = provider.visibleItems[index];
+                                return _buildUsuarioCard(
+                                  context,
+                                  provider,
+                                  usuario,
+                                );
+                              },
+                            ),
                           ),
                         ),
                 ),
@@ -430,8 +434,8 @@ class _UsuarioDetail extends StatelessWidget {
             child: Container(color: Colors.black.withOpacity(0.35)),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
+        ResponsiveSheet(
+          maxWidth: 560,
           child: SlideTransition(
             position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
                 .animate(

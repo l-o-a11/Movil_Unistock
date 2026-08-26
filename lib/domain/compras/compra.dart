@@ -33,10 +33,9 @@ class CompraDetalle {
 
   /// Nombre a mostrar: prioriza el nombre libre guardado en el detalle,
   /// luego el resuelto vía catálogo, y por último un texto de respaldo.
-  String get nombreMostrar =>
-      (nombre != null && nombre!.isNotEmpty)
-          ? nombre!
-          : (nombreResuelto ?? 'Insumo sin nombre');
+  String get nombreMostrar => (nombre != null && nombre!.isNotEmpty)
+      ? nombre!
+      : (nombreResuelto ?? 'Insumo sin nombre');
 
   CompraDetalle copyWith({String? nombreResuelto}) => CompraDetalle(
     id: id,
@@ -106,22 +105,20 @@ class Compra {
 
   String get estadoLabel => anulada ? 'Anulada' : 'Activa';
 
-  Compra copyWith({
-    String? proveedorNombre,
-    List<CompraDetalle>? detalles,
-  }) => Compra(
-    id: id,
-    consecutivo: consecutivo,
-    fecha: fecha,
-    proveedorId: proveedorId,
-    proveedorNombre: proveedorNombre ?? this.proveedorNombre,
-    total: total,
-    anulada: anulada,
-    observaciones: observaciones,
-    numeroFactura: numeroFactura,
-    motivoAnulacion: motivoAnulacion,
-    detalles: detalles ?? this.detalles,
-  );
+  Compra copyWith({String? proveedorNombre, List<CompraDetalle>? detalles}) =>
+      Compra(
+        id: id,
+        consecutivo: consecutivo,
+        fecha: fecha,
+        proveedorId: proveedorId,
+        proveedorNombre: proveedorNombre ?? this.proveedorNombre,
+        total: total,
+        anulada: anulada,
+        observaciones: observaciones,
+        numeroFactura: numeroFactura,
+        motivoAnulacion: motivoAnulacion,
+        detalles: detalles ?? this.detalles,
+      );
 
   /// Tolerante a `id`/`_id` y a nombres alternativos de campos por si el
   /// backend cambia, pero mapea principalmente a la forma real de
