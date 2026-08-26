@@ -103,7 +103,7 @@ class _ComprasPageState extends State<ComprasPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 3),
+      bottomNavigationBar: const GlobalBottomNav(activeKey: 'compras'),
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(

@@ -1,19 +1,22 @@
 import 'package:http/http.dart' as http;
+import '../../config/api_config.dart';
 
 class ApiClient {
-  static const List<String> _defaultBaseUrls = [
-    'http://127.0.0.1:3000',
-    'http://localhost:3000',
-    'http://127.0.0.1:3020',
-    'http://localhost:3020',
-    'http://127.0.0.1:3001',
-    'http://localhost:3001',
-    'https://api-unistock.onrender.com',
-  ];
+  // FIX: antes probaba una lista fija de URLs locales (127.0.0.1,
+  // localhost en varios puertos) y como último recurso la de Render —
+  // eso significaba varios intentos fallidos (lentos) antes de conectar
+  // de verdad contra el backend desplegado. Ahora usa SIEMPRE
+  // ApiConfig.baseUrl, la misma fuente de verdad que el resto de la app.
+  //
+  // OJO: este archivo (lib/shared/utils/api_client.dart) es DISTINTO de
+  // lib/core/api_client.dart — comparten nombre de archivo pero son dos
+  // clases separadas. Esta versión (simple, sin sesión) la usa SOLO
+  // product_category_service.dart. La versión con singleton/token/usuario
+  // que usa el resto de la app vive en lib/core/api_client.dart — no se
+  // deben mezclar entre sí.
+  final String baseUrl;
 
-  final List<String> baseUrls;
-
-  ApiClient({List<String>? baseUrls}) : baseUrls = baseUrls ?? _defaultBaseUrls;
+  ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? ApiConfig.baseUrl;
 
   Future<http.Response> get(
     String endpoint, {
@@ -27,7 +30,10 @@ class ApiClient {
     Map<String, String>? headers,
     Object? body,
   }) async {
-    return _send(endpoint, (uri) => http.post(uri, headers: headers, body: body));
+    return _send(
+      endpoint,
+      (uri) => http.post(uri, headers: headers, body: body),
+    );
   }
 
   Future<http.Response> put(
@@ -35,7 +41,10 @@ class ApiClient {
     Map<String, String>? headers,
     Object? body,
   }) async {
-    return _send(endpoint, (uri) => http.put(uri, headers: headers, body: body));
+    return _send(
+      endpoint,
+      (uri) => http.put(uri, headers: headers, body: body),
+    );
   }
 
   Future<http.Response> patch(
@@ -43,7 +52,10 @@ class ApiClient {
     Map<String, String>? headers,
     Object? body,
   }) async {
-    return _send(endpoint, (uri) => http.patch(uri, headers: headers, body: body));
+    return _send(
+      endpoint,
+      (uri) => http.patch(uri, headers: headers, body: body),
+    );
   }
 
   Future<http.Response> delete(
@@ -57,26 +69,11 @@ class ApiClient {
     String endpoint,
     Future<http.Response> Function(Uri uri) action,
   ) async {
-    http.Response? lastResponse;
-    Object? lastError;
-
-    for (final baseUrl in baseUrls) {
-      final uri = Uri.parse('$baseUrl$endpoint');
-      try {
-        final response = await action(uri);
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          return response;
-        }
-        lastResponse = response;
-      } catch (error) {
-        lastError = error;
-      }
+    final uri = Uri.parse('$baseUrl$endpoint');
+    try {
+      return await action(uri);
+    } catch (error) {
+      throw Exception('No se pudo conectar a la API en $baseUrl. $error');
     }
-
-    if (lastResponse != null) {
-      return lastResponse;
-    }
-
-    throw Exception('No se pudo conectar a la API en ${baseUrls.join(', ')}. ${lastError ?? 'Sin respuesta.'}');
   }
 }

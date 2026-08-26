@@ -87,7 +87,7 @@ class _DashboardView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.bgColor,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 0),
+      bottomNavigationBar: const GlobalBottomNav(activeKey: 'dashboard'),
       body: SafeArea(
         child: Column(
           children: [

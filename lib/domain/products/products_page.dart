@@ -95,7 +95,7 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-            bottomNavigationBar: const GlobalBottomNav(activeIndex: 1),
+      bottomNavigationBar: const GlobalBottomNav(activeKey: 'productos'),
       backgroundColor: const Color(0xFFF5F5F7),
       body: SafeArea(
         child: Column(
@@ -177,37 +177,42 @@ class _ProductsPageState extends State<ProductsPage> {
                       onRefresh: _load,
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _filteredProducts.length + (_hasMoreProducts ? 1 : 0),
+                        itemCount:
+                            _filteredProducts.length +
+                            (_hasMoreProducts ? 1 : 0),
                         itemBuilder: (context, index) {
-                           if (index == _filteredProducts.length) {
-                             return Padding(
-                               padding: const EdgeInsets.only(top: 8, bottom: 16),
-                               child: Center(
-                                 child: OutlinedButton(
-                                   onPressed: () {
-                                     setState(() {
-                                       _visibleCount = nextVisibleCount(
-                                         _allFilteredProducts,
-                                         visibleCount: _visibleCount,
-                                         pageSize: 5,
-                                       );
-                                     });
-                                   },
-                                   style: OutlinedButton.styleFrom(
-                                     foregroundColor: const Color(0xFFFF4FA3),
-                                     side: const BorderSide(
-                                       color: Color(0xFFFF4FA3),
-                                       width: 1.2,
-                                     ),
-                                     shape: RoundedRectangleBorder(
-                                       borderRadius: BorderRadius.circular(10),
-                                     ),
-                                   ),
-                                   child: const Text('Ver más'),
-                                 ),
-                               ),
-                             );
-                           }
+                          if (index == _filteredProducts.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8,
+                                bottom: 16,
+                              ),
+                              child: Center(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _visibleCount = nextVisibleCount(
+                                        _allFilteredProducts,
+                                        visibleCount: _visibleCount,
+                                        pageSize: 5,
+                                      );
+                                    });
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFFF4FA3),
+                                    side: const BorderSide(
+                                      color: Color(0xFFFF4FA3),
+                                      width: 1.2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: const Text('Ver más'),
+                                ),
+                              ),
+                            );
+                          }
 
                           final item = _filteredProducts[index];
                           return _productCard(context, item);

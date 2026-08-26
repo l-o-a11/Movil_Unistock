@@ -39,7 +39,7 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 2),
+      bottomNavigationBar: const GlobalBottomNav(activeKey: 'explorar'),
       body: SafeArea(
         child: Column(
           children: [

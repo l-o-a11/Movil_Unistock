@@ -4,17 +4,31 @@ import '../../domain/auth/domain/auth_session_repository.dart';
 import '../../domain/auth/domain/modulo_constants.dart';
 
 /// Bottom nav global presente en TODAS las pantallas.
-/// [activeIndex] indica qué ícono se resalta en rosado:
-///   0 = dashboard, 1 = productos, 2 = explorar, 3 = compras, 4 = producción
-/// Pasa -1 (o no pases nada) para ninguno activo.
 ///
-/// Cada ícono se muestra solo si el rol del usuario tiene permiso sobre el
-/// módulo correspondiente (mismo criterio que MenuPage). "Explorar" siempre
-/// se muestra: solo exige sesión iniciada, no un módulo puntual.
+/// [activeKey] indica qué ícono se resalta: 'dashboard', 'productos',
+/// 'explorar', 'compras' o 'produccion'. Pasa null (o no pases nada) para
+/// ninguno activo — se usa una CLAVE por nombre en vez de un índice fijo
+/// porque la cantidad de íconos varía según el rol (ver abajo), así que la
+/// posición de cada uno ya no es siempre la misma.
+///
+/// Cada ícono de acceso rápido (Dash/Productos/Compras/Producción) se
+/// muestra SOLO si el rol del usuario tiene permiso sobre ese módulo
+/// (mismo criterio que MenuPage). "Explorar" siempre se muestra: solo
+/// exige sesión iniciada, no un módulo puntual — es la puerta a todo lo
+/// demás (Usuarios, Empleados, Roles, Insumos, etc.).
+///
+/// FIX: antes, los íconos sin permiso se reemplazaban por un
+/// `SizedBox(width: 64)` invisible para "no romper" el `activeIndex` fijo
+/// por posición. Pero con `spaceAround` eso deja huecos muertos y una
+/// barra descuadrada para roles con menos permisos (p. ej. Empleado sin
+/// acceso a Productos). Ahora la fila se arma SOLO con los íconos
+/// visibles y se reparten con `spaceEvenly`, así que un Gerente/Admin ve
+/// las 5 posiciones normales, y un Empleado ve, por ejemplo, 4 íconos
+/// parejos — ambos casos se ven "completos", no rotos.
 class GlobalBottomNav extends StatefulWidget {
-  final int activeIndex;
+  final String? activeKey;
 
-  const GlobalBottomNav({super.key, this.activeIndex = -1});
+  const GlobalBottomNav({super.key, this.activeKey});
 
   static const _pink = Color(0xFFFF4FA3);
   static const _pinkBackground = Color(0xFFFFE4F2);
@@ -55,51 +69,53 @@ class _GlobalBottomNavState extends State<GlobalBottomNav> {
               final modulos = snapshot.data ?? const <String>[];
               final tiene = (String m) => modulos.contains(m);
 
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  if (tiene(moduloDashboard))
-                    _Btn(
-                      icon: Icons.trending_up_rounded,
-                      label: 'Dash',
-                      active: widget.activeIndex == 0,
-                      onTap: () => _goToDashboard(context),
-                    )
-                  else
-                    const SizedBox(width: 64),
-                  if (tiene(moduloProductos))
-                    _Btn(
-                      icon: Icons.inventory_2_outlined,
-                      label: 'Productos',
-                      active: widget.activeIndex == 1,
-                      onTap: () => _goToProductos(context),
-                    )
-                  else
-                    const SizedBox(width: 64),
-                  _Btn(
-                    icon: Icons.grid_view_rounded,
-                    label: 'Explorar',
-                    active: widget.activeIndex == 2,
-                    onTap: () => _goToMenu(context),
+              final items = <_NavItemData>[
+                if (tiene(moduloDashboard))
+                  _NavItemData(
+                    key: 'dashboard',
+                    icon: Icons.trending_up_rounded,
+                    label: 'Dash',
+                    onTap: () => _goToDashboard(context),
                   ),
-                  if (tiene(moduloCompras))
+                if (tiene(moduloProductos))
+                  _NavItemData(
+                    key: 'productos',
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Productos',
+                    onTap: () => _goToProductos(context),
+                  ),
+                _NavItemData(
+                  key: 'explorar',
+                  icon: Icons.grid_view_rounded,
+                  label: 'Explorar',
+                  onTap: () => _goToMenu(context),
+                ),
+                if (tiene(moduloCompras))
+                  _NavItemData(
+                    key: 'compras',
+                    icon: Icons.shopping_cart_outlined,
+                    label: 'Compras',
+                    onTap: () => _goToCompras(context),
+                  ),
+                if (tiene(moduloProduccion))
+                  _NavItemData(
+                    key: 'produccion',
+                    icon: Icons.work_outline_rounded,
+                    label: 'Producción',
+                    onTap: () => _goToProduccion(context),
+                  ),
+              ];
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (final item in items)
                     _Btn(
-                      icon: Icons.shopping_cart_outlined,
-                      label: 'Compras',
-                      active: widget.activeIndex == 3,
-                      onTap: () => _goToCompras(context),
-                    )
-                  else
-                    const SizedBox(width: 64),
-                  if (tiene(moduloProduccion))
-                    _Btn(
-                      icon: Icons.work_outline_rounded,
-                      label: 'Producción',
-                      active: widget.activeIndex == 4,
-                      onTap: () => _goToProduccion(context),
-                    )
-                  else
-                    const SizedBox(width: 64),
+                      icon: item.icon,
+                      label: item.label,
+                      active: widget.activeKey == item.key,
+                      onTap: item.onTap,
+                    ),
                 ],
               );
             },
@@ -136,6 +152,20 @@ class _GlobalBottomNavState extends State<GlobalBottomNav> {
   static void _goToMenu(BuildContext context) {
     Navigator.of(context).pushNamed('/menu');
   }
+}
+
+class _NavItemData {
+  final String key;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _NavItemData({
+    required this.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 }
 
 class _Btn extends StatelessWidget {

@@ -37,7 +37,7 @@ class _OrdenDetailPageState extends State<OrdenDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: const GlobalBottomNav(activeIndex: 4),
+      bottomNavigationBar: const GlobalBottomNav(activeKey: 'produccion'),
       appBar: DetailAppBar(ordenNumero: widget.orden.numero),
       body: Consumer<OrdenDetailProvider>(
         builder: (context, provider, _) {

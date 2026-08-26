@@ -64,7 +64,7 @@ class _ProduccionPageState extends State<ProduccionPage> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          bottomNavigationBar: const GlobalBottomNav(activeIndex: 4),
+          bottomNavigationBar: const GlobalBottomNav(activeKey: 'produccion'),
           body: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

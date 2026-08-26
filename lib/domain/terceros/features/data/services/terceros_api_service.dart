@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:movil_unistock/shared/services/auth_service.dart';
+import 'package:movil_unistock/config/api_config.dart';
 
 import '../../domain/entities/tercero_entity.dart';
 import '../../domain/entities/tercero_detail_entity.dart';
@@ -8,7 +9,11 @@ import '../datasources/tercero_local_datasource.dart';
 import '../models/tercero_model.dart';
 import '../models/tercero_detail_model.dart';
 
-const String kTercerosBaseUrl = 'http://10.0.2.2:3000/api';
+// FIX: antes apuntaba siempre a http://10.0.2.2:3000/api (solo funciona en
+// el emulador de Android contra un backend LOCAL). Ahora usa
+// ApiConfig.baseUrl, la misma fuente de verdad que el resto de la app —
+// así Terceros también pega contra el backend desplegado en Render.
+String get kTercerosBaseUrl => '${ApiConfig.baseUrl}/api';
 
 class TercerosApiService {
   final String baseUrl;
@@ -16,19 +21,21 @@ class TercerosApiService {
   final AuthService _auth;
 
   TercerosApiService({
-    this.baseUrl = kTercerosBaseUrl,
+    String? baseUrl,
     TerceroLocalDataSourceImpl? local,
     AuthService? auth,
-  })  : _local = local ?? TerceroLocalDataSourceImpl(),
-        _auth = auth ?? AuthService();
+  }) : baseUrl = baseUrl ?? kTercerosBaseUrl,
+       _local = local ?? TerceroLocalDataSourceImpl(),
+       _auth = auth ?? AuthService();
 
   Future<List<TerceroEntity>> getTerceros({String? query}) async {
     try {
       final params = <String, String>{'limit': '100'};
       if (query != null && query.isNotEmpty) params['search'] = query;
 
-      final uri = Uri.parse('$baseUrl/terceros')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$baseUrl/terceros',
+      ).replace(queryParameters: params);
 
       final response = await http
           .get(uri, headers: await _authHeaders)
@@ -75,7 +82,8 @@ class TercerosApiService {
 
   Map<String, dynamic> _extractOne(dynamic raw) {
     if (raw is Map<String, dynamic>) {
-      if (raw['data'] is Map<String, dynamic>) return raw['data'] as Map<String, dynamic>;
+      if (raw['data'] is Map<String, dynamic>)
+        return raw['data'] as Map<String, dynamic>;
       return raw;
     }
     return {};
