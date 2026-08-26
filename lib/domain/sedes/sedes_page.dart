@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:movil_unistock/shared/widgets/global_bottom_nav.dart';
+import '../../shared/utils/paginated_list.dart';
 import '../../shared/widgets/app_back_button.dart';
 import '../../shared/widgets/profile_menu_button.dart';
 import 'sede.dart';
@@ -21,6 +22,7 @@ class _SedesPageState extends State<SedesPage> {
   List<Sede> _sedes = [];
   bool _loading = true;
   String? _error;
+  int _visibleCount = 5;
 
   static const _pink = Color(0xFFFF4FA3);
   static const _bg = Color(0xFFF5F5F7);
@@ -38,6 +40,7 @@ class _SedesPageState extends State<SedesPage> {
       setState(() {
         _loading = true;
         _error = null;
+        _visibleCount = 5;
       });
       final data = await _service.getSedes();
       if (!mounted) return;
@@ -65,6 +68,12 @@ class _SedesPageState extends State<SedesPage> {
           r.telefono.toLowerCase().contains(q);
     }).toList();
   }
+
+  List<Sede> get _visibles =>
+      paginateItems(_filtrados, visibleCount: _visibleCount, pageSize: 5);
+
+  bool get _hayMas =>
+      hasMoreItems(_filtrados, visibleCount: _visibleCount, pageSize: 5);
 
   @override
   void dispose() {
@@ -125,7 +134,7 @@ class _SedesPageState extends State<SedesPage> {
                     Expanded(
                       child: TextField(
                         controller: _busqueda,
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) => setState(() => _visibleCount = 5),
                         decoration: const InputDecoration(
                           hintText:
                               'Buscar por nombre, ciudad, barrio o dirección...',
@@ -182,11 +191,36 @@ class _SedesPageState extends State<SedesPage> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                               ),
-                              itemCount: _filtrados.length,
-                              separatorBuilder: (_, __) =>
+                              itemCount: _visibles.length + (_hayMas ? 1 : 0),
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 12),
                               itemBuilder: (context, index) {
-                                final sede = _filtrados[index];
+                                if (index == _visibles.length) {
+                                  return Center(
+                                    child: OutlinedButton(
+                                      onPressed: () => setState(() {
+                                        _visibleCount = nextVisibleCount(
+                                          _filtrados,
+                                          visibleCount: _visibleCount,
+                                          pageSize: 5,
+                                        );
+                                      }),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: _pink,
+                                        side: BorderSide(
+                                          color: _pink.withValues(alpha: 0.4),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text('Ver más'),
+                                    ),
+                                  );
+                                }
+                                final sede = _visibles[index];
                                 return SedeCard(
                                   sede: sede,
                                   onDetailTap: () =>
