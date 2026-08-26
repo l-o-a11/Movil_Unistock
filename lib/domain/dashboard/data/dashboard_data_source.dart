@@ -77,30 +77,21 @@ class DashboardDataSource {
     // procesamiento de órdenes falle, el "Control de Insumos" del dashboard
     // siempre muestra los datos reales de insumos.
     //
-    // Espejo de supplyAPI.getAll({ estado: true, limit: 1000 }) en dashboard.jsx:
-    // solo se cuentan los insumos ACTIVOS (estado === true) y el stock total
-    // suma EXCLUSIVAMENTE el campo `stock` (Number(s.stock) || 0), sin buscar
-    // en otros campos (cantidad, stockActual, etc.) que la web no usa.
+    // El panel dice "Total de insumos", por lo que se cuentan TODOS los
+    // insumos del inventario (no solo los activos) y el stock total suma el
+    // campo `stock` (Number(s.stock) || 0) de cada uno, sin buscar en otros
+    // campos (cantidad, stockActual, etc.) que la web no usa.
     final insumos = await _fetchList('$_kBase/insumos');
-    final insumosActivos = insumos.where((i) {
-      final estado = i['estado'];
-      // El backend puede reportar estado como bool o como string; solo se
-      // consideran los insumos activos (true / 'true' / 'Activo' / 'activo').
-      if (estado == null) return true;
-      if (estado is bool) return estado;
-      final es = estado.toString().toLowerCase();
-      return es == 'true' || es == 'activo';
-    }).toList();
-    // Suma SOLO el campo `stock` de cada insumo, como hace la web con
+    // Suma el campo `stock` de cada insumo, como hace la web con
     // Number(s.stock) || 0. Los decimales se redondean para la vista.
-    final stockTotal = insumosActivos.fold<int>(
+    final stockTotal = insumos.fold<int>(
       0,
       (s, i) => s + _toIntDecimal(i['stock']),
     );
-    final insumosSinStock = insumosActivos
+    final insumosSinStock = insumos
         .where((s) => _toIntDecimal(s['stock']) == 0)
         .length;
-    final insumosTotal = insumosActivos.length;
+    final insumosTotal = insumos.length;
 
     try {
       final orders = await _fetchProductionOrders();
@@ -299,20 +290,10 @@ class DashboardDataSource {
         stockTotal: stockTotal,
       );
     } catch (_) {
-      // Si el procesamiento de órdenes falla, al menos conservamos los
-      // datos de insumos ya calculados (no devolvemos todo en 0).
-      return DashboardStats(
-        activas: 0,
-        completadasMes: 0,
-        porIniciar: 0,
-        avgTime: '—',
-        delayed: 0,
-        onTrack: 0,
-        procesoCounts: {for (final p in _barProcesses) p: 0},
-        insumosSinStock: insumosSinStock,
-        insumosTotal: insumosTotal,
-        stockTotal: stockTotal,
-      );
+      // Si el procesamiento de órdenes falla, NO ocultamos el problema
+      // devolviendo ceros (datos quemados). Se propaga la excepción para
+      // que la UI informe el error en lugar de mostrar valores inventados.
+      rethrow;
     }
   }
 
