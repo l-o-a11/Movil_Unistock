@@ -1,88 +1,84 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:movil_unistock/config/api_config.dart';
+import 'package:movil_unistock/shared/services/auth_service.dart';
 
 import '../../domain/entities/proveedor_entity.dart';
-import '../datasources/proveedor_datasource.dart';
 
 /// Servicio de API para proveedores.
-/// Intenta consumir el backend REST; si no está disponible, cae en el
-/// datasource local (mock) para mantener la app funcional en desarrollo.
+/// Consume únicamente el backend REST. Si la petición falla, la excepción
+/// se propaga hacia la UI (que muestra el estado de error o vacío) — NO hay
+/// datos mock de respaldo, para no mostrar información quemada en la vista.
 class ProveedoresApiService {
   // FIX: antes la URL por defecto era siempre http://10.0.2.2:3000/api
   // (solo sirve en el emulador de Android contra un backend LOCAL). Ahora
   // usa ApiConfig.baseUrl, la misma fuente de verdad que el resto de la
   // app — así Proveedores también pega contra el backend en Render.
   final String baseUrl;
-  final ProveedorDataSource _local;
+  final AuthService _auth;
 
-  ProveedoresApiService({String? baseUrl, ProveedorDataSource? local})
+  ProveedoresApiService({String? baseUrl, AuthService? auth})
     : baseUrl = baseUrl ?? '${ApiConfig.baseUrl}/api',
-      _local = local ?? ProveedorDataSource();
+      _auth = auth ?? AuthService();
 
   // ── Obtener lista de proveedores ──────────────────────────────────────────
   Future<List<ProveedorEntity>> getAll({String? query}) async {
-    try {
-      final params = <String, String>{};
-      if (query != null && query.isNotEmpty)
-        params['search'] = query; // La API usa 'search'
-
-      final uri = Uri.parse(
-        '$baseUrl/suppliers',
-      ).replace(queryParameters: params.isEmpty ? null : params);
-
-      final response = await http
-          .get(uri, headers: _headers)
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final List<dynamic> data = body is List
-            ? body
-            : (body['data'] as List? ?? []);
-        return data
-            .map((e) => _mapFromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-    } catch (_) {
-      // Fallback silencioso al datasource local
+    final params = <String, String>{};
+    if (query != null && query.isNotEmpty) {
+      params['search'] = query; // La API usa 'search'
     }
 
-    return _local.getAll(query: query);
+    final uri = Uri.parse(
+      '$baseUrl/suppliers',
+    ).replace(queryParameters: params.isEmpty ? null : params);
+
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final List<dynamic> data = body is List
+          ? body
+          : (body['data'] as List? ?? []);
+      return data
+          .map((e) => _mapFromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    throw Exception('Error al cargar proveedores (${response.statusCode})');
   }
 
   // ── Obtener detalle de un proveedor ───────────────────────────────────────
   Future<ProveedorEntity?> getById(String id) async {
-    try {
-      final uri = Uri.parse('$baseUrl/suppliers/$id');
-      final response = await http
-          .get(uri, headers: _headers)
-          .timeout(const Duration(seconds: 10));
+    final uri = Uri.parse('$baseUrl/suppliers/$id');
+    final response = await http
+        .get(uri, headers: await _authHeaders)
+        .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final data = body is Map && body.containsKey('data')
-            ? body['data'] as Map<String, dynamic>
-            : body as Map<String, dynamic>;
-        return _mapFromJson(data);
-      }
-    } catch (_) {
-      // Fallback silencioso al datasource local
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final data = body is Map && body.containsKey('data')
+          ? body['data'] as Map<String, dynamic>
+          : body as Map<String, dynamic>;
+      return _mapFromJson(data);
     }
 
-    final todos = await _local.getAll();
-    try {
-      return todos.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
+    throw Exception('Error al cargar proveedor $id (${response.statusCode})');
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  Future<Map<String, String>> get _authHeaders async {
+    final token = await _auth.getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
 
   /// Mapea la respuesta real del backend (snake_case) a la entidad Flutter.
   /// Campos de la API: id, nit, nombre_de_empresa, nombre_del_contacto,
