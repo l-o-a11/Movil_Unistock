@@ -1,5 +1,5 @@
 import '../../../core/api_client.dart';
-import '../../roles/rol_service.dart';
+import '../../roles/rol.dart';
 import '../domain/auth_session_repository.dart';
 
 class LoginSessionResult {
@@ -155,9 +155,21 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
 
   // ── Módulos permitidos según el rol ───────────────────────────────────
   // El login solo devuelve rolId/rolNombre, no los permisos del rol. Para
-  // saber qué módulos puede ver el usuario se pide una vez el Rol completo
-  // (GET /roles/:id) y se cachea en memoria mientras dure la sesión, para
-  // no repetir la petición en cada pantalla que consulta el menú.
+  // saber qué módulos puede ver el usuario se pide una vez GET
+  // /auth/me/permissions y se cachea en memoria mientras dure la sesión,
+  // para no repetir la petición en cada pantalla que consulta el menú.
+  //
+  // FIX: antes se pedía el rol completo vía GET /roles/:id (RolService),
+  // pero esa ruta exige requirePermission("roles", "leer") en el backend
+  // — es decir, solo la puede llamar un usuario cuyo ROL ya tenga acceso
+  // al módulo "roles" (Administrador/Gerente). Cualquier Empleado (que
+  // por definición no tiene ese módulo) recibía un 403, el catch de abajo
+  // lo silenciaba y el menú quedaba vacío ("No tienes módulos asignados"),
+  // aunque su rol sí tuviera módulos configurados.
+  //
+  // /auth/me/permissions solo exige requireAuth (estar logueado) y
+  // devuelve los permisos del usuario autenticado sin importar si su rol
+  // tiene acceso al módulo "roles", así que es la ruta correcta para esto.
   static String? _cachedModulosUserId;
   static List<String>? _cachedModulos;
 
@@ -169,17 +181,22 @@ class AuthSessionRepositoryImpl implements AuthSessionRepository {
       return _cachedModulos!;
     }
 
-    final user = await getUser();
-    final rolId = user?['rolId']?.toString();
-    if (rolId == null || rolId.isEmpty) return const [];
-
     try {
-      final rol = await RolService().getRolById(rolId);
-      final modulos = rol.permisos
+      final body = await _api.get('/auth/me/permissions');
+      final data = body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+      final rawPermisos = data['permisos'] as List<dynamic>? ?? const [];
+
+      final permisos = rawPermisos
+          .whereType<Map>()
+          .map((e) => ModuloRol.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+
+      final modulos = permisos
           .where((m) => m.privilegios.isNotEmpty)
           .map((m) => m.modulo.trim().toLowerCase())
           .toSet()
           .toList();
+
       _cachedModulosUserId = userId;
       _cachedModulos = modulos;
       return modulos;
