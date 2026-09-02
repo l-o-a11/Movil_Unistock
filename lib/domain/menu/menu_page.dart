@@ -7,16 +7,16 @@ import '../empleados/presentation/empleados_page.dart';
 import '../usuarios/presentation/usuarios_page.dart';
 import '../../shared/widgets/global_bottom_nav.dart';
 import '../../shared/widgets/profile_menu_button.dart';
-import '../product_categories/product_categories_page.dart';
-import '../compras/compra.dart';
-import '../compras/compras_page.dart';
-import '../insumos/insumos_page.dart';
+import '../product_categories/presentation/product_categories_page.dart';
+import '../compras/domain/compra.dart';
+import '../compras/presentation/compras_page.dart';
+import '../insumos/presentation/insumos_page.dart';
 import '../proveedores/features/presentation/pages/proveedores_page.dart';
 import '../produccion/produccion.dart';
-import '../roles/roles_page.dart';
-import '../sedes/sedes_page.dart';
-import '../categoriainsumo/categorias_page.dart';
-import '../products/products_page.dart';
+import '../roles/presentation/roles_page.dart';
+import '../sedes/presentation/sedes_page.dart';
+import '../categoriainsumo/presentation/categorias_page.dart';
+import '../products/presentation/products_page.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});

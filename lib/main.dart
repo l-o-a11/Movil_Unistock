@@ -5,8 +5,8 @@ import 'package:movil_unistock/domain/usuarios/presentation/usuarios_page.dart';
 import 'package:movil_unistock/domain/terceros/features/presentation/pages/terceros_page.dart';
 import 'domain/Login_page.dart';
 import 'domain/produccion/produccion.dart';
-import 'domain/compras/compras_page.dart';
-import 'domain/products/products_page.dart';
+import 'domain/compras/presentation/compras_page.dart';
+import 'domain/products/presentation/products_page.dart';
 import 'domain/auth/presentation/route_guard.dart';
 import 'domain/auth/domain/modulo_constants.dart';
 

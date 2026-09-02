@@ -1,5 +1,5 @@
 import '../../../core/api_client.dart';
-import '../../roles/rol.dart';
+import '../../roles/domain/rol.dart';
 import '../domain/auth_session_repository.dart';
 
 class LoginSessionResult {
