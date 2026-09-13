@@ -15,6 +15,20 @@ const kProductionStates = [
   'Enviado',
 ];
 
+/// Etiquetas visibles del flujo. El backend conserva el estado técnico
+/// `Enviado`, pero ese punto del proceso corresponde a la recepción física
+/// de la orden, tal como se muestra también en el dashboard.
+const kProductionStepLabels = [
+  'En espera',
+  'Diseño',
+  'Ficha Técnica',
+  'Corte',
+  'Compras',
+  'Producción',
+  'Empaque',
+  'Recepción',
+];
+
 class OrdenDetailEntity extends OrdenEntity {
   final List<OrdenReferenciaEntity> referencias;
   final List<HistorialEntryEntity> historial;
@@ -59,9 +73,28 @@ class OrdenDetailEntity extends OrdenEntity {
   int get progresoPercent => (progreso * 100).round();
 
   /// Índice 0-based del estado actual en kProductionStates.
+  ///
+  /// Algunas respuestas históricas ya traen `Recepción`/`Recepcion`, aunque
+  /// el endpoint de producción use `Enviado`. Ambos representan el último
+  /// paso real del flujo y deben pintar el mismo avance.
   int get estadoIndex {
     final lower = estado.toLowerCase();
-    return kProductionStates.indexWhere((s) => s.toLowerCase() == lower);
+    final estadoCanonico = switch (lower) {
+      'recepción' || 'recepcion' => 'enviado',
+      'ficha tecnica' => 'ficha técnica',
+      'en producción' => 'producción',
+      _ => lower,
+    };
+    return kProductionStates.indexWhere(
+      (s) => s.toLowerCase() == estadoCanonico,
+    );
+  }
+
+  /// Nombre de la etapa para la interfaz; no altera el estado técnico que se
+  /// envía al backend al avanzar una orden.
+  String get etapaLabel {
+    final idx = estadoIndex;
+    return idx >= 0 ? kProductionStepLabels[idx] : estado;
   }
 
   String get siguienteEtapaLabel {

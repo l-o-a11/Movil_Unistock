@@ -38,7 +38,7 @@ class _EtapasCardState extends State<EtapasCard> {
   @override
   Widget build(BuildContext context) {
     final currentIdx = widget.detail.estadoIndex;
-    final estados    = kProductionStates;
+    final estados = kProductionStepLabels;
 
     return Container(
       width: double.infinity,
@@ -68,7 +68,7 @@ class _EtapasCardState extends State<EtapasCard> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                currentIdx >= 0 ? estados[currentIdx] : widget.detail.estado,
+                currentIdx >= 0 ? estados[currentIdx] : widget.detail.etapaLabel,
                 style: TextStyle(
                   color: currentIdx >= 0 ? AppColors.primary : AppColors.textSecondary,
                   fontSize: 11, fontWeight: FontWeight.w600,

@@ -111,9 +111,29 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
               Text(p.error!, style:const TextStyle(color: _grey), textAlign: TextAlign.center),
             ]));
             final filtrados = p.proveedoresFiltrados;
-            if (filtrados.isEmpty) return const Center(child:Text('No se encontraron proveedores.', style:TextStyle(color: _grey, fontSize:14)));
+            if (filtrados.isEmpty) {
+              return RefreshIndicator(
+                color: _pink,
+                onRefresh: p.load,
+                child: ListView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: 280,
+                      child: Center(
+                        child: Text('No se encontraron proveedores.', style: TextStyle(color: _grey, fontSize: 14)),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
             final visibles = p.visibleItems;
-            return ListView.builder(
+            return RefreshIndicator(
+              color: _pink,
+              onRefresh: p.load,
+              child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding:const EdgeInsets.fromLTRB(16,0,16,24),
               itemCount:visibles.length + (p.hasMore ? 1 : 0),
               itemBuilder:(ctx,i) {
@@ -137,7 +157,8 @@ class _ProveedoresViewState extends State<_ProveedoresView> {
                 tween:Tween(begin:0,end:1), duration:Duration(milliseconds:300+i*60), curve:Curves.easeOutCubic,
                 builder:(_,v,child)=>Opacity(opacity:v, child:Transform.translate(offset:Offset(0,(1-v)*14), child:child)),
                 child:_ProveedorCard(prov:visibles[i], onTap:()=>_showDetail(context, visibles[i])));
-              });
+              }),
+            );
           })),
       ])),
     );

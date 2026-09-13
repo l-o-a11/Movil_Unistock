@@ -244,6 +244,7 @@ class _ProduccionPageState extends State<ProduccionPage> {
                           onToggle: provider.toggleExpanded,
                           onShowMore: provider.showMore,
                           onRetry: provider.loadOrdenes,
+                          onRefresh: provider.loadOrdenes,
                         )
                       : const TercerosEmbeddedList(),
                 ),
@@ -263,7 +264,8 @@ class _OrdenList extends StatelessWidget {
   final ValueChanged<OrdenEntity> onTap;
   final ValueChanged<String> onToggle;
   final VoidCallback onShowMore;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
+  final Future<void> Function() onRefresh;
 
   const _OrdenList({
     required this.state,
@@ -271,6 +273,7 @@ class _OrdenList extends StatelessWidget {
     required this.onToggle,
     required this.onShowMore,
     required this.onRetry,
+    required this.onRefresh,
   });
 
   @override
@@ -301,7 +304,7 @@ class _OrdenList extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: onRetry,
+              onPressed: () => onRetry(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -320,26 +323,42 @@ class _OrdenList extends StatelessWidget {
     final ordenes = state.ordenesVisibles;
 
     if (ordenes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Icon(
-              Icons.inbox_rounded,
-              size: 52,
-              color: AppColors.textHint.withAlpha(120),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'No hay órdenes',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+            SizedBox(
+              height: 280,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inbox_rounded,
+                      size: 52,
+                      color: AppColors.textHint.withAlpha(120),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'No hay órdenes',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: onRefresh,
+      child: ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       itemCount: ordenes.length + (state.hasMore ? 1 : 0),
       itemBuilder: (_, i) {
@@ -372,6 +391,7 @@ class _OrdenList extends StatelessWidget {
           animIndex: i,
         );
       },
+      ),
     );
   }
 }

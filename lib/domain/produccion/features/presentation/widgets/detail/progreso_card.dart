@@ -101,7 +101,7 @@ class ProgresoCard extends StatelessWidget {
                 ],
               ),
               _EstadoChip(
-                estado: detail.estado,
+                estado: detail.etapaLabel,
                 isActive: detail.isEnProduccion,
               ),
             ],

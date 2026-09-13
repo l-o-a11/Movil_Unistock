@@ -167,6 +167,7 @@ class _TercerosBodyState extends State<_TercerosBody> {
                     onRefresh: provider.loadTerceros,
                     child: filtrados.isEmpty
                         ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             // ListView (no Center) para que RefreshIndicator
                             // funcione aunque la lista esté vacía.
                             children: [
@@ -200,6 +201,7 @@ class _TercerosBodyState extends State<_TercerosBody> {
                             ],
                           )
                         : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                             itemCount:
                                 s.tercerosVisibles.length +
