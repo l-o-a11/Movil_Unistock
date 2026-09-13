@@ -57,26 +57,38 @@ class TercerosEmbeddedList extends StatelessWidget {
 
         final filtered = state.tercerosFiltrados;
         if (filtered.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: provider.loadTerceros,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                Icon(
-                  state.searchActive
-                      ? Icons.search_off_rounded
-                      : Icons.people_outline,
-                  size: 52,
-                  color: AppColors.textHint.withAlpha(120),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  state.searchActive
-                      ? 'No se encontraron resultados para "${state.searchQuery}"'
-                      : 'No hay terceros disponibles',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
+                SizedBox(
+                  height: 280,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          state.searchActive
+                              ? Icons.search_off_rounded
+                              : Icons.people_outline,
+                          size: 52,
+                          color: AppColors.textHint.withAlpha(120),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          state.searchActive
+                              ? 'No se encontraron resultados para "${state.searchQuery}"'
+                              : 'No hay terceros disponibles',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -85,10 +97,14 @@ class TercerosEmbeddedList extends StatelessWidget {
         }
 
         final visibles = state.tercerosVisibles;
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          itemCount: visibles.length + (state.hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: provider.loadTerceros,
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            itemCount: visibles.length + (state.hasMore ? 1 : 0),
+            itemBuilder: (context, index) {
             if (index == visibles.length) {
               return Padding(
                 padding: const EdgeInsets.only(top: 4, bottom: 12),
@@ -108,7 +124,8 @@ class TercerosEmbeddedList extends StatelessWidget {
               );
             }
             return TerceroCard(tercero: visibles[index], animIndex: index);
-          },
+            },
+          ),
         );
       },
     );

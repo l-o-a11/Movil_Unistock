@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../../domain/auth/presentation/edit_profile_page.dart';
-import '../../domain/Login_page.dart';
+import '../../domain/auth/presentation/pages/login_page.dart';
 
 const _pink = Color(0xFFFF4FA3);
 const _pinkSoft = Color(0xFFFFE3F2);

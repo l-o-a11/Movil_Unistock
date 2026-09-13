@@ -53,6 +53,8 @@ class ProveedoresProvider extends ChangeNotifier {
   Future<void> load({String? q}) async {
     _q = q ?? _q;
     _visibleCount = kProveedoresPageSize;
+    isLoading = true;
+    error = null;
     notifyListeners();
     try {
       items = await _apiService.getAll(query: _q.isEmpty ? null : _q);

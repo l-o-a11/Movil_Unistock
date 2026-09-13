@@ -9,6 +9,7 @@ import '../../widgets/progress_section.dart';
 import '../../widgets/summary_card.dart';
 import '../providers/dashboard_provider.dart';
 import '../../data/dashboard_data_source.dart';
+import '../widgets/dashboard_widgets.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -44,28 +45,28 @@ class _DashboardView extends StatelessWidget {
 
     final currentYear = DateTime.now().year;
     final cards = [
-      _CardData(
+      DashboardCardData(
         icon: Icons.grid_view_rounded,
         iconColor: AppTheme.purple,
         iconBg: AppTheme.purpleLight,
         title: 'Producciones actuales',
         value: provider.isLoading ? '…' : '${stats.activas}',
       ),
-      _CardData(
+      DashboardCardData(
         icon: Icons.check_rounded,
         iconColor: AppTheme.pink,
         iconBg: AppTheme.pinkLight,
         title: 'Completadas en $currentYear',
         value: provider.isLoading ? '…' : '${stats.completadasMes}',
       ),
-      _CardData(
+      DashboardCardData(
         icon: Icons.access_time_rounded,
         iconColor: AppTheme.pink,
         iconBg: AppTheme.pinkLight,
         title: 'Por iniciar',
         value: provider.isLoading ? '…' : '${stats.porIniciar}',
       ),
-      _CardData(
+      DashboardCardData(
         icon: Icons.calendar_today_rounded,
         iconColor: AppTheme.pink,
         iconBg: AppTheme.pinkLight,
@@ -74,12 +75,12 @@ class _DashboardView extends StatelessWidget {
       ),
     ];
 
-    final processes = <_ProcessData>[];
+    final processes = <DashboardProcessData>[];
     final cycleColors = [AppTheme.purple, AppTheme.pink, AppTheme.green];
     for (var i = 0; i < DashboardPage._processLabels.length; i++) {
       final label = DashboardPage._processLabels[i];
       final count = stats.procesoCounts[label] ?? 0;
-      processes.add(_ProcessData(label, count, cycleColors[i % 3]));
+      processes.add(DashboardProcessData(label, count, cycleColors[i % 3]));
     }
     final maxProcValue = processes.isEmpty
         ? 1
@@ -91,9 +92,9 @@ class _DashboardView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const _TopBar(),
+            const DashboardTopBar(),
             // ── Filtro Semana / Mes / Año ──────────────────────────────────
-            _PeriodFilter(
+            DashboardPeriodFilter(
               current: provider.period,
               onChanged: (p) => provider.setPeriod(p),
             ),
@@ -110,14 +111,19 @@ class _DashboardView extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: Colors.red, size: 18),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.red,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           provider.error!,
                           style: const TextStyle(
-                              color: Colors.red, fontSize: 12),
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -147,7 +153,9 @@ class _DashboardView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _SectionLabel('Estado general de producción'),
+                            const DashboardSectionLabel(
+                              'Estado general de producción',
+                            ),
                             SizedBox(height: AppTheme.sp(context, 12)),
                             Row(
                               children: [
@@ -204,7 +212,7 @@ class _DashboardView extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const _SectionLabel('Procesos en Curso'),
+                          const DashboardSectionLabel('Procesos en Curso'),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -287,178 +295,4 @@ class _DashboardView extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Filtro de período ─────────────────────────────────────────────────────────
-class _PeriodFilter extends StatelessWidget {
-  final DashboardPeriod current;
-  final ValueChanged<DashboardPeriod> onChanged;
-  const _PeriodFilter({required this.current, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Container(
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Row(
-          children: DashboardPeriod.values.map((p) {
-            final selected = p == current;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => onChanged(p),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  margin: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: selected ? AppTheme.pink : Colors.transparent,
-                    borderRadius: BorderRadius.circular(9),
-                    boxShadow: selected
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.pink.withOpacity(0.35),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    p.label,
-                    style: TextStyle(
-                      color: selected ? Colors.white : AppTheme.mutedColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Widgets auxiliares ────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
-  const _TopBar();
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppTheme.sp(context, 20),
-        AppTheme.sp(context, 14),
-        AppTheme.sp(context, 20),
-        4,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Dashboard',
-                style: TextStyle(
-                  fontSize: AppTheme.fs(context, 22),
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.titleColor,
-                  letterSpacing: -0.8,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Panel administrativo',
-                style: TextStyle(
-                  fontSize: AppTheme.fs(context, 12),
-                  color: AppTheme.mutedColor,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-          const _ProfileIconBtn(),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileIconBtn extends StatelessWidget {
-  const _ProfileIconBtn();
-  @override
-  Widget build(BuildContext context) {
-    final size = AppTheme.sp(context, 40);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFFF8ACD), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF4DA6).withOpacity(0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(
-        Icons.person_2_sharp,
-        color: const Color(0xFFFF4DA6),
-        size: AppTheme.sp(context, 18),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-  @override
-  Widget build(BuildContext context) => Text(
-    text,
-    style: TextStyle(
-      fontSize: AppTheme.fs(context, 15),
-      fontWeight: FontWeight.w700,
-      color: AppTheme.titleColor,
-      letterSpacing: -0.3,
-    ),
-  );
-}
-
-class _CardData {
-  final IconData icon;
-  final Color iconColor, iconBg;
-  final String title, value;
-  const _CardData({
-    required this.icon,
-
-    required this.iconColor,
-
-    required this.iconBg,
-
-    required this.title,
-
-    required this.value,
-  });
-}
-
-class _ProcessData {
-  final String label;
-
-  final int value;
-
-  final Color color;
-
-  const _ProcessData(this.label, this.value, this.color);
 }
